@@ -1,0 +1,2604 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="autolife">
+  <link
+    name="Link_Zero_Point">
+    <inertial>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <mass
+        value="0.01" />
+      <inertia
+        ixx="1.0471975511966E-12"
+        ixy="-6.89317177127524E-27"
+        ixz="6.3476295512101E-43"
+        iyy="1.04719755119686E-12"
+        iyz="3.20601193725648E-29"
+        izz="1.57079632679516E-12" />
+    </inertial>
+  </link>
+  <link
+    name="Link_Ground_Vehicle_Z">
+    <inertial>
+      <origin
+        xyz="0.000400870897858022 0.109142664548612 0.0147192660471476"
+        rpy="0 0 0" />
+      <mass
+        value="26.3816730805344" />
+      <inertia
+        ixx="0.00775765841261898"
+        ixy="-1.2335090405042E-05"
+        ixz="2.90755207854229E-06"
+        iyy="0.0119705159502724"
+        iyz="-0.000230536877947004"
+        izz="0.00857382205336638" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Ground_Vehicle_Z.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Ground_Vehicle_Z.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Ground_Vehicle_Z"
+    type="fixed">
+    <origin
+      xyz="0 0 0"
+      rpy="1.5707963267949 0 -1.57079632679516" />
+    <parent
+      link="Link_Zero_Point" />
+    <child
+      link="Link_Ground_Vehicle_Z" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="-3.145"
+      upper="3.145"
+      effort="20"
+      velocity="0.1" />
+  </joint>
+  <link
+    name="Link_Ankle_to_Knee">
+    <inertial>
+      <origin
+        xyz="0.172566218012948 0.000537114400601479 -0.00912227769136287"
+        rpy="0 0 0" />
+      <mass
+        value="3" />
+      <inertia
+        ixx="0.00282056539078239"
+        ixy="7.97626589078161E-06"
+        ixz="9.37318496690752E-05"
+        iyy="0.0243242982709916"
+        iyz="4.97919456103667E-05"
+        izz="0.0234239709963532" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Ankle_to_Knee.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Ankle_to_Knee.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Ankle"
+    type="revolute">
+    <origin
+      xyz="0 0.27 0"
+      rpy="1.5708 0 1.5708" />
+    <parent
+      link="Link_Ground_Vehicle_Z" />
+    <child
+      link="Link_Ankle_to_Knee" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1.5708"
+      upper="1.5708"
+      effort="150"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Knee_to_Waist_Pitch">
+    <inertial>
+      <origin
+        xyz="0.190516175511759 0.00160329740526043 0.0308179543107181"
+        rpy="0 0 0" />
+      <mass
+        value="2" />
+      <inertia
+        ixx="0.000958495389194447"
+        ixy="-0.000157190432853224"
+        ixz="4.07646396563268E-07"
+        iyy="0.0115279594031608"
+        iyz="-6.27935755551994E-08"
+        izz="0.0122760868634565" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Knee_to_Waist_Pitch.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Knee_to_Waist_Pitch.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Knee"
+    type="revolute">
+    <origin
+      xyz="0.3495 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="Link_Ankle_to_Knee" />
+    <child
+      link="Link_Knee_to_Waist_Pitch" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="150"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Waist_Pitch_to_Waist_Yaw">
+    <inertial>
+      <origin
+        xyz="0.0152074286340818 -0.000372613686719527 0.00044493341050468"
+        rpy="0 0 0" />
+      <mass
+        value="3" />
+      <inertia
+        ixx="0.00059017216172053"
+        ixy="-3.01831260181909E-06"
+        ixz="5.48538135378066E-06"
+        iyy="0.000866684105629655"
+        iyz="8.73802440668745E-07"
+        izz="0.000589200767126788" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Waist_Pitch_to_Waist_Yaw.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Waist_Pitch_to_Waist_Yaw.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Waist_Pitch"
+    type="revolute">
+    <origin
+      xyz="0.3705 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="Link_Knee_to_Waist_Pitch" />
+    <child
+      link="Link_Waist_Pitch_to_Waist_Yaw" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-3"
+      upper="3"
+      effort="98"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Waist_Yaw_to_Shoulder_Inner">
+    <inertial>
+      <origin
+        xyz="-0.00357443973349267 0.000167612086857727 0.210203734680231"
+        rpy="0 0 0" />
+      <mass
+        value="8" />
+      <inertia
+        ixx="0.029899659677621"
+        ixy="1.04916920327859E-05"
+        ixz="0.00382797872117665"
+        iyy="0.0250140583387209"
+        iyz="-5.26315732752239E-05"
+        izz="0.00904894088047657" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Waist_Yaw_to_Shoulder_Inner.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Waist_Yaw_to_Shoulder_Inner.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Waist_Yaw"
+    type="revolute">
+    <origin
+      xyz="0.06643 0 0"
+      rpy="-1.5708 0 -1.5708" />
+    <parent
+      link="Link_Waist_Pitch_to_Waist_Yaw" />
+    <child
+      link="Link_Waist_Yaw_to_Shoulder_Inner" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-3.141"
+      upper="3.141"
+      effort="66"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Left_Shoulder_Inner_to_Shoulder_Outer">
+    <inertial>
+      <origin
+        xyz="-0.000617503609231501 0.000337151611778941 0.041930917262553"
+        rpy="0 0 0" />
+      <mass
+        value="2" />
+      <inertia
+        ixx="0.000317942614144699"
+        ixy="-4.37586341691817E-06"
+        ixz="-4.62836387627398E-06"
+        iyy="0.00033024767989875"
+        iyz="5.48084290151384E-06"
+        izz="0.000257578010843229" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Shoulder_Inner_to_Shoulder_Outer.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Shoulder_Inner_to_Shoulder_Outer.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Left_Shoulder_Inner"
+    type="revolute">
+    <origin
+      xyz="0 0.1311 0.25157"
+      rpy="-1.5708 0 0" />
+    <parent
+      link="Link_Waist_Yaw_to_Shoulder_Inner" />
+    <child
+      link="Link_Left_Shoulder_Inner_to_Shoulder_Outer" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-2.6179"
+      upper="3.141"
+      effort="21"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Left_Shoulder_Outer_to_UpperArm">
+    <inertial>
+      <origin
+        xyz="0.027453771294637 0.00492656911979178 -0.0324567233905465"
+        rpy="0 0 0" />
+      <mass
+        value="2" />
+      <inertia
+        ixx="0.000214042217134073"
+        ixy="-1.11365520673853E-05"
+        ixz="2.20630090176925E-06"
+        iyy="0.000214385650493547"
+        iyz="1.92514857571144E-06"
+        izz="0.000358027948278359" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Shoulder_Outer_to_UpperArm.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Shoulder_Outer_to_UpperArm.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Left_Shoulder_Outer"
+    type="revolute">
+    <origin
+      xyz="0.02825 0 0.074"
+      rpy="1.5708 0 1.5708" />
+    <parent
+      link="Link_Left_Shoulder_Inner_to_Shoulder_Outer" />
+    <child
+      link="Link_Left_Shoulder_Outer_to_UpperArm" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-0.349"
+      upper="3.1415"
+      effort="18"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Left_UpperArm_to_Elbow">
+    <inertial>
+      <origin
+        xyz="0.00283794982263701 0.00105392837504717 0.0547329007335405"
+        rpy="0 0 0" />
+      <mass
+        value="2" />
+      <inertia
+        ixx="0.000393121104257055"
+        ixy="-8.75799848864167E-06"
+        ixz="-3.96258342292467E-06"
+        iyy="0.000395853021852877"
+        iyz="-1.34021046685226E-05"
+        izz="0.000299792811027195" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_UpperArm_to_Elbow.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_UpperArm_to_Elbow.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Left_UpperArm"
+    type="revolute">
+    <origin
+      xyz="0.1105 0.011 -0.02825"
+      rpy="0 -1.5708 3.1415" />
+    <parent
+      link="Link_Left_Shoulder_Outer_to_UpperArm" />
+    <child
+      link="Link_Left_UpperArm_to_Elbow" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-2.9322"
+      upper="2.9322"
+      effort="15"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Left_Elbow_to_Forearm">
+    <inertial>
+      <origin
+        xyz="0.0549465992217473 -0.0216756135999627 -0.0245947302614916"
+        rpy="0 0 0" />
+      <mass
+        value="2" />
+      <inertia
+        ixx="0.000127911799616732"
+        ixy="2.3810625065098E-05"
+        ixz="1.03498654475136E-05"
+        iyy="0.000147030754345232"
+        iyz="-3.53363506350729E-06"
+        izz="0.000184937879209279" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Elbow_to_Forearm.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Elbow_to_Forearm.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Left_Elbow"
+    type="revolute">
+    <origin
+      xyz="0.025 0.02925 0.1761"
+      rpy="0 -1.5708 -1.5708" />
+    <parent
+      link="Link_Left_UpperArm_to_Elbow" />
+    <child
+      link="Link_Left_Elbow_to_Forearm" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-0.0524"
+      upper="2.6179"
+      effort="12"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Left_Forearm_to_Wrist_Upper">
+    <inertial>
+      <origin
+        xyz="0.0117316218483125 -3.69437686770224E-06 0.0184007744588988"
+        rpy="0 0 0" />
+      <mass
+        value="2" />
+      <inertia
+        ixx="6.56522999630318E-05"
+        ixy="3.29723529713842E-09"
+        ixz="-5.7222681723475E-06"
+        iyy="5.37807072488987E-05"
+        iyz="-6.26393944850658E-09"
+        izz="4.47545736054096E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Forearm_to_Wrist_Upper.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Forearm_to_Wrist_Upper.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Left_Forearm"
+    type="revolute">
+    <origin
+      xyz="0.1055 -0.025 -0.02925"
+      rpy="1.5708 0 1.5708" />
+    <parent
+      link="Link_Left_Elbow_to_Forearm" />
+    <child
+      link="Link_Left_Forearm_to_Wrist_Upper" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-2.8798"
+      upper="2.8798"
+      effort="9"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Left_Wrist_Upper_to_Wrist_Lower">
+    <inertial>
+      <origin
+        xyz="0.0274706147902958 0.00306146003716865 -0.0287201081136689"
+        rpy="0 0 0" />
+      <mass
+        value="2" />
+      <inertia
+        ixx="7.43980450322553E-05"
+        ixy="-2.82930739790898E-06"
+        ixz="1.6123049284515E-05"
+        iyy="0.00012828611050118"
+        iyz="2.54263802065241E-06"
+        izz="0.000158264614221317" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Wrist_Upper_to_Wrist_Lower.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Wrist_Upper_to_Wrist_Lower.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Left_Wrist_Upper"
+    type="revolute">
+    <origin
+      xyz="0.0321 0.00036292 0.045"
+      rpy="0 -1.5708 3.1415" />
+    <parent
+      link="Link_Left_Forearm_to_Wrist_Upper" />
+    <child
+      link="Link_Left_Wrist_Upper_to_Wrist_Lower" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1.57"
+      upper="1.57"
+      effort="6"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Left_Wrist_Lower_to_Gripper">
+    <inertial>
+      <origin
+        xyz="0.0648741770844647 -0.000143597434240463 -0.027134195278571"
+        rpy="0 0 0" />
+      <mass
+        value="2" />
+      <inertia
+        ixx="6.4292671396503E-05"
+        ixy="-5.66441597276215E-08"
+        ixz="8.15328654282781E-06"
+        iyy="0.000103295646245639"
+        iyz="-8.51386738848492E-08"
+        izz="6.79418373823619E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Wrist_Lower_to_Gripper.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Wrist_Lower_to_Gripper.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Left_Wrist_Lower"
+    type="revolute">
+    <origin
+      xyz="0.0552 0.0321 -0.0321"
+      rpy="-1.5708 0 0" />
+    <parent
+      link="Link_Left_Wrist_Upper_to_Wrist_Lower" />
+    <child
+      link="Link_Left_Wrist_Lower_to_Gripper" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1.4138"
+      upper="1.4138"
+      effort="3"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Camera_Gripper_Left">
+    <inertial>
+      <origin
+        xyz="0 -6.53598090210165E-05 -0.0062936548087732"
+        rpy="0 0 0" />
+      <mass
+        value="0.000689353299449198" />
+      <inertia
+        ixx="1.52761574483593E-08"
+        ixy="7.02761889738621E-43"
+        ixz="-5.04870979341448E-26"
+        iyy="1.50267886999145E-08"
+        iyz="-2.75127488935958E-10"
+        izz="7.39519392062991E-09" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Camera_Gripper_Left.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Camera_Gripper_Left.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Camera_Gripper_Left"
+    type="fixed">
+    <origin
+      xyz="0.144 0 -0.031737"
+      rpy="0 -1.5708 3.1415" />
+    <parent
+      link="Link_Left_Wrist_Lower_to_Gripper" />
+    <child
+      link="Link_Camera_Gripper_Left" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="Link_Left_Gripper">
+    <inertial>
+      <origin
+        xyz="0.0128216630537897 -0.0271636558972338 -0.0109999992497105"
+        rpy="0 0 0" />
+      <mass
+        value="0.019071611307144" />
+      <inertia
+        ixx="4.37605332229106E-06"
+        ixy="-7.97606854154892E-07"
+        ixz="-6.31265013308784E-14"
+        iyy="2.85906444595262E-06"
+        iyz="-5.83897624438853E-14"
+        izz="4.7709011928422E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Gripper.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Gripper.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Left_Gripper"
+    type="fixed">
+    <origin
+      xyz="0.10148 -0.011 -0.0011371"
+      rpy="1.5708 -1.5708 0" />
+    <parent
+      link="Link_Left_Wrist_Lower_to_Gripper" />
+    <child
+      link="Link_Left_Gripper" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1.333"
+      upper="1"
+      effort="2"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Left_Gripper_Left_Inner_Knuckle">
+    <inertial>
+      <origin
+        xyz="-0.0014993883392225 -0.0291504043841675 -0.0109999999999989"
+        rpy="0 0 0" />
+      <mass
+        value="0.0102249515270339" />
+      <inertia
+        ixx="4.39129754380158E-06"
+        ixy="-1.27692143624081E-07"
+        ixz="2.83960514374052E-21"
+        iyy="1.74716935939326E-06"
+        iyz="3.84591771392931E-20"
+        izz="2.912047839001E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Gripper_Left_Inner_Knuckle.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Gripper_Left_Inner_Knuckle.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Left_Gripper_Left_Inner_Knuckle"
+    type="fixed">
+    <origin
+      xyz="0.10799 -0.011 -0.019037"
+      rpy="1.5708 -1.5708 0" />
+    <parent
+      link="Link_Left_Wrist_Lower_to_Gripper" />
+    <child
+      link="Link_Left_Gripper_Left_Inner_Knuckle" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="2"
+      velocity="1" />
+    <mimic
+      joint="Joint_Left_Gripper"
+      multiplier="1"
+      offset="0" />
+  </joint>
+  <link
+    name="Joint_Left_Gripper_Left_Finger">
+    <inertial>
+      <origin
+        xyz="0.000641821702344197 -0.0211812400734594 -0.00789294723050178"
+        rpy="0 0 0" />
+      <mass
+        value="0.0195863673176325" />
+      <inertia
+        ixx="3.21349935756281E-06"
+        ixy="-3.31543812300713E-07"
+        ixz="-6.14417448646314E-09"
+        iyy="1.31949587109393E-06"
+        iyz="-2.98355626473403E-08"
+        izz="2.98254973033515E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Joint_Left_Gripper_Left_Finger.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Joint_Left_Gripper_Left_Finger.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Left_Gripper_Left_Finger"
+    type="fixed">
+    <origin
+      xyz="-0.0032202 -0.057059 -0.0029"
+      rpy="0 0 0" />
+    <parent
+      link="Link_Left_Gripper_Left_Inner_Knuckle" />
+    <child
+      link="Joint_Left_Gripper_Left_Finger" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="2"
+      velocity="1" />
+    <mimic
+      joint="Joint_Left_Gripper"
+      multiplier="-1"
+      offset="0" />
+  </joint>
+  <link
+    name="Link_Left_Gripper_Right_Outer_Knuckle">
+    <inertial>
+      <origin
+        xyz="-0.0128216630537897 -0.0271636558972338 -0.0110000007502954"
+        rpy="0 0 0" />
+      <mass
+        value="0.0190716113071439" />
+      <inertia
+        ixx="4.37605332229105E-06"
+        ixy="7.97606854154892E-07"
+        ixz="-6.31265543908738E-14"
+        iyy="2.85906444595261E-06"
+        iyz="5.8389891601347E-14"
+        izz="4.77090119284218E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Gripper_Right_Outer_Knuckle.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Gripper_Right_Outer_Knuckle.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Left_Gripper_Right_Outer_Knuckle"
+    type="fixed">
+    <origin
+      xyz="0.10148 -0.011 -0.062337"
+      rpy="1.5708 -1.5708 0" />
+    <parent
+      link="Link_Left_Wrist_Lower_to_Gripper" />
+    <child
+      link="Link_Left_Gripper_Right_Outer_Knuckle" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="2"
+      velocity="1" />
+    <mimic
+      joint="Joint_Left_Gripper"
+      multiplier="-1"
+      offset="0" />
+  </joint>
+  <link
+    name="Link_Left_Gripper_Right_Inner_Knuckle">
+    <inertial>
+      <origin
+        xyz="0.00149938833922247 -0.0291504043841676 -0.0109999999999991"
+        rpy="0 0 0" />
+      <mass
+        value="0.0102249515270339" />
+      <inertia
+        ixx="4.39129754380157E-06"
+        ixy="1.27692143624082E-07"
+        ixz="-6.57379537737095E-21"
+        iyy="1.74716935939326E-06"
+        iyz="3.88342247869938E-20"
+        izz="2.912047839001E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Gripper_Right_Inner_Knuckle.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Gripper_Right_Inner_Knuckle.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Left_Gripper_Right_Inner_Knuckle"
+    type="fixed">
+    <origin
+      xyz="0.10799 -0.011 -0.044437"
+      rpy="1.5708 -1.5708 0" />
+    <parent
+      link="Link_Left_Wrist_Lower_to_Gripper" />
+    <child
+      link="Link_Left_Gripper_Right_Inner_Knuckle" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="2"
+      velocity="1" />
+    <mimic
+      joint="Joint_Left_Gripper"
+      multiplier="-1"
+      offset="0" />
+  </joint>
+  <link
+    name="Link_Left_Gripper_Right_Finger">
+    <inertial>
+      <origin
+        xyz="-0.000641821702329487 -0.0211812400734794 -0.00845231346592281"
+        rpy="0 0 0" />
+      <mass
+        value="0.0195863673176191" />
+      <inertia
+        ixx="3.21349935756186E-06"
+        ixy="3.31543812299975E-07"
+        ixz="1.95020615891569E-08"
+        iyy="1.31949587109184E-06"
+        iyz="1.60026426812494E-08"
+        izz="2.98254973033312E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Gripper_Right_Finger.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Left_Gripper_Right_Finger.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Left_Gripper_Right_Finger"
+    type="fixed">
+    <origin
+      xyz="0.0032202 -0.057059 -0.0029"
+      rpy="0 0 0" />
+    <parent
+      link="Link_Left_Gripper_Right_Inner_Knuckle" />
+    <child
+      link="Link_Left_Gripper_Right_Finger" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="2"
+      velocity="1" />
+    <mimic
+      joint="Joint_Left_Gripper"
+      multiplier="1"
+      offset="0" />
+  </joint>
+  <link
+    name="Link_Right_Shoulder_Inner_to_Shoulder_Outer">
+    <inertial>
+      <origin
+        xyz="-0.000121386549671372 7.34583017103496E-06 0.0210155003115829"
+        rpy="0 0 0" />
+      <mass
+        value="2" />
+      <inertia
+        ixx="0.000977756325769617"
+        ixy="3.71069787552584E-06"
+        ixz="-7.30302568317668E-06"
+        iyy="0.000924173733869007"
+        iyz="-1.4882338172485E-05"
+        izz="0.000886081402292421" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Shoulder_Inner_to_Shoulder_Outer.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Shoulder_Inner_to_Shoulder_Outer.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Right_Shoulder_Inner"
+    type="revolute">
+    <origin
+      xyz="0 -0.1311 0.25157"
+      rpy="1.5708 0 0" />
+    <parent
+      link="Link_Waist_Yaw_to_Shoulder_Inner" />
+    <child
+      link="Link_Right_Shoulder_Inner_to_Shoulder_Outer" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-2.6179"
+      upper="3.141"
+      effort="21"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Right_Shoulder_Outer_to_UpperArm">
+    <inertial>
+      <origin
+        xyz="0.0274539015712283 -0.00492677128569141 -0.0324569727055196"
+        rpy="0 0 0" />
+      <mass
+        value="2" />
+      <inertia
+        ixx="0.000214042473591272"
+        ixy="1.11365920380498E-05"
+        ixz="2.20601709700472E-06"
+        iyy="0.000214385832751345"
+        iyz="-1.92165707841848E-06"
+        izz="0.000358027748939643" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Shoulder_Outer_to_UpperArm.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Shoulder_Outer_to_UpperArm.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Right_Shoulder_Outer"
+    type="revolute">
+    <origin
+      xyz="0.02825 0 0.074"
+      rpy="-1.5708 0 -1.5708" />
+    <parent
+      link="Link_Right_Shoulder_Inner_to_Shoulder_Outer" />
+    <child
+      link="Link_Right_Shoulder_Outer_to_UpperArm" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-3.1415"
+      upper="0.349"
+      effort="18"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Right_UpperArm_to_Elbow">
+    <inertial>
+      <origin
+        xyz="0.00283794988551719 0.00105392799054504 0.0547329013503048"
+        rpy="0 0 0" />
+      <mass
+        value="2" />
+      <inertia
+        ixx="0.000393120911825715"
+        ixy="-8.75795324587382E-06"
+        ixz="-3.962514693899E-06"
+        iyy="0.000395852843902946"
+        iyz="-1.34020049734601E-05"
+        izz="0.000299792728258983" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_UpperArm_to_Elbow.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_UpperArm_to_Elbow.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Right_UpperArm"
+    type="revolute">
+    <origin
+      xyz="0.1105 -0.011 -0.02825"
+      rpy="3.1415 -1.5708 0" />
+    <parent
+      link="Link_Right_Shoulder_Outer_to_UpperArm" />
+    <child
+      link="Link_Right_UpperArm_to_Elbow" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-2.9322"
+      upper="2.9322"
+      effort="15"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Right_Elbow_to_Forearm">
+    <inertial>
+      <origin
+        xyz="0.0549466007838511 -0.0216756143846236 -0.0260947315628108"
+        rpy="0 0 0" />
+      <mass
+        value="2" />
+      <inertia
+        ixx="0.000127911797234284"
+        ixy="2.38106236366762E-05"
+        ixz="1.03498650492801E-05"
+        iyy="0.000147030754784962"
+        iyz="-3.53363431747744E-06"
+        izz="0.000184937877942153" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Elbow_to_Forearm.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Elbow_to_Forearm.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Right_Elbow"
+    type="revolute">
+    <origin
+      xyz="0.025 0.03075 0.1761"
+      rpy="0 -1.5708 -1.5708" />
+    <parent
+      link="Link_Right_UpperArm_to_Elbow" />
+    <child
+      link="Link_Right_Elbow_to_Forearm" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-2.6179"
+      upper="0.0524"
+      effort="12"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Right_Forearm_to_Wrist_Upper">
+    <inertial>
+      <origin
+        xyz="0.0117316218483126 -3.6943768679798E-06 0.0184007744589053"
+        rpy="0 0 0" />
+      <mass
+        value="2" />
+      <inertia
+        ixx="6.56522999630344E-05"
+        ixy="3.29723529714723E-09"
+        ixz="-5.72226817234757E-06"
+        iyy="5.37807072489002E-05"
+        iyz="-6.26393944830209E-09"
+        izz="4.47545736054112E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Forearm_to_Wrist_Upper.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Forearm_to_Wrist_Upper.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Right_Forearm"
+    type="revolute">
+    <origin
+      xyz="0.1055 -0.025 -0.03075"
+      rpy="1.5708 0 1.5708" />
+    <parent
+      link="Link_Right_Elbow_to_Forearm" />
+    <child
+      link="Link_Right_Forearm_to_Wrist_Upper" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-2.8798"
+      upper="2.8798"
+      effort="9"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Right_Wrist_Upper_to_Wrist_Lower ">
+    <inertial>
+      <origin
+        xyz="0.0274706147902958 0.00306146003716867 -0.0287201081136689"
+        rpy="0 0 0" />
+      <mass
+        value="2" />
+      <inertia
+        ixx="7.43980450322561E-05"
+        ixy="-2.82930739790888E-06"
+        ixz="1.61230492845152E-05"
+        iyy="0.00012828611050118"
+        iyz="2.54263802065222E-06"
+        izz="0.000158264614221318" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Wrist_Upper_to_Wrist_Lower .STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Wrist_Upper_to_Wrist_Lower .STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Right_Wrist_Upper"
+    type="revolute">
+    <origin
+      xyz="0.0321 -0.00036285 0.045"
+      rpy="3.1415 -1.5708 0" />
+    <parent
+      link="Link_Right_Forearm_to_Wrist_Upper" />
+    <child
+      link="Link_Right_Wrist_Upper_to_Wrist_Lower " />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1.57"
+      upper="1.57"
+      effort="6"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Right_Wrist_Lower_to_Gripper">
+    <inertial>
+      <origin
+        xyz="0.0648741770844646 -0.00014359743424047 -0.0278599665542821"
+        rpy="0 0 0" />
+      <mass
+        value="2" />
+      <inertia
+        ixx="6.42926713965031E-05"
+        ixy="-5.6644159727651E-08"
+        ixz="8.15328654282783E-06"
+        iyy="0.000103295646245639"
+        iyz="-8.51386738847878E-08"
+        izz="6.79418373823619E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Wrist_Lower_to_Gripper.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Wrist_Lower_to_Gripper.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Right_Wrist_Lower"
+    type="revolute">
+    <origin
+      xyz="0.0552 0.0321 -0.0321"
+      rpy="-1.5708 0 0" />
+    <parent
+      link="Link_Right_Wrist_Upper_to_Wrist_Lower " />
+    <child
+      link="Link_Right_Wrist_Lower_to_Gripper" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1.4138"
+      upper="1.4138"
+      effort="3"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Camera_Gripper_Right">
+    <inertial>
+      <origin
+        xyz="0 -6.53598090210174E-05 -0.0062936548087732"
+        rpy="0 0 0" />
+      <mass
+        value="0.000689353299449199" />
+      <inertia
+        ixx="1.52761574483593E-08"
+        ixy="-4.77552014841595E-26"
+        ixz="-1.56220704946069E-25"
+        iyy="1.50267886999145E-08"
+        iyz="-2.75127488935962E-10"
+        izz="7.39519392062994E-09" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Camera_Gripper_Right.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Camera_Gripper_Right.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Camera_Gripper_Right"
+    type="fixed">
+    <origin
+      xyz="0.144 0 -0.032463"
+      rpy="0 -1.5708 3.1415" />
+    <parent
+      link="Link_Right_Wrist_Lower_to_Gripper" />
+    <child
+      link="Link_Camera_Gripper_Right" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="Link_Right_Gripper">
+    <inertial>
+      <origin
+        xyz="0.0128216630537897 -0.0271636558972338 -0.0109999992497105"
+        rpy="0 0 0" />
+      <mass
+        value="0.0190716113071439" />
+      <inertia
+        ixx="4.37605332229105E-06"
+        ixy="-7.97606854154887E-07"
+        ixz="-6.31265006022645E-14"
+        iyy="2.85906444595262E-06"
+        iyz="-5.83897621056923E-14"
+        izz="4.77090119284218E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Gripper.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Gripper.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Right_Gripper"
+    type="fixed">
+    <origin
+      xyz="0.10148 -0.011 -0.0018628"
+      rpy="1.5708 -1.5708 0" />
+    <parent
+      link="Link_Right_Wrist_Lower_to_Gripper" />
+    <child
+      link="Link_Right_Gripper" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1.333"
+      upper="1"
+      effort="2"
+      velocity="1" />
+  </joint>
+  <link
+    name="Link_Right_Gripper_Left_Inner_Knuckle">
+    <inertial>
+      <origin
+        xyz="-0.00149938833922253 -0.0291504043841675 -0.0109999999999989"
+        rpy="0 0 0" />
+      <mass
+        value="0.0102249515270339" />
+      <inertia
+        ixx="4.39129754380159E-06"
+        ixy="-1.27692143624083E-07"
+        ixz="5.56964959956836E-21"
+        iyy="1.74716935939326E-06"
+        iyz="3.7627949232859E-20"
+        izz="2.91204783900101E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Gripper_Left_Inner_Knuckle.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Gripper_Left_Inner_Knuckle.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Right_Gripper_Left_Inner_Knuckle"
+    type="fixed">
+    <origin
+      xyz="0.10799 -0.011 -0.019763"
+      rpy="1.5708 -1.5708 0" />
+    <parent
+      link="Link_Right_Wrist_Lower_to_Gripper" />
+    <child
+      link="Link_Right_Gripper_Left_Inner_Knuckle" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="2"
+      velocity="1" />
+    <mimic
+      joint="Joint_Right_Gripper"
+      multiplier="1"
+      offset="0" />
+  </joint>
+  <link
+    name="Link_Right_Gripper_Left_Finger">
+    <inertial>
+      <origin
+        xyz="0.000641821702344281 -0.0211812400734595 -0.00789294723050172"
+        rpy="0 0 0" />
+      <mass
+        value="0.0195863673176326" />
+      <inertia
+        ixx="3.21349935756284E-06"
+        ixy="-3.31543812300715E-07"
+        ixz="-6.14417448646757E-09"
+        iyy="1.31949587109393E-06"
+        iyz="-2.98355626473412E-08"
+        izz="2.98254973033518E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Gripper_Left_Finger.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Gripper_Left_Finger.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Right_Gripper_Left_Finger"
+    type="fixed">
+    <origin
+      xyz="-0.0032202 -0.057059 -0.0029"
+      rpy="0 0 0" />
+    <parent
+      link="Link_Right_Gripper_Left_Inner_Knuckle" />
+    <child
+      link="Link_Right_Gripper_Left_Finger" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="2"
+      velocity="1" />
+    <mimic
+      joint="Joint_Right_Gripper"
+      multiplier="-1"
+      offset="0" />
+  </joint>
+  <link
+    name="Link_Right_Gripper_Right_Outer_Knuckle">
+    <inertial>
+      <origin
+        xyz="-0.0128216630537898 -0.0271636558972336 -0.0110000007502954"
+        rpy="0 0 0" />
+      <mass
+        value="0.019071611307144" />
+      <inertia
+        ixx="4.37605332229107E-06"
+        ixy="7.97606854154889E-07"
+        ixz="-6.31265587691774E-14"
+        iyy="2.85906444595262E-06"
+        iyz="5.83898889429144E-14"
+        izz="4.77090119284221E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Gripper_Right_Outer_Knuckle.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Gripper_Right_Outer_Knuckle.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Right_Gripper_Right_Outer_Knuckle"
+    type="fixed">
+    <origin
+      xyz="0.10148 -0.011 -0.063063"
+      rpy="1.5708 -1.5708 0" />
+    <parent
+      link="Link_Right_Wrist_Lower_to_Gripper" />
+    <child
+      link="Link_Right_Gripper_Right_Outer_Knuckle" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="2"
+      velocity="1" />
+    <mimic
+      joint="Joint_Right_Gripper"
+      multiplier="-1"
+      offset="0" />
+  </joint>
+  <link
+    name="Link_Right_Gripper_Right_Inner_Knuckle">
+    <inertial>
+      <origin
+        xyz="0.00149938833922253 -0.0291504043841675 -0.0109999999999991"
+        rpy="0 0 0" />
+      <mass
+        value="0.0102249515270339" />
+      <inertia
+        ixx="4.39129754380158E-06"
+        ixy="1.2769214362408E-07"
+        ixz="-5.6943281465406E-21"
+        iyy="1.74716935939326E-06"
+        iyz="3.78884972585288E-20"
+        izz="2.912047839001E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Gripper_Right_Inner_Knuckle.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Gripper_Right_Inner_Knuckle.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Right_Gripper_Right_Inner_Knuckle"
+    type="fixed">
+    <origin
+      xyz="0.10799 -0.011 -0.045163"
+      rpy="1.5708 -1.5708 0" />
+    <parent
+      link="Link_Right_Wrist_Lower_to_Gripper" />
+    <child
+      link="Link_Right_Gripper_Right_Inner_Knuckle" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="2"
+      velocity="1" />
+    <mimic
+      joint="Joint_Right_Gripper"
+      multiplier="-1"
+      offset="0" />
+  </joint>
+  <link
+    name="Link_Right_Gripper_Right_Finger">
+    <inertial>
+      <origin
+        xyz="-0.00064182170213728 -0.0211812400742588 -0.00845231346583974"
+        rpy="0 0 0" />
+      <mass
+        value="0.0195863673180198" />
+      <inertia
+        ixx="3.21349935784202E-06"
+        ixy="3.31543812364365E-07"
+        ixz="1.95020615750501E-08"
+        iyy="1.31949587111093E-06"
+        iyz="1.60026427323422E-08"
+        izz="2.9825497306121E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Gripper_Right_Finger.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Right_Gripper_Right_Finger.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Right_Gripper_Right_Finger"
+    type="fixed">
+    <origin
+      xyz="0.0032202 -0.057059 -0.0029"
+      rpy="0 0 0" />
+    <parent
+      link="Link_Right_Gripper_Right_Inner_Knuckle" />
+    <child
+      link="Link_Right_Gripper_Right_Finger" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1"
+      upper="1"
+      effort="2"
+      velocity="1" />
+    <mimic
+      joint="Joint_Right_Gripper"
+      multiplier="1"
+      offset="0" />
+  </joint>
+  <link
+    name="Link_Camera_Head_Back">
+    <inertial>
+      <origin
+        xyz="-0.000803346538442287 0.00102233892031145 -0.0271730577422258"
+        rpy="0 0 0" />
+      <mass
+        value="0.0177930956200841" />
+      <inertia
+        ixx="8.06235495517881E-06"
+        ixy="1.39056250910053E-08"
+        ixz="-1.00210046478199E-06"
+        iyy="8.74839376567522E-06"
+        iyz="4.91714201406625E-07"
+        izz="3.19382727241654E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Camera_Head_Back.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.250980392156863 0.250980392156863 0.250980392156863 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Camera_Head_Back.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Camera_Head_Back"
+    type="fixed">
+    <origin
+      xyz="-0.0805947420151883 0 0.479275977050066"
+      rpy="1.78023583703347 0 -1.57079633558566" />
+    <parent
+      link="Link_Waist_Yaw_to_Shoulder_Inner" />
+    <child
+      link="Link_Camera_Head_Back" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="Link_Camera_Head_Right_Eye">
+    <inertial>
+      <origin
+        xyz="-0.00080334635020074 0.00102234052424643 -0.0271730569271434"
+        rpy="0 0 0" />
+      <mass
+        value="0.0177930973239926" />
+      <inertia
+        ixx="8.06235514574236E-06"
+        ixy="1.39055611846873E-08"
+        ixz="-1.002100499834E-06"
+        iyy="8.74839411494282E-06"
+        iyz="4.91713772423917E-07"
+        izz="3.19382719772465E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Camera_Head_Right_Eye.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.250980392156863 0.250980392156863 0.250980392156863 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Camera_Head_Right_Eye.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Camera_Head_Right_Eye"
+    type="fixed">
+    <origin
+      xyz="0.0901048231723684 -0.0315000007465771 0.495336903561719"
+      rpy="1.65806278939535 0 1.57079631752076" />
+    <parent
+      link="Link_Waist_Yaw_to_Shoulder_Inner" />
+    <child
+      link="Link_Camera_Head_Right_Eye" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="Link_Camera_Head_Left_Eye">
+    <inertial>
+      <origin
+        xyz="-0.000803346350200747 0.00102234052424621 -0.0271730569271432"
+        rpy="0 0 0" />
+      <mass
+        value="0.0177930973239927" />
+      <inertia
+        ixx="8.06235514574244E-06"
+        ixy="1.39055611846865E-08"
+        ixz="-1.00210049983399E-06"
+        iyy="8.7483941149429E-06"
+        iyz="4.91713772423912E-07"
+        izz="3.19382719772465E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Camera_Head_Left_Eye.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.250980392156863 0.250980392156863 0.250980392156863 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Camera_Head_Left_Eye.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Camera_Head_Left_Eye"
+    type="fixed">
+    <origin
+      xyz="0.0901048237477598 0.031499999253423 0.495336903460226"
+      rpy="1.65806278939535 0 1.57079631752076" />
+    <parent
+      link="Link_Waist_Yaw_to_Shoulder_Inner" />
+    <child
+      link="Link_Camera_Head_Left_Eye" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="Link_Mask">
+    <inertial>
+      <origin
+        xyz="-2.05837901418038E-07 -0.102991142448384 -0.103094710902463"
+        rpy="0 0 0" />
+      <mass
+        value="2" />
+      <inertia
+        ixx="0.000324738316903186"
+        ixy="3.02691177350238E-09"
+        ixz="5.561881661179E-08"
+        iyy="0.000455778905525662"
+        iyz="4.85062200503267E-05"
+        izz="0.000184472373903427" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Mask.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.501960784313725 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Mask.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Mask"
+    type="fixed">
+    <origin
+      xyz="-0.0428574426734296 1.96731518201515E-05 0.391365544112642"
+      rpy="2.96705972838954 0 -1.5707963267949" />
+    <parent
+      link="Link_Waist_Yaw_to_Shoulder_Inner" />
+    <child
+      link="Link_Mask" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="Link_Chest_Front_Cover">
+    <inertial>
+      <origin
+        xyz="0.0970239814442858 0.0370245979162963 -0.317463302536446"
+        rpy="0 0 0" />
+      <mass
+        value="0.0939905859629904" />
+      <inertia
+        ixx="0.000354113496030877"
+        ixy="-3.79940057315708E-06"
+        ixz="1.32395225458379E-06"
+        iyy="0.000505942322232302"
+        iyz="1.60873979885374E-06"
+        izz="0.00016112627656741" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Chest_Front_Cover.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.498039215686275 0.525490196078431 0.745098039215686 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Chest_Front_Cover.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Chest_Front_Cover"
+    type="fixed">
+    <origin
+      xyz="0.0482644434006438 -0.102712228594056 -0.150180188902497"
+      rpy="3.14159265358979 0 1.5707963267949" />
+    <parent
+      link="Link_Waist_Yaw_to_Shoulder_Inner" />
+    <child
+      link="Link_Chest_Front_Cover" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="Link_Chest_Back_Cover">
+    <inertial>
+      <origin
+        xyz="0.102665022539535 -0.0910080676557068 -0.212115982770171"
+        rpy="0 0 0" />
+      <mass
+        value="0.209224454777449" />
+      <inertia
+        ixx="0.000566488052492765"
+        ixy="-2.65086386504084E-08"
+        ixz="-4.38278326230094E-07"
+        iyy="0.00166785759059947"
+        iyz="-3.47104995483819E-05"
+        izz="0.00158774316311701" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Chest_Back_Cover.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.725490196078431 0.745098039215686 0.650980392156863 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Chest_Back_Cover.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Chest_Back_Cover"
+    type="fixed">
+    <origin
+      xyz="0.0482644434006438 -0.102712228594056 -0.150180188902497"
+      rpy="3.14159265358979 0 1.5707963267949" />
+    <parent
+      link="Link_Waist_Yaw_to_Shoulder_Inner" />
+    <child
+      link="Link_Chest_Back_Cover" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="Link_Camera_Chest">
+    <inertial>
+      <origin
+        xyz="0.00111196141451277 -2.78495287886482E-05 -0.012565684115131"
+        rpy="0 0 0" />
+      <mass
+        value="0.0457689927476151" />
+      <inertia
+        ixx="4.13770899814852E-06"
+        ixy="-1.45339317442275E-09"
+        ixz="4.09728418768785E-07"
+        iyy="2.78756697554141E-05"
+        iyz="7.42363844020483E-09"
+        izz="2.75915836718397E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Camera_Chest.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Camera_Chest.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Camera_Chest"
+    type="fixed">
+    <origin
+      xyz="0.0553284685822616 0 0.299416237004018"
+      rpy="1.7453292519943 0 1.57079632679775" />
+    <parent
+      link="Link_Waist_Yaw_to_Shoulder_Inner" />
+    <child
+      link="Link_Camera_Chest" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="Link_Knee_Black_Cover">
+    <inertial>
+      <origin
+        xyz="-0.185935924677306 0.0115409856049614 -0.00145142348220287"
+        rpy="0 0 0" />
+      <mass
+        value="0.260422352934635" />
+      <inertia
+        ixx="0.00024862624724164"
+        ixy="-4.3718926653023E-05"
+        ixz="7.52189734591861E-08"
+        iyy="0.00208362754151595"
+        iyz="2.44599307705115E-07"
+        izz="0.00232631660520813" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Knee_Black_Cover.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Knee_Black_Cover.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Knee_Black_Cover"
+    type="fixed">
+    <origin
+      xyz="0.3705 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="Link_Knee_to_Waist_Pitch" />
+    <child
+      link="Link_Knee_Black_Cover" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="Link_IMU">
+    <inertial>
+      <origin
+        xyz="-0.000532256650626006 -0.0054028565472856 -0.00652634706970708"
+        rpy="0 0 0" />
+      <mass
+        value="0.0250513530544791" />
+      <inertia
+        ixx="4.72772678965137E-06"
+        ixy="1.65105409699308E-09"
+        ixz="6.04146929799404E-12"
+        iyy="5.75032057676297E-06"
+        iyz="6.75832216834686E-09"
+        izz="9.91394694823134E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_IMU.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_IMU.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_IMU"
+    type="fixed">
+    <origin
+      xyz="0 0.1987 0"
+      rpy="1.5707963267949 0 3.14159265358979" />
+    <parent
+      link="Link_Ground_Vehicle_Z" />
+    <child
+      link="Link_IMU" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="Link_Lidar_Back">
+    <inertial>
+      <origin
+        xyz="0.00283997852782114 0.0125654528599173 -0.0103261484034342"
+        rpy="0 0 0" />
+      <mass
+        value="0.0393714505596442" />
+      <inertia
+        ixx="1.29211869218963E-05"
+        ixy="-4.72398074752648E-07"
+        ixz="-2.61010067974635E-08"
+        iyy="1.24132096076578E-05"
+        iyz="-2.11501620053375E-08"
+        izz="2.31759864713394E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Lidar_Back.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Lidar_Back.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Lidar_Back"
+    type="fixed">
+    <origin
+      xyz="0 0.1515 0.215"
+      rpy="-1.5707963267949 0 3.14159265358979" />
+    <parent
+      link="Link_Ground_Vehicle_Z" />
+    <child
+      link="Link_Lidar_Back" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="Link_Lidar_Front">
+    <inertial>
+      <origin
+        xyz="-0.002839978813898 -0.0125654532989012 -0.0103261483032979"
+        rpy="0 0 0" />
+      <mass
+        value="0.0393714500462311" />
+      <inertia
+        ixx="1.2921186920272E-05"
+        ixy="-4.7239807496703E-07"
+        ixz="2.61010039931071E-08"
+        iyy="1.24132096040167E-05"
+        iyz="2.11501615819816E-08"
+        izz="2.31759864709317E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Lidar_Front.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Lidar_Front.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Lidar_Front"
+    type="fixed">
+    <origin
+      xyz="0 0.151499999999971 -0.215"
+      rpy="-1.57079632679489 0 3.14159265358979" />
+    <parent
+      link="Link_Ground_Vehicle_Z" />
+    <child
+      link="Link_Lidar_Front" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="Link_Ground_Vehicle_Visual_Cover">
+    <inertial>
+      <origin
+        xyz="5.03813175097151E-05 0.198962140361411 -0.0233991728505725"
+        rpy="0 0 0" />
+      <mass
+        value="0.569688940866508" />
+      <inertia
+        ixx="0.012140533672483"
+        ixy="-1.69800921173855E-06"
+        ixz="-6.29282321581049E-06"
+        iyy="0.0232610035532533"
+        iyz="-0.000347486083806363"
+        izz="0.0120287046366284" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Ground_Vehicle_Visual_Cover.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.698039215686274 0.698039215686274 0.698039215686274 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/Link_Ground_Vehicle_Visual_Cover.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint_Ground_Vehicle_Visual_Cover"
+    type="fixed">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="Link_Ground_Vehicle_Z" />
+    <child
+      link="Link_Ground_Vehicle_Visual_Cover" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+</robot>

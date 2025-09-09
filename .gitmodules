@@ -4,3 +4,6 @@
 [submodule "third_party/cricket"]
 	path = third_party/cricket
 	url = https://github.com/H-tr/cricket.git
+[submodule "third_party/foam"]
+	path = third_party/foam
+	url = https://github.com/CoMMALab/foam.git
