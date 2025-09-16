@@ -53,21 +53,33 @@
     <disable_collisions link1="Link_Zero_Point" link2="Link_Ankle_to_Knee" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Knee_to_Waist_Pitch" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Waist_Pitch_to_Waist_Yaw" reason="Default"/>
-    <!-- <disable_collisions link1="Link_Zero_Point" link2="Link_Waist_Yaw_to_Shoulder_Inner" reason="Default"/> -->
+    <disable_collisions link1="Link_Zero_Point" link2="Link_Waist_Yaw_to_Shoulder_Inner" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Left_Shoulder_Inner_to_Shoulder_Outer" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Left_Shoulder_Outer_to_UpperArm" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Left_UpperArm_to_Elbow" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Left_Elbow_to_Forearm" reason="Default"/>
+    <disable_collisions link1="Link_Zero_Point" link2="Link_Left_Forearm_to_Wrist_Upper" reason="Default"/>
+    <disable_collisions link1="Link_Zero_Point" link2="Link_Left_Wrist_Upper_to_Wrist_Lower" reason="Default"/>
+    <disable_collisions link1="Link_Zero_Point" link2="Link_Left_Wrist_Lower_to_Gripper" reason="Default"/>
+    <disable_collisions link1="Link_Zero_Point" link2="Link_Left_Gripper" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Right_Shoulder_Inner_to_Shoulder_Outer" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Right_Shoulder_Outer_to_UpperArm" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Right_UpperArm_to_Elbow" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Right_Elbow_to_Forearm" reason="Default"/>
+    <disable_collisions link1="Link_Zero_Point" link2="Link_Right_Forearm_to_Wrist_Upper" reason="Default"/>
+    <disable_collisions link1="Link_Zero_Point" link2="Link_Right_Wrist_Upper_to_Wrist_Lower " reason="Default"/>
+    <disable_collisions link1="Link_Zero_Point" link2="Link_Right_Wrist_Lower_to_Gripper" reason="Default"/>
+    <disable_collisions link1="Link_Zero_Point" link2="Link_Right_Gripper" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Left_Gripper_Left_Inner_Knuckle" reason="Default"/>
+    <disable_collisions link1="Link_Zero_Point" link2="Joint_Left_Gripper_Left_Finger" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Left_Gripper_Right_Outer_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Left_Gripper_Right_Inner_Knuckle" reason="Default"/>
+    <disable_collisions link1="Link_Zero_Point" link2="Link_Left_Gripper_Right_Finger" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Right_Gripper_Left_Inner_Knuckle" reason="Default"/>
+    <disable_collisions link1="Link_Zero_Point" link2="Link_Right_Gripper_Left_Finger" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Right_Gripper_Right_Outer_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Right_Gripper_Right_Inner_Knuckle" reason="Default"/>
+    <disable_collisions link1="Link_Zero_Point" link2="Link_Right_Gripper_Right_Finger" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Knee_Black_Cover" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Mask" reason="Default"/>
     <disable_collisions link1="Link_Zero_Point" link2="Link_Chest_Front_Cover" reason="Default"/>
@@ -76,13 +88,23 @@
     <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Ankle_to_Knee" reason="Default"/>
     <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Knee_to_Waist_Pitch" reason="Default"/>
     <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Waist_Pitch_to_Waist_Yaw" reason="Default"/>
-    <!-- <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Waist_Yaw_to_Shoulder_Inner" reason="Default"/> -->
+    <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Waist_Yaw_to_Shoulder_Inner" reason="Default"/>
     <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Left_Shoulder_Inner_to_Shoulder_Outer" reason="Default"/>
     <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Left_Shoulder_Outer_to_UpperArm" reason="Default"/>
     <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Left_UpperArm_to_Elbow" reason="Default"/>
+    <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Left_Elbow_to_Forearm" reason="Default"/>
+    <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Left_Forearm_to_Wrist_Upper" reason="Default"/>
+    <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Left_Wrist_Upper_to_Wrist_Lower" reason="Default"/>
+    <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Left_Wrist_Lower_to_Gripper" reason="Default"/>
+    <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Left_Gripper" reason="Default"/>
     <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Right_Shoulder_Inner_to_Shoulder_Outer" reason="Default"/>
     <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Right_Shoulder_Outer_to_UpperArm" reason="Default"/>
     <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Right_UpperArm_to_Elbow" reason="Default"/>
+    <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Right_Elbow_to_Forearm" reason="Default"/>
+    <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Right_Forearm_to_Wrist_Upper" reason="Default"/>
+    <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Right_Wrist_Upper_to_Wrist_Lower " reason="Default"/>
+    <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Right_Wrist_Lower_to_Gripper" reason="Default"/>
+    <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Right_Gripper" reason="Default"/>
     <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Left_Gripper_Left_Inner_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Joint_Left_Gripper_Left_Finger" reason="Default"/>
     <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Left_Gripper_Right_Outer_Knuckle" reason="Default"/>
@@ -100,13 +122,23 @@
     <disable_collisions link1="Link_Ground_Vehicle_Z" link2="Link_Ground_Vehicle_Visual_Cover" reason="Default"/>
     <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Knee_to_Waist_Pitch" reason="Default"/>
     <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Waist_Pitch_to_Waist_Yaw" reason="Default"/>
-    <!-- <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Waist_Yaw_to_Shoulder_Inner" reason="Default"/> -->
+    <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Waist_Yaw_to_Shoulder_Inner" reason="Default"/>
     <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Left_Shoulder_Inner_to_Shoulder_Outer" reason="Default"/>
     <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Left_Shoulder_Outer_to_UpperArm" reason="Default"/>
     <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Left_UpperArm_to_Elbow" reason="Default"/>
+    <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Left_Elbow_to_Forearm" reason="Default"/>
+    <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Left_Forearm_to_Wrist_Upper" reason="Default"/>
+    <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Left_Wrist_Upper_to_Wrist_Lower" reason="Default"/>
+    <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Left_Wrist_Lower_to_Gripper" reason="Default"/>
+    <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Left_Gripper" reason="Default"/>
     <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Right_Shoulder_Inner_to_Shoulder_Outer" reason="Default"/>
     <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Right_Shoulder_Outer_to_UpperArm" reason="Default"/>
     <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Right_UpperArm_to_Elbow" reason="Default"/>
+    <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Right_Elbow_to_Forearm" reason="Default"/>
+    <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Right_Forearm_to_Wrist_Upper" reason="Default"/>
+    <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Right_Wrist_Upper_to_Wrist_Lower " reason="Default"/>
+    <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Right_Wrist_Lower_to_Gripper" reason="Default"/>
+    <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Right_Gripper" reason="Default"/>
     <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Left_Gripper_Left_Inner_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Ankle_to_Knee" link2="Joint_Left_Gripper_Left_Finger" reason="Default"/>
     <disable_collisions link1="Link_Ankle_to_Knee" link2="Link_Left_Gripper_Right_Outer_Knuckle" reason="Default"/>
@@ -127,9 +159,19 @@
     <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Link_Left_Shoulder_Inner_to_Shoulder_Outer" reason="Default"/>
     <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Link_Left_Shoulder_Outer_to_UpperArm" reason="Default"/>
     <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Link_Left_UpperArm_to_Elbow" reason="Default"/>
+    <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Link_Left_Elbow_to_Forearm" reason="Default"/>
+    <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Link_Left_Forearm_to_Wrist_Upper" reason="Default"/>
+    <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Link_Left_Wrist_Upper_to_Wrist_Lower" reason="Default"/>
+    <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Link_Left_Wrist_Lower_to_Gripper" reason="Default"/>
+    <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Link_Left_Gripper" reason="Default"/>
     <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Link_Right_Shoulder_Inner_to_Shoulder_Outer" reason="Default"/>
     <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Link_Right_Shoulder_Outer_to_UpperArm" reason="Default"/>
     <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Link_Right_UpperArm_to_Elbow" reason="Default"/>
+    <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Link_Right_Elbow_to_Forearm" reason="Default"/>
+    <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Link_Right_Forearm_to_Wrist_Upper" reason="Default"/>
+    <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Link_Right_Wrist_Upper_to_Wrist_Lower " reason="Default"/>
+    <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Link_Right_Wrist_Lower_to_Gripper" reason="Default"/>
+    <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Link_Right_Gripper" reason="Default"/>
     <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Link_Left_Gripper_Left_Inner_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Joint_Left_Gripper_Left_Finger" reason="Default"/>
     <disable_collisions link1="Link_Knee_to_Waist_Pitch" link2="Link_Left_Gripper_Right_Outer_Knuckle" reason="Default"/>
@@ -149,9 +191,19 @@
     <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Link_Left_Shoulder_Inner_to_Shoulder_Outer" reason="Default"/>
     <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Link_Left_Shoulder_Outer_to_UpperArm" reason="Default"/>
     <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Link_Left_UpperArm_to_Elbow" reason="Default"/>
+    <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Link_Left_Elbow_to_Forearm" reason="Default"/>
+    <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Link_Left_Forearm_to_Wrist_Upper" reason="Default"/>
+    <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Link_Left_Wrist_Upper_to_Wrist_Lower" reason="Default"/>
+    <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Link_Left_Wrist_Lower_to_Gripper" reason="Default"/>
+    <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Link_Left_Gripper" reason="Default"/>
     <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Link_Right_Shoulder_Inner_to_Shoulder_Outer" reason="Default"/>
     <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Link_Right_Shoulder_Outer_to_UpperArm" reason="Default"/>
     <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Link_Right_UpperArm_to_Elbow" reason="Default"/>
+    <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Link_Right_Elbow_to_Forearm" reason="Default"/>
+    <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Link_Right_Forearm_to_Wrist_Upper" reason="Default"/>
+    <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Link_Right_Wrist_Upper_to_Wrist_Lower " reason="Default"/>
+    <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Link_Right_Wrist_Lower_to_Gripper" reason="Default"/>
+    <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Link_Right_Gripper" reason="Default"/>
     <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Link_Left_Gripper_Left_Inner_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Joint_Left_Gripper_Left_Finger" reason="Default"/>
     <disable_collisions link1="Link_Waist_Pitch_to_Waist_Yaw" link2="Link_Left_Gripper_Right_Outer_Knuckle" reason="Default"/>
@@ -307,6 +359,7 @@
     <disable_collisions link1="Link_Left_Elbow_to_Forearm" link2="Link_Right_Gripper_Right_Outer_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Left_Elbow_to_Forearm" link2="Link_Right_Gripper_Right_Inner_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Left_Elbow_to_Forearm" link2="Link_Right_Gripper_Right_Finger" reason="Default"/>
+    <disable_collisions link1="Link_Left_Elbow_to_Forearm" link2="Link_Knee_Black_Cover" reason="Default"/>
     <disable_collisions link1="Link_Left_Elbow_to_Forearm" link2="Link_Mask" reason="Default"/>
     <disable_collisions link1="Link_Left_Elbow_to_Forearm" link2="Link_Chest_Front_Cover" reason="Default"/>
     <disable_collisions link1="Link_Left_Elbow_to_Forearm" link2="Link_Chest_Back_Cover" reason="Default"/>
@@ -332,6 +385,7 @@
     <disable_collisions link1="Link_Left_Forearm_to_Wrist_Upper" link2="Link_Right_Gripper_Right_Outer_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Left_Forearm_to_Wrist_Upper" link2="Link_Right_Gripper_Right_Inner_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Left_Forearm_to_Wrist_Upper" link2="Link_Right_Gripper_Right_Finger" reason="Default"/>
+    <disable_collisions link1="Link_Left_Forearm_to_Wrist_Upper" link2="Link_Knee_Black_Cover" reason="Default"/>
     <disable_collisions link1="Link_Left_Forearm_to_Wrist_Upper" link2="Link_Mask" reason="Default"/>
     <disable_collisions link1="Link_Left_Forearm_to_Wrist_Upper" link2="Link_Chest_Front_Cover" reason="Default"/>
     <disable_collisions link1="Link_Left_Forearm_to_Wrist_Upper" link2="Link_Chest_Back_Cover" reason="Default"/>
@@ -356,6 +410,7 @@
     <disable_collisions link1="Link_Left_Wrist_Upper_to_Wrist_Lower" link2="Link_Right_Gripper_Right_Outer_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Left_Wrist_Upper_to_Wrist_Lower" link2="Link_Right_Gripper_Right_Inner_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Left_Wrist_Upper_to_Wrist_Lower" link2="Link_Right_Gripper_Right_Finger" reason="Default"/>
+    <disable_collisions link1="Link_Left_Wrist_Upper_to_Wrist_Lower" link2="Link_Knee_Black_Cover" reason="Default"/>
     <disable_collisions link1="Link_Left_Wrist_Upper_to_Wrist_Lower" link2="Link_Mask" reason="Default"/>
     <disable_collisions link1="Link_Left_Wrist_Upper_to_Wrist_Lower" link2="Link_Chest_Front_Cover" reason="Default"/>
     <disable_collisions link1="Link_Left_Wrist_Upper_to_Wrist_Lower" link2="Link_Chest_Back_Cover" reason="Default"/>
@@ -379,6 +434,7 @@
     <disable_collisions link1="Link_Left_Wrist_Lower_to_Gripper" link2="Link_Right_Gripper_Right_Outer_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Left_Wrist_Lower_to_Gripper" link2="Link_Right_Gripper_Right_Inner_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Left_Wrist_Lower_to_Gripper" link2="Link_Right_Gripper_Right_Finger" reason="Default"/>
+    <disable_collisions link1="Link_Left_Wrist_Lower_to_Gripper" link2="Link_Knee_Black_Cover" reason="Default"/>
     <disable_collisions link1="Link_Left_Wrist_Lower_to_Gripper" link2="Link_Mask" reason="Default"/>
     <disable_collisions link1="Link_Left_Wrist_Lower_to_Gripper" link2="Link_Chest_Front_Cover" reason="Default"/>
     <disable_collisions link1="Link_Left_Wrist_Lower_to_Gripper" link2="Link_Chest_Back_Cover" reason="Default"/>
@@ -401,6 +457,7 @@
     <disable_collisions link1="Link_Left_Gripper" link2="Link_Right_Gripper_Right_Outer_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Left_Gripper" link2="Link_Right_Gripper_Right_Inner_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Left_Gripper" link2="Link_Right_Gripper_Right_Finger" reason="Default"/>
+    <disable_collisions link1="Link_Left_Gripper" link2="Link_Knee_Black_Cover" reason="Default"/>
     <disable_collisions link1="Link_Left_Gripper" link2="Link_Mask" reason="Default"/>
     <disable_collisions link1="Link_Left_Gripper" link2="Link_Chest_Front_Cover" reason="Default"/>
     <disable_collisions link1="Link_Left_Gripper" link2="Link_Chest_Back_Cover" reason="Default"/>
@@ -500,6 +557,7 @@
     <disable_collisions link1="Link_Right_Forearm_to_Wrist_Upper" link2="Link_Right_Gripper_Right_Outer_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Right_Forearm_to_Wrist_Upper" link2="Link_Right_Gripper_Right_Inner_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Right_Forearm_to_Wrist_Upper" link2="Link_Right_Gripper_Right_Finger" reason="Default"/>
+    <disable_collisions link1="Link_Right_Forearm_to_Wrist_Upper" link2="Link_Knee_Black_Cover" reason="Default"/>
     <disable_collisions link1="Link_Right_Forearm_to_Wrist_Upper" link2="Link_Mask" reason="Default"/>
     <disable_collisions link1="Link_Right_Forearm_to_Wrist_Upper" link2="Link_Chest_Front_Cover" reason="Default"/>
     <disable_collisions link1="Link_Right_Forearm_to_Wrist_Upper" link2="Link_Chest_Back_Cover" reason="Default"/>
@@ -516,6 +574,7 @@
     <disable_collisions link1="Link_Right_Wrist_Upper_to_Wrist_Lower " link2="Link_Right_Gripper_Right_Outer_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Right_Wrist_Upper_to_Wrist_Lower " link2="Link_Right_Gripper_Right_Inner_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Right_Wrist_Upper_to_Wrist_Lower " link2="Link_Right_Gripper_Right_Finger" reason="Default"/>
+    <disable_collisions link1="Link_Right_Wrist_Upper_to_Wrist_Lower " link2="Link_Knee_Black_Cover" reason="Default"/>
     <disable_collisions link1="Link_Right_Wrist_Upper_to_Wrist_Lower " link2="Link_Mask" reason="Default"/>
     <disable_collisions link1="Link_Right_Wrist_Upper_to_Wrist_Lower " link2="Link_Chest_Front_Cover" reason="Default"/>
     <disable_collisions link1="Link_Right_Wrist_Upper_to_Wrist_Lower " link2="Link_Chest_Back_Cover" reason="Default"/>
@@ -531,6 +590,7 @@
     <disable_collisions link1="Link_Right_Wrist_Lower_to_Gripper" link2="Link_Right_Gripper_Right_Outer_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Right_Wrist_Lower_to_Gripper" link2="Link_Right_Gripper_Right_Inner_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Right_Wrist_Lower_to_Gripper" link2="Link_Right_Gripper_Right_Finger" reason="Default"/>
+    <disable_collisions link1="Link_Right_Wrist_Lower_to_Gripper" link2="Link_Knee_Black_Cover" reason="Default"/>
     <disable_collisions link1="Link_Right_Wrist_Lower_to_Gripper" link2="Link_Mask" reason="Default"/>
     <disable_collisions link1="Link_Right_Wrist_Lower_to_Gripper" link2="Link_Chest_Front_Cover" reason="Default"/>
     <disable_collisions link1="Link_Right_Wrist_Lower_to_Gripper" link2="Link_Chest_Back_Cover" reason="Default"/>
@@ -545,6 +605,7 @@
     <disable_collisions link1="Link_Right_Gripper" link2="Link_Right_Gripper_Right_Outer_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Right_Gripper" link2="Link_Right_Gripper_Right_Inner_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Right_Gripper" link2="Link_Right_Gripper_Right_Finger" reason="Default"/>
+    <disable_collisions link1="Link_Right_Gripper" link2="Link_Knee_Black_Cover" reason="Default"/>
     <disable_collisions link1="Link_Right_Gripper" link2="Link_Mask" reason="Default"/>
     <disable_collisions link1="Link_Right_Gripper" link2="Link_Chest_Front_Cover" reason="Default"/>
     <disable_collisions link1="Link_Right_Gripper" link2="Link_Chest_Back_Cover" reason="Default"/>
@@ -571,6 +632,7 @@
     <disable_collisions link1="Joint_Left_Gripper_Left_Finger" link2="Link_Right_Gripper_Right_Outer_Knuckle" reason="Default"/>
     <disable_collisions link1="Joint_Left_Gripper_Left_Finger" link2="Link_Right_Gripper_Right_Inner_Knuckle" reason="Default"/>
     <disable_collisions link1="Joint_Left_Gripper_Left_Finger" link2="Link_Right_Gripper_Right_Finger" reason="Default"/>
+    <disable_collisions link1="Joint_Left_Gripper_Left_Finger" link2="Link_Knee_Black_Cover" reason="Default"/>
     <disable_collisions link1="Joint_Left_Gripper_Left_Finger" link2="Link_Mask" reason="Default"/>
     <disable_collisions link1="Joint_Left_Gripper_Left_Finger" link2="Link_Chest_Front_Cover" reason="Default"/>
     <disable_collisions link1="Joint_Left_Gripper_Left_Finger" link2="Link_Chest_Back_Cover" reason="Default"/>
@@ -603,6 +665,7 @@
     <disable_collisions link1="Link_Left_Gripper_Right_Finger" link2="Link_Right_Gripper_Right_Outer_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Left_Gripper_Right_Finger" link2="Link_Right_Gripper_Right_Inner_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Left_Gripper_Right_Finger" link2="Link_Right_Gripper_Right_Finger" reason="Default"/>
+    <disable_collisions link1="Link_Left_Gripper_Right_Finger" link2="Link_Knee_Black_Cover" reason="Default"/>
     <disable_collisions link1="Link_Left_Gripper_Right_Finger" link2="Link_Mask" reason="Default"/>
     <disable_collisions link1="Link_Left_Gripper_Right_Finger" link2="Link_Chest_Front_Cover" reason="Default"/>
     <disable_collisions link1="Link_Left_Gripper_Right_Finger" link2="Link_Chest_Back_Cover" reason="Default"/>
@@ -619,6 +682,7 @@
     <disable_collisions link1="Link_Right_Gripper_Left_Finger" link2="Link_Right_Gripper_Right_Outer_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Right_Gripper_Left_Finger" link2="Link_Right_Gripper_Right_Inner_Knuckle" reason="Default"/>
     <disable_collisions link1="Link_Right_Gripper_Left_Finger" link2="Link_Right_Gripper_Right_Finger" reason="Default"/>
+    <disable_collisions link1="Link_Right_Gripper_Left_Finger" link2="Link_Knee_Black_Cover" reason="Default"/>
     <disable_collisions link1="Link_Right_Gripper_Left_Finger" link2="Link_Mask" reason="Default"/>
     <disable_collisions link1="Link_Right_Gripper_Left_Finger" link2="Link_Chest_Front_Cover" reason="Default"/>
     <disable_collisions link1="Link_Right_Gripper_Left_Finger" link2="Link_Chest_Back_Cover" reason="Default"/>
