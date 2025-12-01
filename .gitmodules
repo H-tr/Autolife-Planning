@@ -1,6 +1,7 @@
 [submodule "third_party/vamp"]
 	path = third_party/vamp
 	url = https://github.com/H-tr/vamp.git
+	branch = main
 [submodule "third_party/cricket"]
 	path = third_party/cricket
 	url = https://github.com/H-tr/cricket.git
