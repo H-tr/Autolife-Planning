@@ -17,10 +17,10 @@ from vamp import pybullet_interface as vpb
 
 POINT_RADIUS = 0.01
 
-def sample_valid(vamp_module, rng):
+def sample_valid(vamp_module, rng, env):
     while True:
         config = rng.next()
-        if vamp_module.validate(config):
+        if vamp_module.validate(config, env):
             return config
 
 def main(robot="autolife", planner="rrtc", n_samples=10000):
@@ -72,9 +72,9 @@ def main(robot="autolife", planner="rrtc", n_samples=10000):
     # 6. Define Start and Goal Configurations
     sampler = getattr(vamp_module, "halton")()
 
-    def sample_and_choose(name):
+    def sample_and_choose(name, env):
         while True:
-            config = sample_valid(vamp_module, sampler)
+            config = sample_valid(vamp_module, sampler, env)
             
             # Visualize
             sim.set_joint_positions(config)
@@ -89,8 +89,8 @@ def main(robot="autolife", planner="rrtc", n_samples=10000):
                     print("Rejected, sampling again...")
                     break
 
-    start = sample_and_choose("start (hands under table)")
-    goal = sample_and_choose("goal (hands on table)")
+    start = sample_and_choose("start (hands under table)", env)
+    goal = sample_and_choose("goal (hands on table)", env)
 
     # start = sample_valid(vamp_module, sampler)
     # goal = sample_valid(vamp_module, sampler)
