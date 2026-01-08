@@ -1,7 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Any
-import numpy as np
-from autolife_planning.dataclass.robot_configuration import RobotConfiguration, BaseConfiguration
+
+from autolife_planning.dataclass.robot_configuration import (
+    BaseConfiguration,
+    RobotConfiguration,
+)
+
 
 class BaseEnv(ABC):
     @abstractmethod
@@ -12,7 +16,6 @@ class BaseEnv(ABC):
     @abstractmethod
     def set_joint_states(self, config: RobotConfiguration):
         """Set joint positions."""
-        pass
 
     @abstractmethod
     def get_localization(self) -> BaseConfiguration:

@@ -1,7 +1,8 @@
-import numpy as np
 from typing import Any
+
 from autolife_planning.dataclass.planning_context import PlanningContext
 from autolife_planning.dataclass.robot_configuration import BaseConfiguration
+
 
 def navigation(
     start_base: BaseConfiguration,

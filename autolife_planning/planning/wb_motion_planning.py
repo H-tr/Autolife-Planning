@@ -1,13 +1,14 @@
-import numpy as np
 from typing import Any
+
 from autolife_planning.dataclass.planning_context import PlanningContext
 from autolife_planning.dataclass.robot_configuration import WholeBodyConfiguration
+
 
 def plan_wb_motion(
     start_config: WholeBodyConfiguration,
     goal_config: WholeBodyConfiguration,
     context: PlanningContext,
-    interpolate: bool = True
+    interpolate: bool = True,
 ) -> Any | None:
     """
     Plan a whole body motion from start to goal using the provided context.

@@ -1,8 +1,14 @@
-import numpy as np
 from typing import Any
-from autolife_planning.envs.base_env import BaseEnv
-from autolife_planning.dataclass.robot_configuration import RobotConfiguration, BaseConfiguration
+
+import numpy as np
 from vamp import pybullet_interface as vpb
+
+from autolife_planning.dataclass.robot_configuration import (
+    BaseConfiguration,
+    RobotConfiguration,
+)
+from autolife_planning.envs.base_env import BaseEnv
+
 
 class PyBulletEnv(BaseEnv):
     def __init__(self, urdf_path: str, joint_names: list[str], visualize: bool = True):
@@ -28,11 +34,13 @@ class PyBulletEnv(BaseEnv):
     def get_obs(self) -> Any:
         return {
             "joint_states": self.get_joint_states(),
-            "localization": self.get_localization()
+            "localization": self.get_localization(),
         }
 
     def step(self):
         self.sim.client.stepSimulation()
 
-    def add_pointcloud(self, points: np.ndarray, lifetime: float = 0., pointsize: int = 3):
+    def add_pointcloud(
+        self, points: np.ndarray, lifetime: float = 0.0, pointsize: int = 3
+    ):
         self.sim.draw_pointcloud(points, lifetime, pointsize)

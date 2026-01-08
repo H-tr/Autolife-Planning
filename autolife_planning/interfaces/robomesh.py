@@ -1,10 +1,11 @@
-import socket
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify, request
+
 from autolife_planning.agents import chat_agent, point_agent
 
 app = Flask(__name__)
 
-@app.route('/chat', methods=['POST'])
+
+@app.route("/chat", methods=["POST"])
 def chat():
     """Endpoint called by tomwebrtc when user types text"""
     try:
@@ -19,7 +20,8 @@ def chat():
         print(f"Error processing chat: {e}")
         return jsonify({"error": "Internal Error"}), 500
 
-@app.route('/point', methods=['POST'])
+
+@app.route("/point", methods=["POST"])
 def point():
     """Endpoint called by tomwebrtc when user clicks video"""
     try:
@@ -29,7 +31,7 @@ def point():
         # Parse standard JSON formats
         if "point" in data:
             # Format: {"point": "0.5,0.5"}
-            parts = data["point"].split(',')
+            parts = data["point"].split(",")
             if len(parts) == 2:
                 x, y = float(parts[0]), float(parts[1])
         elif "x" in data and "y" in data:
@@ -46,6 +48,7 @@ def point():
         print(f"Error processing point: {e}")
         return jsonify({"error": "Internal Error"}), 500
 
-@app.route('/health', methods=['GET'])
+
+@app.route("/health", methods=["GET"])
 def health():
     return jsonify("OK"), 200
