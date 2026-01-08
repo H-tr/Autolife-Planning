@@ -2,6 +2,7 @@
 import logging
 import os
 import threading
+import time
 
 import numpy as np
 
@@ -75,6 +76,16 @@ class RobomeshServer:
 
         self.streamer.push_frame(image_rgb)
 
+    def stream_rgbd(self, rgb: np.ndarray, depth: np.ndarray):
+        # Normalize depth to 0-255 uint8 for visualization
+        depth_visual = (np.clip(depth, 0, 5.0) / 5.0 * 255).astype(np.uint8)
+        depth_visual = np.stack([depth_visual] * 3, axis=-1)
+
+        # Concatenate side-by-side
+        combined = np.hstack((rgb, depth_visual))
+
+        self.stream_image(combined)
+
     def run(self):
         """Run the Flask app"""
         logger.info(f"Starting RobomeshServer Flask app on port {self.port}")
@@ -88,5 +99,40 @@ class RobomeshServer:
 
 
 if __name__ == "__main__":
+    from autolife_planning.envs.pybullet_env import PyBulletEnv
+
+    urdf_path = (
+        "/media/run/Extend/Autolife-Planning/assets/robot/autolife/autolife.urdf"
+    )
+    joint_names = [
+        "Joint_Ankle",
+        "Joint_Knee",
+        "Joint_Waist_Pitch",
+        "Joint_Waist_Yaw",
+        "Joint_Left_Shoulder_Inner",
+        "Joint_Left_Shoulder_Outer",
+        "Joint_Left_UpperArm",
+        "Joint_Left_Elbow",
+        "Joint_Left_Forearm",
+        "Joint_Left_Wrist_Upper",
+        "Joint_Left_Wrist_Lower",
+        "Joint_Right_Shoulder_Inner",
+        "Joint_Right_Shoulder_Outer",
+        "Joint_Right_UpperArm",
+        "Joint_Right_Elbow",
+        "Joint_Right_Forearm",
+        "Joint_Right_Wrist_Upper",
+        "Joint_Right_Wrist_Lower",
+    ]
+    env = PyBulletEnv(urdf_path, joint_names, visualize=True)
+
     server = RobomeshServer()
-    server.run()
+    server.run_threaded()
+
+    # Strict loop, assumes valid observations
+    while True:
+        env.step()
+        obs = env.get_obs()
+        cam = obs["camera_chest"]
+        server.stream_rgbd(cam["rgb"], cam["depth"])
+        time.sleep(1.0 / 30.0)
