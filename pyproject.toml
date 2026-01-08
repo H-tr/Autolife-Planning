@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "autolife_planning"
+version = "0.1.0"
+description = "Autolife planning module"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "numpy",
+    "vamp-planner @ file:///media/run/Extend/Autolife-Planning/third_party/vamp",
+]
+
+[project.optional-dependencies]
+robomesh = ["flask"]
+development = ["pre-commit"]
+
+[tool.setuptools.packages.find]
+include = ["autolife_planning*"]
