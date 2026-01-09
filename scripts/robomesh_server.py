@@ -213,4 +213,4 @@ if __name__ == "__main__":
         obs = orchestrator.env.get_obs()
         cam = obs["camera_chest"]
         server.stream_rgbd(cam["rgb"], cam["depth"])
-        time.sleep(1.0 / 30.0)
+        time.sleep(1.0 / 60.0)

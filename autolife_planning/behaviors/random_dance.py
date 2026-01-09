@@ -52,9 +52,6 @@ class RandomDanceBehavior(BaseBehavior):
             return self.status
 
         # Convert plan to list of configs if not already
-        # The 'plan' object from vamp seems to be iterable or has specific access
-        # vamp.Path usually is a list of configs
-
         path_configs = self.interpolated_plan
 
         if self.current_step < len(path_configs):
