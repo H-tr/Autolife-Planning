@@ -7,13 +7,17 @@ from autolife_planning.dataclass.robot_configuration import (
     BaseConfiguration,
     RobotConfiguration,
 )
+from autolife_planning.dataclass.robot_description import RobotConfig
 from autolife_planning.envs.base_env import BaseEnv
 
 
 class PyBulletEnv(BaseEnv):
-    def __init__(self, urdf_path: str, joint_names: list[str], visualize: bool = True):
-        self.sim = vpb.PyBulletSimulator(urdf_path, joint_names, visualize=visualize)
-        self.joint_names = joint_names
+    def __init__(self, config: RobotConfig, visualize: bool = True):
+        self.config = config
+        self.sim = vpb.PyBulletSimulator(
+            config.urdf_path, config.joint_names, visualize=visualize
+        )
+        self.joint_names = config.joint_names
 
         # Find camera link index
         self.camera_link_idx = -1
@@ -22,7 +26,7 @@ class PyBulletEnv(BaseEnv):
         for i in range(num_joints):
             info = self.sim.client.getJointInfo(self.sim.skel_id, i)
             # info[12] is the child link name (bytes)
-            if info[12].decode("utf-8") == "Link_Camera_Chest":
+            if info[12].decode("utf-8") == config.camera.link_name:
                 self.camera_link_idx = i
                 break
 
@@ -62,12 +66,12 @@ class PyBulletEnv(BaseEnv):
             cameraEyePosition=pos, cameraTargetPosition=pos + forward, cameraUpVector=up
         )
 
-        width = 640
-        height = 480
-        fov = 60
+        width = self.config.camera.width
+        height = self.config.camera.height
+        fov = self.config.camera.fov
         aspect = width / height
-        near = 0.1
-        far = 10.0
+        near = self.config.camera.near
+        far = self.config.camera.far
 
         proj_matrix = self.sim.client.computeProjectionMatrixFOV(fov, aspect, near, far)
 

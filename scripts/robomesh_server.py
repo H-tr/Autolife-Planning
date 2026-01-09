@@ -132,32 +132,10 @@ class RobomeshServer:
 
 
 if __name__ == "__main__":
+    from autolife_planning.config.robot_config import autolife_robot_config
     from autolife_planning.envs.pybullet_env import PyBulletEnv
 
-    urdf_path = (
-        "/media/run/Extend/Autolife-Planning/assets/robot/autolife/autolife.urdf"
-    )
-    joint_names = [
-        "Joint_Ankle",
-        "Joint_Knee",
-        "Joint_Waist_Pitch",
-        "Joint_Waist_Yaw",
-        "Joint_Left_Shoulder_Inner",
-        "Joint_Left_Shoulder_Outer",
-        "Joint_Left_UpperArm",
-        "Joint_Left_Elbow",
-        "Joint_Left_Forearm",
-        "Joint_Left_Wrist_Upper",
-        "Joint_Left_Wrist_Lower",
-        "Joint_Right_Shoulder_Inner",
-        "Joint_Right_Shoulder_Outer",
-        "Joint_Right_UpperArm",
-        "Joint_Right_Elbow",
-        "Joint_Right_Forearm",
-        "Joint_Right_Wrist_Upper",
-        "Joint_Right_Wrist_Lower",
-    ]
-    env = PyBulletEnv(urdf_path, joint_names, visualize=True)
+    env = PyBulletEnv(autolife_robot_config, visualize=True)
 
     # Load environment pointclouds
     pcd_dir = "/media/run/Extend/Autolife-Planning/assets/envs/rls_env/pcd"
