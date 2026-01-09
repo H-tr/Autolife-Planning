@@ -6,9 +6,9 @@ import threading
 import time
 
 import numpy as np
+from flask import Flask, jsonify, request
 
-# Import project interfaces
-from autolife_planning.interfaces.robomesh import app
+# Import project utilities
 from autolife_planning.utils.stream_utils import VideoStreamer
 
 # Configure logging
@@ -17,10 +17,14 @@ logger = logging.getLogger("RobomeshServer")
 
 
 class RobomeshServer:
-    def __init__(self, host="0.0.0.0", port=11111):
+    def __init__(self, orchestrator=None, host="0.0.0.0", port=11111):
         self.host = host
         self.port = port
-        self.app = app
+        self.orchestrator = orchestrator
+
+        # Initialize Flask app
+        self.app = Flask(__name__)
+        self.setup_routes()
 
         # Image streaming configuration
         rtp_ip = os.getenv("RTP_VIDEO_IP", "127.0.0.1")
@@ -41,6 +45,87 @@ class RobomeshServer:
         self.streamer_initialized = False
 
         logger.info("RobomeshServer initialized")
+
+    def setup_routes(self):
+        """Setup Flask routes for HTTP API"""
+
+        @self.app.route("/chat", methods=["POST"])
+        def chat():
+            try:
+                data = request.json
+                user_input = data.get("text")
+                if user_input:
+                    logger.info(f"Received user input: {user_input}")
+
+                    # Hand over instruction to orchestrator
+                    if self.orchestrator:
+                        self.orchestrator.submit_task(context=user_input, point=None)
+
+                    # Return acknowledgment
+                    return jsonify(
+                        {"status": "received", "message": "Processing request..."}
+                    )
+
+                return jsonify({"error": "No input text provided"}), 400
+
+            except Exception as e:
+                logger.error(f"Error in chat endpoint: {e}")
+                return jsonify({"error": "Internal server error"}), 500
+
+        @self.app.route("/point", methods=["POST"])
+        def point():
+            try:
+                data = request.json
+                x, y = None, None
+
+                # Support both formats: {"x": 0.5, "y": 0.5} and {"point": "0.5, 0.5"}
+                if "point" in data:
+                    # Handle string format like server_web.py
+                    point_string = data.get("point")
+                    if point_string:
+                        logger.info(f"Received point string: {point_string}")
+                        # Simple extraction for "x,y"
+                        parts = point_string.split(",")
+                        if len(parts) == 2:
+                            x, y = float(parts[0]), float(parts[1])
+                        else:
+                            return (
+                                jsonify({"error": "Invalid point string format"}),
+                                400,
+                            )
+                    else:
+                        return jsonify({"error": "No point string provided"}), 400
+                else:
+                    # Handle coordinate format
+                    x = data.get("x")
+                    y = data.get("y")
+
+                if x is not None and y is not None:
+                    x, y = float(x), float(y)
+                    logger.info(f"Received point coordinates: ({x}, {y})")
+
+                    # Hand over point to orchestrator
+                    # We might want to pass this as a task or just update context
+                    if self.orchestrator:
+                        self.orchestrator.submit_task(context=None, point=(x, y))
+
+                    return jsonify(
+                        {
+                            "status": "received",
+                            "point": [x, y],
+                            "message": "Point received successfully",
+                        }
+                    )
+                else:
+                    return jsonify({"error": "Missing x or y coordinates"}), 400
+
+            except Exception as e:
+                logger.error(f"Error in point endpoint: {e}")
+                return jsonify({"error": "Internal server error"}), 500
+
+        @self.app.route("/health", methods=["GET"])
+        def health():
+            return jsonify("OK"), 200
 
     def stream_image(self, image_rgb: np.ndarray):
         """
@@ -101,9 +186,11 @@ class RobomeshServer:
 
 if __name__ == "__main__":
     from autolife_planning.config.robot_config import autolife_robot_config
+    from autolife_planning.core.orchestrator import Orchestrator
     from autolife_planning.envs.pybullet_env import PyBulletEnv
 
     env = PyBulletEnv(autolife_robot_config, visualize=True)
+    orchestrator = Orchestrator(env)
 
     # Load environment meshes
     mesh_dir = (
@@ -142,13 +229,13 @@ if __name__ == "__main__":
             f"Mesh directory {mesh_dir} not found. Please run 'bash scripts/download_assets.sh'"
         )
 
-    server = RobomeshServer()
+    server = RobomeshServer(orchestrator=orchestrator)
     server.run_threaded()
 
     # Strict loop, assumes valid observations
     while True:
-        env.step()
-        obs = env.get_obs()
+        orchestrator.env.step()  # Orchestrator could eventually wrap step completely, but for now we keep sync
+        obs = orchestrator.env.get_obs()
         cam = obs["camera_chest"]
         server.stream_rgbd(cam["rgb"], cam["depth"])
         time.sleep(1.0 / 30.0)
