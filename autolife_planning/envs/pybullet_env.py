@@ -1,6 +1,8 @@
+import os
 from typing import Any
 
 import numpy as np
+import pybullet as pb
 from vamp import pybullet_interface as vpb
 
 from autolife_planning.dataclass.robot_configuration import (
@@ -97,3 +99,62 @@ class PyBulletEnv(BaseEnv):
         self, points: np.ndarray, lifetime: float = 0.0, pointsize: int = 3
     ):
         self.sim.draw_pointcloud(points, lifetime, pointsize)
+
+    def add_mesh(
+        self,
+        mesh_file: str,
+        position: np.ndarray = np.zeros(3),
+        orientation: np.ndarray = np.array([0, 0, 0, 1]),
+        scale: np.ndarray = np.ones(3),
+        mass: float = 0.0,
+        name: str = None,
+    ):
+        """
+        Add a mesh to the simulation environment directly using the raw PyBullet client,
+        bypassing the wrapper to avoid modifying third_party code.
+        """
+        # Ensure the simulator isn't rendering while we load to speed it up
+        # We can't easily use the DisableRendering context manager from vamp here
+        # without importing it, but we can access the client directly.
+        self.sim.client.configureDebugVisualizer(pb.COV_ENABLE_RENDERING, 0)
+
+        vis_shape_id = self.sim.client.createVisualShape(
+            shapeType=pb.GEOM_MESH,
+            fileName=mesh_file,
+            meshScale=scale.tolist(),
+        )
+        col_shape_id = self.sim.client.createCollisionShape(
+            shapeType=pb.GEOM_MESH,
+            fileName=mesh_file,
+            meshScale=scale.tolist(),
+        )
+
+        multibody_id = self.sim.client.createMultiBody(
+            baseVisualShapeIndex=vis_shape_id,
+            baseCollisionShapeIndex=col_shape_id,
+            basePosition=position.tolist(),
+            baseOrientation=orientation.tolist(),
+            baseMass=mass,
+        )
+
+        if name:
+            # Add debug text
+            self.sim.client.addUserDebugText(
+                text=name,
+                textPosition=position.tolist(),
+                textColorRGB=[0.0, 0.0, 0.0],
+            )
+
+        # Try to load texture if it exists
+        base_path = os.path.splitext(mesh_file)[0]
+        for ext in [".png", ".jpg", ".jpeg", ".tga"]:
+            tex_path = base_path + ext
+            if os.path.exists(tex_path):
+                tex_id = self.sim.client.loadTexture(tex_path)
+                self.sim.client.changeVisualShape(
+                    multibody_id, -1, textureUniqueId=tex_id
+                )
+                break
+
+        self.sim.client.configureDebugVisualizer(pb.COV_ENABLE_RENDERING, 1)
+        return multibody_id

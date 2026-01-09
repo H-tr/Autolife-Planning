@@ -16,38 +16,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("RobomeshServer")
 
 
-def load_ply(filename):
-    """
-    Simple PLY loader for binary_little_endian 1.0 files from Open3D.
-    Assumes properties: double x, y, z, nx, ny, nz, uchar red, green, blue.
-    """
-    with open(filename, "rb") as f:
-        # Read header
-        while True:
-            line = f.readline().decode("ascii").strip()
-            if line == "end_header":
-                break
-
-        # Define dtype based on observed Open3D format
-        dt = np.dtype(
-            [
-                ("x", "<f8"),
-                ("y", "<f8"),
-                ("z", "<f8"),
-                ("nx", "<f8"),
-                ("ny", "<f8"),
-                ("nz", "<f8"),
-                ("red", "u1"),
-                ("green", "u1"),
-                ("blue", "u1"),
-            ]
-        )
-
-        data = np.frombuffer(f.read(), dtype=dt)
-        points = np.stack([data["x"], data["y"], data["z"]], axis=-1)
-        return points
-
-
 class RobomeshServer:
     def __init__(self, host="0.0.0.0", port=11111):
         self.host = host
@@ -137,20 +105,41 @@ if __name__ == "__main__":
 
     env = PyBulletEnv(autolife_robot_config, visualize=True)
 
-    # Load environment pointclouds
-    pcd_dir = "/media/run/Extend/Autolife-Planning/assets/envs/rls_env/pcd"
+    # Load environment meshes
+    mesh_dir = (
+        "/media/run/Extend/Autolife-Planning/assets/envs/rls_env/simplified_meshes"
+    )
 
-    if os.path.exists(pcd_dir):
-        ply_files = glob.glob(os.path.join(pcd_dir, "*.ply"))
-        logger.info(f"Found {len(ply_files)} ply files in {pcd_dir}")
+    if os.path.exists(mesh_dir):
+        # Recursively find all .obj files
+        obj_files = glob.glob(os.path.join(mesh_dir, "**/*.obj"), recursive=True)
+        logger.info(f"Found {len(obj_files)} obj files in {mesh_dir}")
 
-        for ply_file in ply_files:
-            points = load_ply(ply_file)
-            env.add_pointcloud(points)
-            logger.info(f"Loaded pointcloud: {ply_file} with {len(points)} points")
+        allowed_meshes = {
+            "open_kitchen",
+            "rls_2",
+            "table",
+            "wall",
+            "workstation",
+            "sofa",
+            "tea_table",
+        }
+
+        for obj_file in obj_files:
+            # We can use the filename stem as the object name
+            obj_name = os.path.splitext(os.path.basename(obj_file))[0]
+
+            if obj_name in allowed_meshes:
+                body_id = env.add_mesh(obj_file, name=obj_name)
+                aabb_min, aabb_max = env.sim.client.getAABB(body_id)
+                logger.info(
+                    f"Loaded mesh: {obj_name} | ID: {body_id} | Bounds: {aabb_min} to {aabb_max}"
+                )
+            else:
+                logger.debug(f"Skipping mesh: {obj_name}")
     else:
         logger.warning(
-            f"Pointcloud directory {pcd_dir} not found. Please run 'bash scripts/download_assets.sh'"
+            f"Mesh directory {mesh_dir} not found. Please run 'bash scripts/download_assets.sh'"
         )
 
     server = RobomeshServer()
