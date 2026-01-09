@@ -54,9 +54,9 @@ class PyBulletEnv(BaseEnv):
         # Calculate view matrix
         rot_mat = np.array(self.sim.client.getMatrixFromQuaternion(orn)).reshape(3, 3)
 
-        # Assume camera link X is forward, Z is up (common sensor frame)
-        forward = rot_mat[:, 0]
-        up = rot_mat[:, 2]
+        # Camera link Z is forward, Y is up (URDF frame)
+        forward = rot_mat[:, 2]
+        up = rot_mat[:, 1]
 
         view_matrix = self.sim.client.computeViewMatrix(
             cameraEyePosition=pos, cameraTargetPosition=pos + forward, cameraUpVector=up
