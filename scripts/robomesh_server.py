@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import glob
 import logging
 import os
 import threading
@@ -13,6 +14,38 @@ from autolife_planning.utils.stream_utils import VideoStreamer
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("RobomeshServer")
+
+
+def load_ply(filename):
+    """
+    Simple PLY loader for binary_little_endian 1.0 files from Open3D.
+    Assumes properties: double x, y, z, nx, ny, nz, uchar red, green, blue.
+    """
+    with open(filename, "rb") as f:
+        # Read header
+        while True:
+            line = f.readline().decode("ascii").strip()
+            if line == "end_header":
+                break
+
+        # Define dtype based on observed Open3D format
+        dt = np.dtype(
+            [
+                ("x", "<f8"),
+                ("y", "<f8"),
+                ("z", "<f8"),
+                ("nx", "<f8"),
+                ("ny", "<f8"),
+                ("nz", "<f8"),
+                ("red", "u1"),
+                ("green", "u1"),
+                ("blue", "u1"),
+            ]
+        )
+
+        data = np.frombuffer(f.read(), dtype=dt)
+        points = np.stack([data["x"], data["y"], data["z"]], axis=-1)
+        return points
 
 
 class RobomeshServer:
@@ -125,6 +158,22 @@ if __name__ == "__main__":
         "Joint_Right_Wrist_Lower",
     ]
     env = PyBulletEnv(urdf_path, joint_names, visualize=True)
+
+    # Load environment pointclouds
+    pcd_dir = "/media/run/Extend/Autolife-Planning/assets/envs/rls_env/pcd"
+
+    if os.path.exists(pcd_dir):
+        ply_files = glob.glob(os.path.join(pcd_dir, "*.ply"))
+        logger.info(f"Found {len(ply_files)} ply files in {pcd_dir}")
+
+        for ply_file in ply_files:
+            points = load_ply(ply_file)
+            env.add_pointcloud(points)
+            logger.info(f"Loaded pointcloud: {ply_file} with {len(points)} points")
+    else:
+        logger.warning(
+            f"Pointcloud directory {pcd_dir} not found. Please run 'bash scripts/download_assets.sh'"
+        )
 
     server = RobomeshServer()
     server.run_threaded()
