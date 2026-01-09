@@ -32,6 +32,13 @@ class PyBulletEnv(BaseEnv):
                 self.camera_link_idx = i
                 break
 
+        # Set initial pose
+        from autolife_planning.config.robot_config import HOME_JOINTS
+
+        # Reset joint states directly using PyBullet native command or helper
+        # Using set_joint_states which expects RobotConfiguration
+        self.set_joint_states(RobotConfiguration.from_array(HOME_JOINTS))
+
     def get_joint_states(self) -> RobotConfiguration:
         states = []
         # PyBulletSimulator stores self.joints as indices

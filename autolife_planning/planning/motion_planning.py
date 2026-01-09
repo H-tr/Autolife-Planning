@@ -40,6 +40,8 @@ def plan_motion(
             # Interpolate to robot resolution for smooth animation
             plan.interpolate_to_resolution(context.vamp_module.resolution())
 
+        # Return the plan object directly to avoid segfaults during list conversion
+        # and to match the datatype expected by the underlying C++ module.
         return plan
     else:
         print("Failed to find a path.")

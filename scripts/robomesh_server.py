@@ -209,7 +209,7 @@ if __name__ == "__main__":
 
     # Strict loop, assumes valid observations
     while True:
-        orchestrator.env.step()  # Orchestrator could eventually wrap step completely, but for now we keep sync
+        orchestrator.update()  # Orchestrator wraps step and behavior execution
         obs = orchestrator.env.get_obs()
         cam = obs["camera_chest"]
         server.stream_rgbd(cam["rgb"], cam["depth"])
