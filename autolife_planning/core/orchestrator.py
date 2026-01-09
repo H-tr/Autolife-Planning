@@ -1,7 +1,7 @@
 import logging
-from typing import Any
 
 from autolife_planning.behaviors.base_behavior import BaseBehavior
+from autolife_planning.dataclass.commands import PointCommand, TextCommand
 from autolife_planning.dataclass.state import ContextState
 from autolife_planning.envs.base_env import BaseEnv
 
@@ -22,7 +22,7 @@ class Orchestrator:
         self.running: bool = True
         self.available_behaviors: set[BaseBehavior] = {}
 
-    def submit_task(self, context: Any | None, point: Any | None):
+    def submit_task(self, context: TextCommand | None, point: PointCommand | None):
         """
         Handle the behaviors from the instruction
         TODO: to be implemented

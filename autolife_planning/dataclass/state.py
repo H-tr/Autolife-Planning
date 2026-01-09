@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional
+from typing import Any
 
 from autolife_planning.dataclass.robot_configuration import (
     BaseConfiguration,
@@ -14,12 +14,12 @@ class ContextState:
     """
 
     # Robot State
-    robot_config: Optional[RobotConfiguration] = None
-    base_pose: Optional[BaseConfiguration] = None
+    robot_config: RobotConfiguration | None = None
+    base_pose: BaseConfiguration | None = None
 
     # World State
     # Dictionary mapping object_name -> Object details (pose, id, etc.)
-    known_objects: Dict[str, Any] = field(default_factory=dict)
+    known_objects: dict[str, Any] = field(default_factory=dict)
 
     # Task State
     current_mode: str = "IDLE"  # IDLE, PLANNING, EXECUTING, ERROR
@@ -32,5 +32,5 @@ class ContextState:
     def register_object(self, name: str, info: Any):
         self.known_objects[name] = info
 
-    def get_object(self, name: str) -> Optional[Any]:
+    def get_object(self, name: str) -> Any | None:
         return self.known_objects.get(name)

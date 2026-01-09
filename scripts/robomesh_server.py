@@ -52,21 +52,21 @@ class RobomeshServer:
         @self.app.route("/chat", methods=["POST"])
         def chat():
             try:
-                data = request.json
-                user_input = data.get("text")
-                if user_input:
-                    logger.info(f"Received user input: {user_input}")
+                # Validate and parse input using dataclass
+                from autolife_planning.dataclass.commands import TextCommand
 
-                    # Hand over instruction to orchestrator
-                    if self.orchestrator:
-                        self.orchestrator.submit_task(context=user_input, point=None)
+                message = TextCommand.from_dict(request.json)
 
-                    # Return acknowledgment
-                    return jsonify(
-                        {"status": "received", "message": "Processing request..."}
-                    )
+                logger.info(f"Received user input: {message.text}")
 
-                return jsonify({"error": "No input text provided"}), 400
+                # Hand over instruction to orchestrator
+                if self.orchestrator:
+                    self.orchestrator.submit_task(context=message, point=None)
+
+                # Return acknowledgment
+                return jsonify(
+                    {"status": "received", "message": "Processing request..."}
+                )
 
             except Exception as e:
                 logger.error(f"Error in chat endpoint: {e}")
@@ -75,49 +75,24 @@ class RobomeshServer:
         @self.app.route("/point", methods=["POST"])
         def point():
             try:
-                data = request.json
-                x, y = None, None
+                # Validate and parse input using dataclass
+                from autolife_planning.dataclass.commands import PointCommand
 
-                # Support both formats: {"x": 0.5, "y": 0.5} and {"point": "0.5, 0.5"}
-                if "point" in data:
-                    # Handle string format like server_web.py
-                    point_string = data.get("point")
-                    if point_string:
-                        logger.info(f"Received point string: {point_string}")
-                        # Simple extraction for "x,y"
-                        parts = point_string.split(",")
-                        if len(parts) == 2:
-                            x, y = float(parts[0]), float(parts[1])
-                        else:
-                            return (
-                                jsonify({"error": "Invalid point string format"}),
-                                400,
-                            )
-                    else:
-                        return jsonify({"error": "No point string provided"}), 400
-                else:
-                    # Handle coordinate format
-                    x = data.get("x")
-                    y = data.get("y")
+                message = PointCommand.from_dict(request.json)
 
-                if x is not None and y is not None:
-                    x, y = float(x), float(y)
-                    logger.info(f"Received point coordinates: ({x}, {y})")
+                logger.info(f"Received point coordinates: ({message.x}, {message.y})")
 
-                    # Hand over point to orchestrator
-                    # We might want to pass this as a task or just update context
-                    if self.orchestrator:
-                        self.orchestrator.submit_task(context=None, point=(x, y))
+                # Hand over point to orchestrator
+                if self.orchestrator:
+                    self.orchestrator.submit_task(context=None, point=message)
 
-                    return jsonify(
-                        {
-                            "status": "received",
-                            "point": [x, y],
-                            "message": "Point received successfully",
-                        }
-                    )
-                else:
-                    return jsonify({"error": "Missing x or y coordinates"}), 400
+                return jsonify(
+                    {
+                        "status": "received",
+                        "point": [message.x, message.y],
+                        "message": "Point received successfully",
+                    }
+                )
 
             except Exception as e:
                 logger.error(f"Error in point endpoint: {e}")
