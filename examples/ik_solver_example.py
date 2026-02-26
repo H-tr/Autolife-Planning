@@ -1,16 +1,18 @@
-"""IK solver example with PyBullet visualization using TRAC-IK."""
+"""IK solver example using TRAC-IK with PyBullet visualization."""
 
 import time
 
 import numpy as np
 import pybullet as pb
-import pybullet_data
 
-from autolife_planning.config.robot_config import CHAIN_CONFIGS, HOME_JOINTS
+from autolife_planning.config.robot_config import (
+    CHAIN_CONFIGS,
+    HOME_JOINTS,
+    autolife_robot_config,
+)
+from autolife_planning.envs.pybullet_env import PyBulletEnv
 from autolife_planning.kinematics.trac_ik_solver import create_ik_solver
-from autolife_planning.types import SE3Pose
-
-URDF_PATH = CHAIN_CONFIGS["left_arm"].urdf_path
+from autolife_planning.types import RobotConfiguration, SE3Pose
 
 # Home configuration subsets matching each chain's joint ordering
 HOME_LEFT_ARM = np.array(HOME_JOINTS[4:11])
@@ -34,146 +36,85 @@ CHAIN_SEEDS = {
 }
 
 
-class Visualizer:
-    """PyBullet GUI wrapper for IK visualization."""
+def get_ee_link_index(env, link_name):
+    """Find PyBullet link index by name."""
+    client = env.sim.client
+    for i in range(client.getNumJoints(env.sim.skel_id)):
+        info = client.getJointInfo(env.sim.skel_id, i)
+        if info[12].decode("utf-8") == link_name:
+            return i
+    return -1
 
-    def __init__(self):
-        self.client = pb.connect(pb.GUI)
-        pb.setAdditionalSearchPath(
-            pybullet_data.getDataPath(), physicsClientId=self.client
+
+def draw_frame_at_link(env, link_index, length=0.08, width=3):
+    """Draw RGB axes at a link's world pose. Returns debug line IDs."""
+    client = env.sim.client
+    state = client.getLinkState(env.sim.skel_id, link_index)
+    pos = np.array(state[0])
+    rot = np.array(client.getMatrixFromQuaternion(state[1])).reshape(3, 3)
+
+    line_ids = []
+    for axis_idx, color in enumerate([[1, 0, 0], [0, 1, 0], [0, 0, 1]]):
+        axis = np.zeros(3)
+        axis[axis_idx] = length
+        end = (pos + rot @ axis).tolist()
+        line_ids.append(
+            client.addUserDebugLine(pos.tolist(), end, color, lineWidth=width)
         )
-        pb.setGravity(0, 0, -9.81, physicsClientId=self.client)
-        pb.loadURDF("plane.urdf", physicsClientId=self.client)
-
-        self.robot_id = pb.loadURDF(
-            URDF_PATH,
-            basePosition=[0, 0, 0],
-            useFixedBase=True,
-            physicsClientId=self.client,
-        )
-
-        # Build pybullet joint index map: joint_name -> pb_index
-        self._joint_map: dict[str, int] = {}
-        n = pb.getNumJoints(self.robot_id, physicsClientId=self.client)
-        for i in range(n):
-            info = pb.getJointInfo(self.robot_id, i, physicsClientId=self.client)
-            name = info[1].decode()
-            if info[2] != pb.JOINT_FIXED:
-                self._joint_map[name] = i
-
-        # Ordered pybullet indices matching autolife_robot_config.joint_names
-        from autolife_planning.config.robot_config import autolife_robot_config
-
-        self._pb_indices = [
-            self._joint_map[n] for n in autolife_robot_config.joint_names
-        ]
-
-        # Set home configuration
-        self.set_full_config(HOME_JOINTS)
-
-        # Camera
-        pb.resetDebugVisualizerCamera(
-            1.5, 45, -30, [0, 0, 0.5], physicsClientId=self.client
-        )
-
-        self._debug_lines: list[int] = []
-
-    def set_full_config(self, full_joints: list[float] | np.ndarray) -> None:
-        """Set all 18 controlled joints."""
-        for idx, val in zip(self._pb_indices, full_joints):
-            pb.resetJointState(self.robot_id, idx, val, physicsClientId=self.client)
-
-    def set_chain_solution(self, chain_name: str, chain_joints: np.ndarray) -> None:
-        """Overlay a chain IK solution onto the current full config."""
-        full = list(HOME_JOINTS)
-        for i, fi in enumerate(CHAIN_TO_FULL[chain_name]):
-            full[fi] = float(chain_joints[i])
-        self.set_full_config(full)
-
-    def draw_frame(
-        self, pos: np.ndarray, rot: np.ndarray, length: float = 0.08, width: float = 3
-    ) -> None:
-        """Draw RGB coordinate axes at a pose."""
-        origin = pos.tolist()
-        colors = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
-        for axis_idx, color in enumerate(colors):
-            axis = np.zeros(3)
-            axis[axis_idx] = length
-            end = (pos + rot @ axis).tolist()
-            line_id = pb.addUserDebugLine(
-                origin, end, color, lineWidth=width, physicsClientId=self.client
-            )
-            self._debug_lines.append(line_id)
-
-    def draw_sphere(
-        self, pos: np.ndarray, radius: float = 0.015, color: list | None = None
-    ) -> int:
-        """Draw a small sphere marker at a position."""
-        if color is None:
-            color = [1, 0.3, 0, 0.8]
-        vis = pb.createVisualShape(
-            pb.GEOM_SPHERE, radius=radius, rgbaColor=color, physicsClientId=self.client
-        )
-        body = pb.createMultiBody(
-            baseVisualShapeIndex=vis,
-            basePosition=pos.tolist(),
-            physicsClientId=self.client,
-        )
-        return body
-
-    def clear_markers(self) -> None:
-        for line_id in self._debug_lines:
-            pb.removeUserDebugItem(line_id, physicsClientId=self.client)
-        self._debug_lines.clear()
-
-    def add_text(
-        self, text: str, pos: list[float], color: list[float] | None = None
-    ) -> int:
-        if color is None:
-            color = [0, 0, 0]
-        return pb.addUserDebugText(
-            text, pos, textColorRGB=color, textSize=1.5, physicsClientId=self.client
-        )
-
-    def wait_key(self, key: int, msg: str) -> None:
-        text_id = self.add_text(msg, [0, 0, 1.5])
-        print(msg)
-        while True:
-            keys = pb.getKeyboardEvents(physicsClientId=self.client)
-            if key in keys and keys[key] & pb.KEY_WAS_TRIGGERED:
-                break
-            time.sleep(0.01)
-        pb.removeUserDebugItem(text_id, physicsClientId=self.client)
-
-    def disconnect(self) -> None:
-        pb.disconnect(self.client)
+    return line_ids
 
 
-def test_chain_visualized(vis: Visualizer, chain_name: str) -> None:
-    """Solve IK for one chain and visualize initial -> solution."""
+def draw_frame_at_pose(env, pos, rot, length=0.08, width=3):
+    """Draw RGB axes at a given world pose. Returns debug line IDs."""
+    client = env.sim.client
+    origin = pos.tolist()
+    line_ids = []
+    for axis_idx, color in enumerate([[1, 0, 0], [0, 1, 0], [0, 0, 1]]):
+        axis = np.zeros(3)
+        axis[axis_idx] = length
+        end = (pos + rot @ axis).tolist()
+        line_ids.append(client.addUserDebugLine(origin, end, color, lineWidth=width))
+    return line_ids
+
+
+def wait_key(env, key, msg):
+    """Wait for a key press in the PyBullet GUI."""
+    client = env.sim.client
+    text_id = client.addUserDebugText(
+        msg, [0, 0, 1.5], textColorRGB=[0, 0, 0], textSize=1.5
+    )
+    print(msg)
+    while True:
+        keys = client.getKeyboardEvents()
+        if key in keys and keys[key] & pb.KEY_WAS_TRIGGERED:
+            break
+        time.sleep(0.01)
+    client.removeUserDebugItem(text_id)
+
+
+def test_chain(env, chain_name):
+    """Solve IK for one chain and visualize."""
     print(f"\n{'='*60}")
     print(f"Chain: {chain_name}")
     print(f"{'='*60}")
 
     solver = create_ik_solver(chain_name)
     seed = CHAIN_SEEDS[chain_name]
+    ee_link = CHAIN_CONFIGS[chain_name].ee_link
+    ee_idx = get_ee_link_index(env, ee_link)
 
     print(f"  DOF: {solver.num_joints}")
     print(f"  base: {solver.base_frame}")
     print(f"  ee:   {solver.ee_frame}")
 
-    # Show initial config
-    vis.set_full_config(HOME_JOINTS)
-    vis.clear_markers()
+    # Show home config and draw current EE frame
+    env.set_joint_states(RobotConfiguration.from_array(HOME_JOINTS))
+    debug_lines = draw_frame_at_link(env, ee_idx, length=0.06, width=2)
 
-    # FK at seed to get current EE pose
+    # FK to get current EE pose (in chain-local frame for IK target)
     current_pose = solver.fk(seed)
-    print(f"  Current EE pos: {np.round(current_pose.position, 4).tolist()}")
 
-    # Draw current EE frame
-    vis.draw_frame(current_pose.position, current_pose.rotation, length=0.06, width=2)
-
-    # Target: offset from current pose
+    # Define target: offset from current
     target_position = current_pose.position + np.array([0.10, 0.08, 0.05])
     angle = np.deg2rad(20)
     rot_z = np.array(
@@ -188,55 +129,47 @@ def test_chain_visualized(vis: Visualizer, chain_name: str) -> None:
         rotation=rot_z @ current_pose.rotation,
     )
 
-    # Draw target
-    vis.draw_frame(target_pose.position, target_pose.rotation)
-    vis.draw_sphere(target_pose.position)
-    print(f"  Target EE pos:  {np.round(target_position, 4).tolist()}")
-
-    vis.wait_key(
-        ord("n"), f"[{chain_name}] Initial config shown. Press 'n' to solve IK."
-    )
+    wait_key(env, ord("n"), f"[{chain_name}] Home config. Press 'n' to solve IK.")
 
     # Solve IK
     result = solver.solve(target_pose, seed=seed)
     print(
-        f"  IK: {result.status.value}, pos_err={result.position_error:.6f}m, "
-        f"ori_err={result.orientation_error:.6f}rad, attempts={result.iterations}"
+        f"  IK: {result.status.value}, "
+        f"pos_err={result.position_error:.6f}m, "
+        f"ori_err={result.orientation_error:.6f}rad"
     )
 
     if result.joint_positions is not None:
-        print(f"  Solution: {np.round(result.joint_positions, 4).tolist()}")
-        vis.set_chain_solution(chain_name, result.joint_positions)
+        # Apply solution and draw achieved EE frame
+        full = list(HOME_JOINTS)
+        for i, fi in enumerate(CHAIN_TO_FULL[chain_name]):
+            full[fi] = float(result.joint_positions[i])
+        env.set_joint_states(RobotConfiguration.from_array(full))
+        debug_lines += draw_frame_at_link(env, ee_idx, length=0.05, width=2)
 
-        # Draw achieved EE frame
-        achieved_pose = solver.fk(result.joint_positions)
-        vis.draw_frame(
-            achieved_pose.position, achieved_pose.rotation, length=0.05, width=2
-        )
+    wait_key(env, ord("n"), f"[{chain_name}] Solution shown. Press 'n' for next.")
 
-    vis.wait_key(ord("n"), f"[{chain_name}] Solution shown. Press 'n' for next chain.")
+    # Clean up
+    for lid in debug_lines:
+        env.sim.client.removeUserDebugItem(lid)
 
 
-def main() -> None:
-    print("TRAC-IK Solver — PyBullet Visualization")
+def main():
+    print("TRAC-IK Solver Example")
     print("=" * 60)
-    print("Controls: 'n' = next step, 'q' = quit")
 
-    vis = Visualizer()
+    env = PyBulletEnv(autolife_robot_config, visualize=True)
 
-    chains = ["left_arm", "right_arm", "whole_body_left", "whole_body_right"]
-
-    for chain_name in chains:
+    for chain_name in ["left_arm", "right_arm", "whole_body_left", "whole_body_right"]:
         try:
-            test_chain_visualized(vis, chain_name)
+            test_chain(env, chain_name)
         except Exception as e:
             print(f"  ERROR on {chain_name}: {e}")
             import traceback
 
             traceback.print_exc()
 
-    vis.wait_key(ord("q"), "All chains done. Press 'q' to quit.")
-    vis.disconnect()
+    wait_key(env, ord("q"), "All chains done. Press 'q' to quit.")
     print("\nDone.")
 
 
