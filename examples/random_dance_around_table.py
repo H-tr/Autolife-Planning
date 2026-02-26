@@ -6,10 +6,10 @@ import trimesh
 from fire import Fire
 
 from autolife_planning.config.robot_config import autolife_robot_config
-from autolife_planning.dataclass.robot_configuration import RobotConfiguration
 from autolife_planning.envs.pybullet_env import PyBulletEnv
 from autolife_planning.planning import motion_planning
 from autolife_planning.planning.validation import valid_config
+from autolife_planning.types import RobotConfiguration
 from autolife_planning.utils.vamp_utils import create_planning_context
 
 POINT_RADIUS = 0.01

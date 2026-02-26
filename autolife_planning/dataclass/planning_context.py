@@ -1,14 +1,4 @@
-from dataclasses import dataclass
-from typing import Any
+# Re-export from autolife_planning.types for backwards compatibility
+from autolife_planning.types.planning import PlanningContext
 
-
-@dataclass
-class PlanningContext:
-    vamp_module: Any
-    planner_func: Any
-    plan_settings: Any
-    simp_settings: Any
-    env: Any
-    sampler: Any
-    robot_name: str
-    planner_name: str
+__all__ = ["PlanningContext"]

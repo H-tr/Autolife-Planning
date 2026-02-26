@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "pybind11>=2.10"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,12 +10,15 @@ readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
     "numpy",
-    "pin",
-    "vamp-planner @ file:./third_party/vamp",
+    "scipy",
+    "pybind11>=2.10",
 ]
 
 [project.optional-dependencies]
 dev = ["pre-commit"]
+pinocchio = ["pin"]
+vamp = ["vamp-planner @ file:./third_party/vamp"]
+full = ["pin", "vamp-planner @ file:./third_party/vamp"]
 
 [tool.setuptools.packages.find]
 include = ["autolife_planning*"]

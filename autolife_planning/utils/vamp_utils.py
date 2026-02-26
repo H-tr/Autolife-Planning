@@ -1,7 +1,7 @@
 import numpy as np
 import vamp
 
-from autolife_planning.dataclass.planning_context import PlanningContext
+from autolife_planning.types import PlanningContext
 
 
 def create_planning_context(

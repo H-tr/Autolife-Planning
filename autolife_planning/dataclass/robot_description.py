@@ -1,18 +1,4 @@
-from dataclasses import dataclass
+# Re-export from autolife_planning.types for backwards compatibility
+from autolife_planning.types.robot import CameraConfig, RobotConfig
 
-
-@dataclass
-class CameraConfig:
-    link_name: str
-    width: int
-    height: int
-    fov: float
-    near: float
-    far: float
-
-
-@dataclass
-class RobotConfig:
-    urdf_path: str
-    joint_names: list[str]
-    camera: CameraConfig
+__all__ = ["CameraConfig", "RobotConfig"]

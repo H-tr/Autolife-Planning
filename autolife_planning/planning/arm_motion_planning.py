@@ -1,7 +1,6 @@
 from typing import Any
 
-from autolife_planning.dataclass.planning_context import PlanningContext
-from autolife_planning.dataclass.robot_configuration import ArmConfiguration
+from autolife_planning.types import ArmConfiguration, PlanningContext
 
 
 def plan_arm_motion(

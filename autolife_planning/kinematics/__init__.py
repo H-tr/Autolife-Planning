@@ -1,17 +1,26 @@
-from .ik_solver import (
-    IKContext,
-    compute_forward_kinematics,
-    compute_jacobian,
-    create_ik_context,
-    solve_ik,
-    solve_ik_position_only,
-)
+# TRAC-IK solver (primary IK interface)
+from .trac_ik_solver import IKSolverBase, TracIKSolver, create_ik_solver
 
 __all__ = [
-    "IKContext",
-    "create_ik_context",
-    "solve_ik",
-    "solve_ik_position_only",
-    "compute_forward_kinematics",
-    "compute_jacobian",
+    "IKSolverBase",
+    "TracIKSolver",
+    "create_ik_solver",
 ]
+
+# Pinocchio FK/Jacobian (optional — kept for motion planning)
+try:
+    from .pinocchio_fk import (
+        PinocchioContext,
+        compute_forward_kinematics,
+        compute_jacobian,
+        create_pinocchio_context,
+    )
+
+    __all__ += [
+        "PinocchioContext",
+        "create_pinocchio_context",
+        "compute_forward_kinematics",
+        "compute_jacobian",
+    ]
+except ImportError:
+    pass

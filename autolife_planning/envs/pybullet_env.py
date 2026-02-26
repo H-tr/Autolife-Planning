@@ -5,12 +5,8 @@ import numpy as np
 import pybullet as pb
 from vamp import pybullet_interface as vpb
 
-from autolife_planning.dataclass.robot_configuration import (
-    BaseConfiguration,
-    RobotConfiguration,
-)
-from autolife_planning.dataclass.robot_description import RobotConfig
 from autolife_planning.envs.base_env import BaseEnv
+from autolife_planning.types import BaseConfiguration, RobotConfig, RobotConfiguration
 
 
 class PyBulletEnv(BaseEnv):

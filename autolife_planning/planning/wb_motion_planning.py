@@ -1,7 +1,6 @@
 from typing import Any
 
-from autolife_planning.dataclass.planning_context import PlanningContext
-from autolife_planning.dataclass.robot_configuration import WholeBodyConfiguration
+from autolife_planning.types import PlanningContext, WholeBodyConfiguration
 
 
 def plan_wb_motion(
