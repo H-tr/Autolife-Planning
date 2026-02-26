@@ -1,0 +1,807 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="autolife">
+  <link name="Link_Zero_Point" />
+
+  <link name="Link_Ground_Vehicle_Z">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Ground_Vehicle_Z.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Ground_Vehicle_Z.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Ground_Vehicle_Z" type="fixed">
+    <origin xyz="0 0 0" rpy="1.5707963267949 0 -1.57079632679516" />
+    <parent link="Link_Zero_Point" />
+    <child link="Link_Ground_Vehicle_Z" />
+    <axis xyz="0 0 0" />
+  </joint>
+
+  <link name="Link_Ankle_to_Knee">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Ankle_to_Knee.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Ankle_to_Knee.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Ankle" type="revolute">
+    <origin xyz="0 0.27 0" rpy="1.5708 0 1.5708" />
+    <parent link="Link_Ground_Vehicle_Z" />
+    <child link="Link_Ankle_to_Knee" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-1.5708" upper="1.5708" effort="150" velocity="1" />
+  </joint>
+
+  <link name="Link_Knee_to_Waist_Pitch">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Knee_to_Waist_Pitch.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Knee_to_Waist_Pitch.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Knee" type="revolute">
+    <origin xyz="0.3495 0 0" rpy="0 0 0" />
+    <parent link="Link_Ankle_to_Knee" />
+    <child link="Link_Knee_to_Waist_Pitch" />
+    <axis xyz="0 0 1" />
+    <limit lower="-3.14" upper="3.14" effort="150" velocity="1" />
+  </joint>
+
+  <link name="Link_Waist_Pitch_to_Waist_Yaw">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Waist_Pitch_to_Waist_Yaw.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Waist_Pitch_to_Waist_Yaw.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Waist_Pitch" type="revolute">
+    <origin xyz="0.3705 0 0" rpy="0 0 0" />
+    <parent link="Link_Knee_to_Waist_Pitch" />
+    <child link="Link_Waist_Pitch_to_Waist_Yaw" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-3" upper="3" effort="98" velocity="1" />
+  </joint>
+
+  <link name="Link_Waist_Yaw_to_Shoulder_Inner">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Waist_Yaw_to_Shoulder_Inner.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Waist_Yaw_to_Shoulder_Inner.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Waist_Yaw" type="revolute">
+    <origin xyz="0.06643 0 0" rpy="-1.5708 0 -1.5708" />
+    <parent link="Link_Waist_Pitch_to_Waist_Yaw" />
+    <child link="Link_Waist_Yaw_to_Shoulder_Inner" />
+    <axis xyz="0 0 1" />
+    <limit lower="-3.141" upper="3.141" effort="66" velocity="1" />
+  </joint>
+
+  <!-- Left Arm -->
+  <link name="Link_Left_Shoulder_Inner_to_Shoulder_Outer">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Shoulder_Inner_to_Shoulder_Outer.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Shoulder_Inner_to_Shoulder_Outer.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Left_Shoulder_Inner" type="revolute">
+    <origin xyz="0 0.1311 0.25157" rpy="-1.5708 0 0" />
+    <parent link="Link_Waist_Yaw_to_Shoulder_Inner" />
+    <child link="Link_Left_Shoulder_Inner_to_Shoulder_Outer" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-2.6179" upper="3.141" effort="21" velocity="1" />
+  </joint>
+
+  <link name="Link_Left_Shoulder_Outer_to_UpperArm">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Shoulder_Outer_to_UpperArm.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Shoulder_Outer_to_UpperArm.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Left_Shoulder_Outer" type="revolute">
+    <origin xyz="0.02825 0 0.074" rpy="1.5708 0 1.5708" />
+    <parent link="Link_Left_Shoulder_Inner_to_Shoulder_Outer" />
+    <child link="Link_Left_Shoulder_Outer_to_UpperArm" />
+    <axis xyz="0 0 1" />
+    <limit lower="-0.349" upper="3.1415" effort="18" velocity="1" />
+  </joint>
+
+  <link name="Link_Left_UpperArm_to_Elbow">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_UpperArm_to_Elbow.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_UpperArm_to_Elbow.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Left_UpperArm" type="revolute">
+    <origin xyz="0.1105 0.011 -0.02825" rpy="0 -1.5708 3.1415" />
+    <parent link="Link_Left_Shoulder_Outer_to_UpperArm" />
+    <child link="Link_Left_UpperArm_to_Elbow" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-2.9322" upper="2.9322" effort="15" velocity="1" />
+  </joint>
+
+  <link name="Link_Left_Elbow_to_Forearm">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Elbow_to_Forearm.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Elbow_to_Forearm.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Left_Elbow" type="revolute">
+    <origin xyz="0.025 0.02925 0.1761" rpy="0 -1.5708 -1.5708" />
+    <parent link="Link_Left_UpperArm_to_Elbow" />
+    <child link="Link_Left_Elbow_to_Forearm" />
+    <axis xyz="0 0 1" />
+    <limit lower="-0.0524" upper="2.6179" effort="12" velocity="1" />
+  </joint>
+
+  <link name="Link_Left_Forearm_to_Wrist_Upper">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Forearm_to_Wrist_Upper.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Forearm_to_Wrist_Upper.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Left_Forearm" type="revolute">
+    <origin xyz="0.1055 -0.025 -0.02925" rpy="1.5708 0 1.5708" />
+    <parent link="Link_Left_Elbow_to_Forearm" />
+    <child link="Link_Left_Forearm_to_Wrist_Upper" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.8798" upper="2.8798" effort="9" velocity="1" />
+  </joint>
+
+  <link name="Link_Left_Wrist_Upper_to_Wrist_Lower">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Wrist_Upper_to_Wrist_Lower.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Wrist_Upper_to_Wrist_Lower.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Left_Wrist_Upper" type="revolute">
+    <origin xyz="0.0321 0.00036292 0.045" rpy="0 -1.5708 3.1415" />
+    <parent link="Link_Left_Forearm_to_Wrist_Upper" />
+    <child link="Link_Left_Wrist_Upper_to_Wrist_Lower" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-1.57" upper="1.57" effort="6" velocity="1" />
+  </joint>
+
+  <link name="Link_Left_Wrist_Lower_to_Gripper">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Wrist_Lower_to_Gripper.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Wrist_Lower_to_Gripper.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Left_Wrist_Lower" type="revolute">
+    <origin xyz="0.0552 0.0321 -0.0321" rpy="-1.5708 0 0" />
+    <parent link="Link_Left_Wrist_Upper_to_Wrist_Lower" />
+    <child link="Link_Left_Wrist_Lower_to_Gripper" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1.4138" upper="1.4138" effort="3" velocity="1" />
+  </joint>
+
+  <link name="Link_Left_Gripper">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Gripper.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Gripper.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Left_Gripper" type="fixed">
+    <origin xyz="0.10148 -0.011 -0.0011371" rpy="1.5708 -1.5708 0" />
+    <parent link="Link_Left_Wrist_Lower_to_Gripper" />
+    <child link="Link_Left_Gripper" />
+    <axis xyz="0 0 1" />
+  </joint>
+
+  <!-- Right Arm -->
+  <link name="Link_Right_Shoulder_Inner_to_Shoulder_Outer">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Shoulder_Inner_to_Shoulder_Outer.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Shoulder_Inner_to_Shoulder_Outer.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Right_Shoulder_Inner" type="revolute">
+    <origin xyz="0 -0.1311 0.25157" rpy="1.5708 0 0" />
+    <parent link="Link_Waist_Yaw_to_Shoulder_Inner" />
+    <child link="Link_Right_Shoulder_Inner_to_Shoulder_Outer" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-2.6179" upper="3.141" effort="21" velocity="1" />
+  </joint>
+
+  <link name="Link_Right_Shoulder_Outer_to_UpperArm">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Shoulder_Outer_to_UpperArm.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Shoulder_Outer_to_UpperArm.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Right_Shoulder_Outer" type="revolute">
+    <origin xyz="0.02825 0 0.074" rpy="-1.5708 0 -1.5708" />
+    <parent link="Link_Right_Shoulder_Inner_to_Shoulder_Outer" />
+    <child link="Link_Right_Shoulder_Outer_to_UpperArm" />
+    <axis xyz="0 0 1" />
+    <limit lower="-3.1415" upper="0.349" effort="18" velocity="1" />
+  </joint>
+
+  <link name="Link_Right_UpperArm_to_Elbow">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_UpperArm_to_Elbow.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_UpperArm_to_Elbow.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Right_UpperArm" type="revolute">
+    <origin xyz="0.1105 -0.011 -0.02825" rpy="3.1415 -1.5708 0" />
+    <parent link="Link_Right_Shoulder_Outer_to_UpperArm" />
+    <child link="Link_Right_UpperArm_to_Elbow" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-2.9322" upper="2.9322" effort="15" velocity="1" />
+  </joint>
+
+  <link name="Link_Right_Elbow_to_Forearm">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Elbow_to_Forearm.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Elbow_to_Forearm.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Right_Elbow" type="revolute">
+    <origin xyz="0.025 0.03075 0.1761" rpy="0 -1.5708 -1.5708" />
+    <parent link="Link_Right_UpperArm_to_Elbow" />
+    <child link="Link_Right_Elbow_to_Forearm" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-2.6179" upper="0.0524" effort="12" velocity="1" />
+  </joint>
+
+  <link name="Link_Right_Forearm_to_Wrist_Upper">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Forearm_to_Wrist_Upper.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Forearm_to_Wrist_Upper.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Right_Forearm" type="revolute">
+    <origin xyz="0.1055 -0.025 -0.03075" rpy="1.5708 0 1.5708" />
+    <parent link="Link_Right_Elbow_to_Forearm" />
+    <child link="Link_Right_Forearm_to_Wrist_Upper" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.8798" upper="2.8798" effort="9" velocity="1" />
+  </joint>
+
+  <link name="Link_Right_Wrist_Upper_to_Wrist_Lower ">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Wrist_Upper_to_Wrist_Lower .STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Wrist_Upper_to_Wrist_Lower .STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Right_Wrist_Upper" type="revolute">
+    <origin xyz="0.0321 -0.00036285 0.045" rpy="3.1415 -1.5708 0" />
+    <parent link="Link_Right_Forearm_to_Wrist_Upper" />
+    <child link="Link_Right_Wrist_Upper_to_Wrist_Lower " />
+    <axis xyz="0 0 -1" />
+    <limit lower="-1.57" upper="1.57" effort="6" velocity="1" />
+  </joint>
+
+  <link name="Link_Right_Wrist_Lower_to_Gripper">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Wrist_Lower_to_Gripper.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Wrist_Lower_to_Gripper.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Right_Wrist_Lower" type="revolute">
+    <origin xyz="0.0552 0.0321 -0.0321" rpy="-1.5708 0 0" />
+    <parent link="Link_Right_Wrist_Upper_to_Wrist_Lower " />
+    <child link="Link_Right_Wrist_Lower_to_Gripper" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1.4138" upper="1.4138" effort="3" velocity="1" />
+  </joint>
+
+  <link name="Link_Right_Gripper">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Gripper.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Gripper.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Right_Gripper" type="fixed">
+    <origin xyz="0.10148 -0.011 -0.0018628" rpy="1.5708 -1.5708 0" />
+    <parent link="Link_Right_Wrist_Lower_to_Gripper" />
+    <child link="Link_Right_Gripper" />
+    <axis xyz="0 0 1" />
+  </joint>
+
+  <!-- Non-sensor additional links restored from original URDF -->
+  <!-- Left gripper sub-links -->
+  <link name="Link_Left_Gripper_Left_Inner_Knuckle">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Gripper_Left_Inner_Knuckle.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Gripper_Left_Inner_Knuckle.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Left_Gripper_Left_Inner_Knuckle" type="fixed">
+    <origin xyz="0.10799 -0.011 -0.019037" rpy="1.5708 -1.5708 0" />
+    <parent link="Link_Left_Wrist_Lower_to_Gripper" />
+    <child link="Link_Left_Gripper_Left_Inner_Knuckle" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1" upper="1" effort="2" velocity="1" />
+    <mimic joint="Joint_Left_Gripper" multiplier="1" offset="0" />
+  </joint>
+
+  <link name="Joint_Left_Gripper_Left_Finger">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Joint_Left_Gripper_Left_Finger.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Joint_Left_Gripper_Left_Finger.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Left_Gripper_Left_Finger" type="fixed">
+    <origin xyz="-0.0032202 -0.057059 -0.0029" rpy="0 0 0" />
+    <parent link="Link_Left_Gripper_Left_Inner_Knuckle" />
+    <child link="Joint_Left_Gripper_Left_Finger" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1" upper="1" effort="2" velocity="1" />
+    <mimic joint="Joint_Left_Gripper" multiplier="-1" offset="0" />
+  </joint>
+
+  <link name="Link_Left_Gripper_Right_Outer_Knuckle">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Gripper_Right_Outer_Knuckle.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Gripper_Right_Outer_Knuckle.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Left_Gripper_Right_Outer_Knuckle" type="fixed">
+    <origin xyz="0.10148 -0.011 -0.062337" rpy="1.5708 -1.5708 0" />
+    <parent link="Link_Left_Wrist_Lower_to_Gripper" />
+    <child link="Link_Left_Gripper_Right_Outer_Knuckle" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1" upper="1" effort="2" velocity="1" />
+    <mimic joint="Joint_Left_Gripper" multiplier="-1" offset="0" />
+  </joint>
+
+  <link name="Link_Left_Gripper_Right_Inner_Knuckle">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Gripper_Right_Inner_Knuckle.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Gripper_Right_Inner_Knuckle.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Left_Gripper_Right_Inner_Knuckle" type="fixed">
+    <origin xyz="0.10799 -0.011 -0.044437" rpy="1.5708 -1.5708 0" />
+    <parent link="Link_Left_Wrist_Lower_to_Gripper" />
+    <child link="Link_Left_Gripper_Right_Inner_Knuckle" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1" upper="1" effort="2" velocity="1" />
+    <mimic joint="Joint_Left_Gripper" multiplier="-1" offset="0" />
+  </joint>
+
+  <link name="Link_Left_Gripper_Right_Finger">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Gripper_Right_Finger.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Left_Gripper_Right_Finger.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Left_Gripper_Right_Finger" type="fixed">
+    <origin xyz="0.0032202 -0.057059 -0.0029" rpy="0 0 0" />
+    <parent link="Link_Left_Gripper_Right_Inner_Knuckle" />
+    <child link="Link_Left_Gripper_Right_Finger" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1" upper="1" effort="2" velocity="1" />
+    <mimic joint="Joint_Left_Gripper" multiplier="1" offset="0" />
+  </joint>
+
+  <!-- Right gripper sub-links -->
+  <link name="Link_Right_Gripper_Left_Inner_Knuckle">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Gripper_Left_Inner_Knuckle.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Gripper_Left_Inner_Knuckle.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Right_Gripper_Left_Inner_Knuckle" type="fixed">
+    <origin xyz="0.10799 -0.011 -0.019763" rpy="1.5708 -1.5708 0" />
+    <parent link="Link_Right_Wrist_Lower_to_Gripper" />
+    <child link="Link_Right_Gripper_Left_Inner_Knuckle" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1" upper="1" effort="2" velocity="1" />
+    <mimic joint="Joint_Right_Gripper" multiplier="1" offset="0" />
+  </joint>
+
+  <link name="Link_Right_Gripper_Left_Finger">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Gripper_Left_Finger.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Gripper_Left_Finger.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Right_Gripper_Left_Finger" type="fixed">
+    <origin xyz="-0.0032202 -0.057059 -0.0029" rpy="0 0 0" />
+    <parent link="Link_Right_Gripper_Left_Inner_Knuckle" />
+    <child link="Link_Right_Gripper_Left_Finger" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1" upper="1" effort="2" velocity="1" />
+    <mimic joint="Joint_Right_Gripper" multiplier="-1" offset="0" />
+  </joint>
+
+  <link name="Link_Right_Gripper_Right_Outer_Knuckle">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Gripper_Right_Outer_Knuckle.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Gripper_Right_Outer_Knuckle.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Right_Gripper_Right_Outer_Knuckle" type="fixed">
+    <origin xyz="0.10148 -0.011 -0.063063" rpy="1.5708 -1.5708 0" />
+    <parent link="Link_Right_Wrist_Lower_to_Gripper" />
+    <child link="Link_Right_Gripper_Right_Outer_Knuckle" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1" upper="1" effort="2" velocity="1" />
+    <mimic joint="Joint_Right_Gripper" multiplier="-1" offset="0" />
+  </joint>
+
+  <link name="Link_Right_Gripper_Right_Inner_Knuckle">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Gripper_Right_Inner_Knuckle.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Gripper_Right_Inner_Knuckle.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Right_Gripper_Right_Inner_Knuckle" type="fixed">
+    <origin xyz="0.10799 -0.011 -0.045163" rpy="1.5708 -1.5708 0" />
+    <parent link="Link_Right_Wrist_Lower_to_Gripper" />
+    <child link="Link_Right_Gripper_Right_Inner_Knuckle" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1" upper="1" effort="2" velocity="1" />
+    <mimic joint="Joint_Right_Gripper" multiplier="-1" offset="0" />
+  </joint>
+
+  <link name="Link_Right_Gripper_Right_Finger">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Gripper_Right_Finger.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Right_Gripper_Right_Finger.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Right_Gripper_Right_Finger" type="fixed">
+    <origin xyz="0.0032202 -0.057059 -0.0029" rpy="0 0 0" />
+    <parent link="Link_Right_Gripper_Right_Inner_Knuckle" />
+    <child link="Link_Right_Gripper_Right_Finger" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1" upper="1" effort="2" velocity="1" />
+    <mimic joint="Joint_Right_Gripper" multiplier="1" offset="0" />
+  </joint>
+
+  <!-- Other non-sensor covers -->
+  <link name="Link_Knee_Black_Cover">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Knee_Black_Cover.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Knee_Black_Cover.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Knee_Black_Cover" type="fixed">
+    <origin xyz="0.3705 0 0" rpy="0 0 0" />
+    <parent link="Link_Knee_to_Waist_Pitch" />
+    <child link="Link_Knee_Black_Cover" />
+    <axis xyz="0 0 0" />
+  </joint>
+
+  <link name="Link_Mask">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Mask.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Mask.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Mask" type="fixed">
+    <origin xyz="-0.0428574426734296 1.96731518201515E-05 0.391365544112642" rpy="2.96705972838954 0 -1.5707963267949" />
+    <parent link="Link_Waist_Yaw_to_Shoulder_Inner" />
+    <child link="Link_Mask" />
+    <axis xyz="0 0 0" />
+  </joint>
+
+  <link name="Link_Chest_Front_Cover">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Chest_Front_Cover.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Chest_Front_Cover.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Chest_Front_Cover" type="fixed">
+    <origin xyz="0.0482644434006438 -0.102712228594056 -0.150180188902497" rpy="3.14159265358979 0 1.5707963267949" />
+    <parent link="Link_Waist_Yaw_to_Shoulder_Inner" />
+    <child link="Link_Chest_Front_Cover" />
+    <axis xyz="0 0 0" />
+  </joint>
+
+  <link name="Link_Chest_Back_Cover">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Chest_Back_Cover.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Chest_Back_Cover.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Chest_Back_Cover" type="fixed">
+    <origin xyz="0.0482644434006438 -0.102712228594056 -0.150180188902497" rpy="3.14159265358979 0 1.5707963267949" />
+    <parent link="Link_Waist_Yaw_to_Shoulder_Inner" />
+    <child link="Link_Chest_Back_Cover" />
+    <axis xyz="0 0 0" />
+  </joint>
+
+  <link name="Link_Ground_Vehicle_Visual_Cover">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Ground_Vehicle_Visual_Cover.STL" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://meshes/Link_Ground_Vehicle_Visual_Cover.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_Ground_Vehicle_Visual_Cover" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="Link_Ground_Vehicle_Z" />
+    <child link="Link_Ground_Vehicle_Visual_Cover" />
+    <axis xyz="0 0 0" />
+  </joint>
+
+</robot>
+
+

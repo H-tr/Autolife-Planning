@@ -1,0 +1,515 @@
+{
+    "robot_v1_0": {
+        "mod_microphone_": {
+            "mod_microphone_m1051": {
+                "mod_name": "mod_microphone_main",
+                "driver_model": "gst",
+                "driver_version": "v1",
+                "settings": {
+                    "sound_card_name": "M1051",
+                    "sound_card_longname": "Yundea M1051",
+                    "sample_rate": 48000,
+                    "channels": 2
+                }
+            },
+            "mod_microphone_a311": {
+                "mod_name": "mod_microphone_main",
+                "driver_model": "gst",
+                "driver_version": "v1",
+                "settings": {
+                    "sound_card_name": "A311",
+                    "sound_card_longname": "Yundea A31-1",
+                    "sample_rate": 48000,
+                    "channels": 2
+                }
+            },
+            "mod_microphone_pc320532": {
+                "mod_name": "mod_microphone_main",
+                "driver_model": "gst",
+                "driver_version": "v1",
+                "settings": {
+                    "sound_card_name": "PC320532",
+                    "sound_card_longname": "PC-320532",
+                    "sample_rate": 16000,
+                    "channels": 1
+                }
+            }
+        },
+        "mod_speaker_": {
+            "mod_speaker_m1051": {
+                "mod_name": "mod_speaker_main",
+                "driver_model": "alsa",
+                "driver_version": "v1",
+                "settings": {
+                    "sound_card_name": "M1051",
+                    "sound_card_longname": "Yundea M1051",
+                    "sample_rate": 48000,
+                    "channels": 2,
+                    "period_size": 1200,
+                    "periods": 4
+                }
+            },
+            "mod_speaker_a311": {
+                "mod_name": "mod_speaker_main",
+                "driver_model": "alsa",
+                "driver_version": "v1",
+                "settings": {
+                    "sound_card_name": "A311",
+                    "sound_card_longname": "Yundea A31-1",
+                    "sample_rate": 48000,
+                    "channels": 2,
+                    "period_size": 1200,
+                    "periods": 4,
+                    "default_volume": 100,
+                    "default_volume_factor": 1.0
+                }
+            },
+            "mod_speaker_pc320532": {
+                "mod_name": "mod_speaker_main",
+                "driver_model": "alsa",
+                "driver_version": "v1",
+                "settings": {
+                    "sound_card_name": "PC320532",
+                    "sound_card_longname": "PC-320532",
+                    "sample_rate": 48000,
+                    "channels": 2,
+                    "period_size": 1200,
+                    "periods": 4,
+                    "default_volume": 100,
+                    "default_volume_factor": 1.0
+                }
+            }
+        },
+        "mod_camera_": {
+            "mod_camera_head_left": {
+                "mod_name": "mod_camera_head_left",
+                "driver_model": "v4l2",
+                "driver_version": "v1",
+                "settings": {
+                    "usb_bus_id": "usb-3610000.usb-1.4",
+                    "width": 2560,
+                    "height": 1440,
+                    "channel": 3,
+                    "fps": 60
+                }
+            },
+            "mod_camera_head_right": {
+                "mod_name": "mod_camera_head_right",
+                "driver_model": "v4l2",
+                "driver_version": "v1",
+                "settings": {
+                    "usb_bus_id": "usb-3610000.usb-1.3",
+                    "width": 2560,
+                    "height": 1440,
+                    "channel": 3,
+                    "fps": 60
+                }
+            },
+            "mod_camera_head_rear": {
+                "mod_name": "mod_camera_head_rear",
+                "driver_model": "v4l2",
+                "driver_version": "v1",
+                "settings": {
+                    "usb_bus_id": "usb-3610000.usb-1.1",
+                    "width": 2560,
+                    "height": 1440,
+                    "channel": 3,
+                    "fps": 60
+                }
+            },
+            "mod_camera_hand_left": {
+                "mod_name": "mod_camera_hand_left",
+                "driver_model": "v4l2",
+                "driver_version": "v1",
+                "settings": {
+                    "usb_bus_id": "usb-3610000.usb-3.2.1",
+                    "width": 640,
+                    "height": 480,
+                    "channel": 3,
+                    "fps": 30,
+                    "extra_config": true
+                }
+            },
+            "mod_camera_hand_right": {
+                "mod_name": "mod_camera_hand_right",
+                "driver_model": "v4l2",
+                "driver_version": "v1",
+                "settings": {
+                    "usb_bus_id": "usb-3610000.usb-3.2.2",
+                    "width": 640,
+                    "height": 480,
+                    "channel": 3,
+                    "fps": 30,
+                    "extra_config": true
+                }
+            },
+            "mod_camera_torso_front": {
+                "mod_name": "mod_camera_torso_front",
+                "driver_model": "realsense",
+                "driver_version": "v1",
+                "settings": {
+                    "serial": "141722070664",
+                    "width": 640,
+                    "height": 480,
+                    "fps": 30,
+                    "enable_depth": true,
+                    "enable_color": true
+                }
+            }
+        },
+        "mod_battery_": {
+            "mod_battery_main": {
+                "mod_name": "mod_battery_main",
+                "driver_model": "rs485",
+                "driver_version": "v1",
+                "settings": {
+                    "bus_prefix": "/dev/ttyBattery",
+                    "bitrate": 9600
+                }
+            }
+        },
+        "mod_imu_": {
+            "mod_imu_main": {
+                "mod_name": "mod_imu_main",
+                "driver_model": "h30",
+                "driver_version": "v1",
+                "settings": {
+                    "bus_prefix": "/dev/ttyIMU",
+                    "bitrate": 460800
+                }
+            }
+        },
+        "mod_lidar_": {
+            "mod_lidar_front": {
+                "mod_name": "mod_lidar_front",
+                "driver_model": "rp",
+                "driver_version": "v1",
+                "settings": {
+                    "port": "/dev/ttyUSB0"
+                }
+            },
+            "mod_lidar_rear": {
+                "mod_name": "mod_lidar_rear",
+                "driver_model": "rp",
+                "driver_version": "v1",
+                "settings": {
+                    "port": "/dev/ttyUSB1"
+                }
+            }
+        },
+        "mod_motor_": {
+            "mod_motor_left_arm": {
+                "mod_name": "mod_motor_left_arm",
+                "driver_model": "lk",
+                "driver_version": "v1",
+                "settings": {
+                    "bus_prefix": "PCAN_USBBUS",
+                    "interface": "pcan",
+                    "bitrate": 1000000,
+                    "pcan_device_id": null
+                },
+                "devices": [
+                    {
+                        "can_id": 325,
+                        "joint_name": "Joint_Left_Shoulder_Inner",
+                        "extra_configs": {
+                            "reduction_type": 0
+                        }
+                    },
+                    {
+                        "can_id": 326,
+                        "joint_name": "Joint_Left_Shoulder_Outer",
+                        "extra_configs": {
+                            "reduction_type": 0
+                        }
+                    },
+                    {
+                        "can_id": 327,
+                        "joint_name": "Joint_Left_UpperArm",
+                        "extra_configs": {
+                            "reduction_type": 0
+                        }
+                    },
+                    {
+                        "can_id": 328,
+                        "joint_name": "Joint_Left_Elbow",
+                        "extra_configs": {
+                            "reduction_type": 0
+                        }
+                    },
+                    {
+                        "can_id": 329,
+                        "joint_name": "Joint_Left_Forearm",
+                        "extra_configs": {
+                            "reduction_type": 0
+                        }
+                    },
+                    {
+                        "can_id": 330,
+                        "joint_name": "Joint_Left_Wrist_Upper",
+                        "extra_configs": {
+                            "reduction_type": 0
+                        }
+                    },
+                    {
+                        "can_id": 331,
+                        "joint_name": "Joint_Left_Wrist_Lower",
+                        "extra_configs": {
+                            "reduction_type": 0
+                        }
+                    },
+                    {
+                        "can_id": 332,
+                        "joint_name": "Joint_Left_Gripper",
+                        "extra_configs": {
+                            "reduction_type": 1
+                        }
+                    }
+                ]
+            },
+            "mod_motor_right_arm": {
+                "mod_name": "mod_motor_right_arm",
+                "driver_model": "lk",
+                "driver_version": "v1",
+                "settings": {
+                    "bus_prefix": "PCAN_USBBUS",
+                    "interface": "pcan",
+                    "bitrate": 1000000,
+                    "pcan_device_id": null
+                },
+                "devices": [
+                    {
+                        "can_id": 333,
+                        "joint_name": "Joint_Right_Shoulder_Inner",
+                        "extra_configs": {
+                            "reduction_type": 0
+                        }
+                    },
+                    {
+                        "can_id": 334,
+                        "joint_name": "Joint_Right_Shoulder_Outer",
+                        "extra_configs": {
+                            "reduction_type": 0
+                        }
+                    },
+                    {
+                        "can_id": 335,
+                        "joint_name": "Joint_Right_UpperArm",
+                        "extra_configs": {
+                            "reduction_type": 0
+                        }
+                    },
+                    {
+                        "can_id": 336,
+                        "joint_name": "Joint_Right_Elbow",
+                        "extra_configs": {
+                            "reduction_type": 0
+                        }
+                    },
+                    {
+                        "can_id": 337,
+                        "joint_name": "Joint_Right_Forearm",
+                        "extra_configs": {
+                            "reduction_type": 0
+                        }
+                    },
+                    {
+                        "can_id": 338,
+                        "joint_name": "Joint_Right_Wrist_Upper",
+                        "extra_configs": {
+                            "reduction_type": 0
+                        }
+                    },
+                    {
+                        "can_id": 339,
+                        "joint_name": "Joint_Right_Wrist_Lower",
+                        "extra_configs": {
+                            "reduction_type": 0
+                        }
+                    },
+                    {
+                        "can_id": 340,
+                        "joint_name": "Joint_Right_Gripper",
+                        "extra_configs": {
+                            "reduction_type": 1
+                        }
+                    }
+                ]
+            },
+            "mod_motor_waist-leg": {
+                "mod_name": "mod_motor_waist-leg",
+                "driver_model": "eu",
+                "driver_version": "v1",
+                "settings": {
+                    "bus_prefix": "PCAN_USBBUS",
+                    "interface": "pcan",
+                    "bitrate": 1000000,
+                    "pcan_device_id": null
+                },
+                "devices": [
+                    {
+                        "can_id": 21,
+                        "joint_name": "Joint_Waist_Yaw",
+                        "extra_configs": {
+                            "ctl_mode": 1,
+                            "angle_offset": 0,
+                            "ReductionRatio": 121,
+                            "positionLimitEnabled": 0
+                        }
+                    },
+                    {
+                        "can_id": 22,
+                        "joint_name": "Joint_Waist_Pitch",
+                        "extra_configs": {
+                            "ctl_mode": 1,
+                            "angle_offset": 0,
+                            "ReductionRatio": 121,
+                            "positionLimitEnabled": 0
+                        }
+                    },
+                    {
+                        "can_id": 23,
+                        "joint_name": "Joint_Knee",
+                        "extra_configs": {
+                            "ctl_mode": 1,
+                            "angle_offset": 0,
+                            "ReductionRatio": 121,
+                            "positionLimitEnabled": 0
+                        }
+                    },
+                    {
+                        "can_id": 24,
+                        "joint_name": "Joint_Ankle",
+                        "extra_configs": {
+                            "ctl_mode": 1,
+                            "angle_offset": 0,
+                            "ReductionRatio": 121,
+                            "positionLimitEnabled": 0
+                        }
+                    }
+                ]
+            },
+            "mod_motor_gv": {
+                "mod_name": "mod_motor_gv",
+                "driver_model": "dm",
+                "driver_version": "v1",
+                "settings": {
+                    "bus_prefix": "PCAN_USBBUS",
+                    "interface": "pcan",
+                    "bitrate": 1000000,
+                    "pcan_device_id": null
+                },
+                "devices": [
+                    {
+                        "can_id": 1,
+                        "joint_name": "Joint_Ground_Vehicle_Front_Left",
+                        "extra_configs": {
+                            "master_id": 49,
+                            "motor_type": 0,
+                            "acc": 2.0,
+                            "dec": -2.0,
+                            "max_speed": 600.0,
+                            "ctl_mode": 3,
+                            "hardware_ver": 1445998643,
+                            "software_ver": 0,
+                            "sub_ver": 51,
+                            "NPP": 21,
+                            "gear_ratio": 6.0,
+                            "PMAX": 12.5,
+                            "VMAX": 45.0,
+                            "TMAX": 20.0,
+                            "I_BW": 1000.0,
+                            "KP_VEL": 0.004057577811181545,
+                            "KI_VEL": 0.015707960352301598,
+                            "KP_POS": 54.0,
+                            "KI_POS": 0.0,
+                            "pos_offset": 0,
+                            "direction": 1.0
+                        }
+                    },
+                    {
+                        "can_id": 2,
+                        "joint_name": "Joint_Ground_Vehicle_Front_Right",
+                        "extra_configs": {
+                            "master_id": 50,
+                            "motor_type": 0,
+                            "acc": 2.0,
+                            "dec": -2.0,
+                            "max_speed": 600.0,
+                            "ctl_mode": 3,
+                            "hardware_ver": 1445998643,
+                            "software_ver": 0,
+                            "sub_ver": 51,
+                            "NPP": 21,
+                            "gear_ratio": 6.0,
+                            "PMAX": 12.5,
+                            "VMAX": 45.0,
+                            "TMAX": 20.0,
+                            "I_BW": 1000.0,
+                            "KP_VEL": 0.004057577811181545,
+                            "KI_VEL": 0.015707960352301598,
+                            "KP_POS": 54.0,
+                            "KI_POS": 0.0,
+                            "pos_offset": 0,
+                            "direction": 1.0
+                        }
+                    },
+                    {
+                        "can_id": 3,
+                        "joint_name": "Joint_Ground_Vehicle_Rear_Right",
+                        "extra_configs": {
+                            "master_id": 51,
+                            "motor_type": 0,
+                            "acc": 2.0,
+                            "dec": -2.0,
+                            "max_speed": 600.0,
+                            "ctl_mode": 3,
+                            "hardware_ver": 1445998643,
+                            "software_ver": 0,
+                            "sub_ver": 51,
+                            "NPP": 21,
+                            "gear_ratio": 6.0,
+                            "PMAX": 12.5,
+                            "VMAX": 45.0,
+                            "TMAX": 20.0,
+                            "I_BW": 1000.0,
+                            "KP_VEL": 0.004057577811181545,
+                            "KI_VEL": 0.015707960352301598,
+                            "KP_POS": 54.0,
+                            "KI_POS": 0.0,
+                            "pos_offset": 0,
+                            "direction": 1.0
+                        }
+                    },
+                    {
+                        "can_id": 4,
+                        "joint_name": "Joint_Ground_Vehicle_Rear_Left",
+                        "extra_configs": {
+                            "master_id": 52,
+                            "motor_type": 0,
+                            "acc": 2.0,
+                            "dec": -2.0,
+                            "max_speed": 600.0,
+                            "ctl_mode": 3,
+                            "hardware_ver": 1445998643,
+                            "software_ver": 0,
+                            "sub_ver": 51,
+                            "NPP": 21,
+                            "gear_ratio": 6.0,
+                            "PMAX": 12.5,
+                            "VMAX": 45.0,
+                            "TMAX": 20.0,
+                            "I_BW": 1000.0,
+                            "KP_VEL": 0.004057577811181545,
+                            "KI_VEL": 0.015707960352301598,
+                            "KP_POS": 54.0,
+                            "KI_POS": 0.0,
+                            "pos_offset": 0,
+                            "direction": 1.0
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}
