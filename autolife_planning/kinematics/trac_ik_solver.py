@@ -111,6 +111,24 @@ class TracIKSolver:
         """Joint limits as (lower_bounds, upper_bounds) arrays."""
         return self._lower_bounds.copy(), self._upper_bounds.copy()
 
+    def set_joint_limits(self, lower: np.ndarray, upper: np.ndarray) -> None:
+        """Override joint limits for the solver.
+
+        Input:
+            lower: Lower bounds array of length num_joints
+            upper: Upper bounds array of length num_joints
+        """
+        lower = np.asarray(lower, dtype=np.float64)
+        upper = np.asarray(upper, dtype=np.float64)
+        if len(lower) != self._n_joints or len(upper) != self._n_joints:
+            raise ValueError(
+                f"Expected {self._n_joints} limits, "
+                f"got lower={len(lower)}, upper={len(upper)}"
+            )
+        self._pytracik.set_joint_limits(self._trac_ik, lower, upper)
+        self._lower_bounds = lower.copy()
+        self._upper_bounds = upper.copy()
+
     def fk(self, joint_positions: np.ndarray) -> SE3Pose:
         """Compute forward kinematics via TRAC-IK's built-in FK.
 

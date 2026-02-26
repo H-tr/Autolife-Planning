@@ -14,7 +14,13 @@ class IKStatus(Enum):
 
 
 class SolveType(Enum):
-    """TRAC-IK solve type."""
+    """TRAC-IK solve type.
+
+    SPEED:    Return first valid solution (fastest).
+    DISTANCE: Minimize joint displacement from seed configuration.
+    MANIP1:   Maximize manipulability (product of Jacobian singular values).
+    MANIP2:   Maximize isotropy (min/max Jacobian singular value ratio).
+    """
 
     SPEED = "Speed"
     DISTANCE = "Distance"
