@@ -8,8 +8,6 @@ import os
 
 from setuptools import Extension, setup
 
-_PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-
 
 def _find_kdl_header():
     """Find kdl/tree.hpp in conda or system include paths."""
