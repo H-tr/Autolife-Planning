@@ -15,7 +15,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-robomesh = ["flask"]
 dev = ["pre-commit"]
 
 [tool.setuptools.packages.find]

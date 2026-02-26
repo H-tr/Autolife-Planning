@@ -22,7 +22,3 @@ Run some example scripts first:
 ```bash
 python examples/random_dance_around_table.py
 ```
-
-## Robomesh
-
-If you want to run it in robomesh, please check the [readme in the doc folder](docs/README.md).
