@@ -12,7 +12,7 @@ from autolife_planning.config.robot_config import (
 )
 from autolife_planning.envs.pybullet_env import PyBulletEnv
 from autolife_planning.kinematics.trac_ik_solver import create_ik_solver
-from autolife_planning.types import RobotConfiguration, SE3Pose
+from autolife_planning.types import IKConfig, RobotConfiguration, SE3Pose, SolveType
 
 # Home configuration subsets matching each chain's joint ordering
 HOME_LEFT_ARM = np.array(HOME_JOINTS[4:11])
@@ -98,7 +98,27 @@ def test_chain(env, chain_name):
     print(f"Chain: {chain_name}")
     print(f"{'='*60}")
 
-    solver = create_ik_solver(chain_name)
+    # IKConfig controls solver behavior:
+    #   timeout         - seconds for TRAC-IK dual-thread solve (default: 0.2)
+    #   epsilon         - convergence tolerance (default: 1e-5)
+    #   solve_type      - SPEED:    return first valid solution (fastest)
+    #                     DISTANCE: minimize joint displacement from seed
+    #                     MANIP1:   maximize manipulability (product of singular values)
+    #                     MANIP2:   maximize isotropy (min/max singular value ratio)
+    #   max_attempts    - random restart attempts (default: 10)
+    #   position_tolerance    - post-solve validation in meters (default: 1e-4)
+    #   orientation_tolerance - post-solve validation in radians (default: 1e-4)
+    config = IKConfig(
+        timeout=0.2,
+        epsilon=1e-5,
+        solve_type=SolveType.DISTANCE,
+        max_attempts=10,
+    )
+
+    # Available chains: left_arm, right_arm, whole_body_left, whole_body_right,
+    #                   whole_body_base_left, whole_body_base_right
+    # Shorthand: create_ik_solver("whole_body", side="left")
+    solver = create_ik_solver(chain_name, config=config)
     seed = CHAIN_SEEDS[chain_name]
     ee_link = CHAIN_CONFIGS[chain_name].ee_link
     ee_idx = get_ee_link_index(env, ee_link)
@@ -131,7 +151,8 @@ def test_chain(env, chain_name):
 
     wait_key(env, ord("n"), f"[{chain_name}] Home config. Press 'n' to solve IK.")
 
-    # Solve IK
+    # Solve IK (seed is optional; if None, uses random within joint limits)
+    # Joint limits can be overridden: solver.set_joint_limits(lower, upper)
     result = solver.solve(target_pose, seed=seed)
     print(
         f"  IK: {result.status.value}, "
