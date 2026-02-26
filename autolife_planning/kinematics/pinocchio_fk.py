@@ -4,20 +4,25 @@ Pinocchio-based forward kinematics and Jacobian computation.
 Used by motion planning. IK solving is handled by trac_ik_solver.py.
 """
 
+from __future__ import annotations
+
+import importlib
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
-import pinocchio as pin
 
 from autolife_planning.types import SE3Pose
+
+pin = importlib.import_module("pinocchio")
 
 
 @dataclass
 class PinocchioContext:
     """Context holding Pinocchio model and data for FK/Jacobian computations."""
 
-    model: pin.Model
-    data: pin.Data
+    model: Any
+    data: Any
     end_effector_frame_id: int
     joint_names: list[str]
     joint_ids: list[int]
