@@ -1,5 +1,6 @@
 import os
 import time
+from typing import Any
 
 import numpy as np
 import trimesh
@@ -31,7 +32,7 @@ def main(planner="rrtc"):
     assets_dir = os.path.join(project_root, "assets", "envs", "rls_env", "pcd")
     table_pcd_path = os.path.join(assets_dir, "table.ply")
 
-    table_pcd = trimesh.load(table_pcd_path)
+    table_pcd: Any = trimesh.load(table_pcd_path)
     points = np.array(table_pcd.vertices)
 
     # Rotate 90 degrees around Z axis
