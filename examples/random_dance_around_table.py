@@ -1,10 +1,16 @@
 import os
+import time
 
 import numpy as np
 import trimesh
-import vamp
 from fire import Fire
-from vamp import pybullet_interface as vpb
+
+from autolife_planning.config.robot_config import autolife_robot_config
+from autolife_planning.dataclass.robot_configuration import RobotConfiguration
+from autolife_planning.envs.pybullet_env import PyBulletEnv
+from autolife_planning.planning import motion_planning
+from autolife_planning.planning.validation import valid_config
+from autolife_planning.utils.vamp_utils import create_planning_context
 
 POINT_RADIUS = 0.01
 
@@ -12,28 +18,19 @@ script_path = os.path.abspath(__file__)
 project_root = os.path.dirname(os.path.dirname(script_path))
 
 
-def sample_valid(vamp_module, rng, env):
+def sample_valid(context):
+    """Sample a valid (collision-free) configuration."""
     while True:
-        config = rng.next()
-        if vamp_module.validate(config, env):
+        config = context.sampler.next()
+        if valid_config(config, context):
             return config
 
 
-def main(robot="autolife", planner="rrtc", n_samples=10000):
-    # 1. Setup Paths
+def main(planner="rrtc"):
+    # 1. Load and Process Pointcloud
     assets_dir = os.path.join(project_root, "assets", "envs", "rls_env", "pcd")
     table_pcd_path = os.path.join(assets_dir, "table.ply")
 
-    # 2. Configure Robot and Planner
-    print(f"Configuring {robot} with {planner}...")
-    (
-        vamp_module,
-        planner_func,
-        plan_settings,
-        simp_settings,
-    ) = vamp.configure_robot_and_planner_with_kwargs(robot, planner)
-
-    # 3. Load and Process Pointcloud
     table_pcd = trimesh.load(table_pcd_path)
     points = np.array(table_pcd.vertices)
 
@@ -47,64 +44,51 @@ def main(robot="autolife", planner="rrtc", n_samples=10000):
     translation = np.array([0.5, 3.0, 0.0])
     points += translation
 
-    # 4. Setup Environment (Collision)
-    env = vamp.Environment()
+    # 2. Create Planning Context
+    planning_context = create_planning_context(
+        "autolife", points, planner, POINT_RADIUS
+    )
 
-    # Get robot radii for pointcloud addition
-    r_min, r_max = vamp_module.min_max_radii()
+    # 3. Setup Visualization Environment
+    env = PyBulletEnv(autolife_robot_config, visualize=True)
+    env.add_pointcloud(points)
 
-    env.add_pointcloud(points, r_min, r_max, POINT_RADIUS)
-
-    # 5. Setup Simulation (Visualization)
-    resources_dir = os.path.join(project_root, "third_party", "vamp", "resources")
-    urdf_path = os.path.join(resources_dir, robot, f"{robot}_spherized.urdf")
-
-    sim = vpb.PyBulletSimulator(urdf_path, vamp_module.joint_names(), visualize=True)
-
-    # Draw pointcloud
-    sim.draw_pointcloud(points)
-
-    # 6. Define Start and Goal Configurations
-    sampler = getattr(vamp_module, "halton")()
-
-    def sample_and_choose(name, env):
+    # 4. Interactive Configuration Sampling
+    def sample_and_choose(name):
         while True:
-            config = sample_valid(vamp_module, sampler, env)
-
-            # Visualize
-            sim.set_joint_positions(config)
+            config = sample_valid(planning_context)
+            env.set_joint_states(RobotConfiguration.from_array(config))
 
             # Wait for user input via PyBullet window
             while True:
-                keys = sim.client.getKeyboardEvents()
-                if ord("y") in keys and (keys[ord("y")] & sim.client.KEY_WAS_TRIGGERED):
+                keys = env.sim.client.getKeyboardEvents()
+                if ord("y") in keys and (
+                    keys[ord("y")] & env.sim.client.KEY_WAS_TRIGGERED
+                ):
                     print(f"Accepted {name}")
-                    return config
-                if ord("n") in keys and (keys[ord("n")] & sim.client.KEY_WAS_TRIGGERED):
+                    return RobotConfiguration.from_array(config)
+                if ord("n") in keys and (
+                    keys[ord("n")] & env.sim.client.KEY_WAS_TRIGGERED
+                ):
                     print("Rejected, sampling again...")
                     break
 
     print("Press 'y' to accept the configuration, 'n' to reject and resample")
 
-    start = sample_and_choose("start (hands under table)", env)
-    goal = sample_and_choose("goal (hands on table)", env)
+    start = sample_and_choose("start")
+    goal = sample_and_choose("goal")
 
     print("Start:", start)
     print("Goal:", goal)
 
-    # 7. Plan Path
-    result = planner_func(start, goal, env, plan_settings, sampler)
+    # 5. Plan Path
+    plan = motion_planning.plan_motion(start, goal, planning_context)
 
-    if result.solved:
-        print("Path found! Simplifying...")
-        simplify = vamp_module.simplify(result.path, env, simp_settings, sampler)
-        plan = simplify.path
-
-        # Interpolate to robot resolution for smooth animation
-        plan.interpolate_to_resolution(vamp_module.resolution())
-
+    if plan is not None:
         print("Animating...")
-        sim.animate(plan)
+        for i in range(len(plan)):
+            env.set_joint_states(RobotConfiguration.from_array(plan[i]))
+            time.sleep(1.0 / 60.0)
     else:
         print("Failed to find a path.")
 
