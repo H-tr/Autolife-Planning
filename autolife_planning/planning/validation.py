@@ -1,9 +1,9 @@
 import numpy as np
 
-from autolife_planning.dataclass.planning_context import PlanningContext
-from autolife_planning.dataclass.robot_configuration import (
+from autolife_planning.types import (
     ArmConfiguration,
     BaseConfiguration,
+    PlanningContext,
     RobotConfiguration,
     WholeBodyConfiguration,
 )

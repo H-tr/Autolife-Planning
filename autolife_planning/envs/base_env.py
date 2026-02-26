@@ -1,10 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from autolife_planning.dataclass.robot_configuration import (
-    BaseConfiguration,
-    RobotConfiguration,
-)
+from autolife_planning.types import BaseConfiguration, RobotConfiguration
 
 
 class BaseEnv(ABC):
