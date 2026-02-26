@@ -1,4 +1,52 @@
-from autolife_planning.dataclass.robot_description import CameraConfig, RobotConfig
+import os
+
+from autolife_planning.types.robot import CameraConfig, ChainConfig, RobotConfig
+
+_ASSETS_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    "assets",
+    "robot",
+    "autolife",
+)
+
+CHAIN_CONFIGS: dict[str, ChainConfig] = {
+    "left_arm": ChainConfig(
+        base_link="Link_Waist_Yaw_to_Shoulder_Inner",
+        ee_link="Link_Left_Wrist_Lower_to_Gripper",
+        num_joints=7,
+        urdf_path=os.path.join(_ASSETS_DIR, "autolife.urdf"),
+    ),
+    "right_arm": ChainConfig(
+        base_link="Link_Waist_Yaw_to_Shoulder_Inner",
+        ee_link="Link_Right_Wrist_Lower_to_Gripper",
+        num_joints=7,
+        urdf_path=os.path.join(_ASSETS_DIR, "autolife.urdf"),
+    ),
+    "whole_body_left": ChainConfig(
+        base_link="Link_Ground_Vehicle_Z",
+        ee_link="Link_Left_Wrist_Lower_to_Gripper",
+        num_joints=11,
+        urdf_path=os.path.join(_ASSETS_DIR, "autolife.urdf"),
+    ),
+    "whole_body_right": ChainConfig(
+        base_link="Link_Ground_Vehicle_Z",
+        ee_link="Link_Right_Wrist_Lower_to_Gripper",
+        num_joints=11,
+        urdf_path=os.path.join(_ASSETS_DIR, "autolife.urdf"),
+    ),
+    "whole_body_base_left": ChainConfig(
+        base_link="Link_Zero_Point",
+        ee_link="Link_Left_Wrist_Lower_to_Gripper",
+        num_joints=14,
+        urdf_path=os.path.join(_ASSETS_DIR, "autolife_base.urdf"),
+    ),
+    "whole_body_base_right": ChainConfig(
+        base_link="Link_Zero_Point",
+        ee_link="Link_Right_Wrist_Lower_to_Gripper",
+        num_joints=14,
+        urdf_path=os.path.join(_ASSETS_DIR, "autolife_base.urdf"),
+    ),
+}
 
 autolife_robot_config = RobotConfig(
     urdf_path="/media/run/Extend/Autolife-Planning/assets/robot/autolife/autolife.urdf",
