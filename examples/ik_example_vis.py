@@ -134,20 +134,27 @@ def test_chain(env, chain_name):
     # FK to get current EE pose (in chain-local frame for IK target)
     current_pose = solver.fk(seed)
 
-    # Define target: offset from current
-    target_position = current_pose.position + np.array([0.10, 0.08, 0.05])
-    angle = np.deg2rad(20)
-    rot_z = np.array(
-        [
-            [np.cos(angle), -np.sin(angle), 0],
-            [np.sin(angle), np.cos(angle), 0],
-            [0, 0, 1],
-        ]
-    )
-    target_pose = SE3Pose(
-        position=target_position,
-        rotation=rot_z @ current_pose.rotation,
-    )
+    # Define target pose
+    if "whole_body" in chain_name:
+        offset = np.array([0.10, 0.08, 0.05])
+        angle = np.deg2rad(20)
+        rot_z = np.array(
+            [
+                [np.cos(angle), -np.sin(angle), 0],
+                [np.sin(angle), np.cos(angle), 0],
+                [0, 0, 1],
+            ]
+        )
+        target_pose = SE3Pose(
+            position=current_pose.position + offset,
+            rotation=rot_z @ current_pose.rotation,
+        )
+    else:
+        # Arm-only: keep orientation, small position offset toward the front
+        target_pose = SE3Pose(
+            position=current_pose.position + np.array([0.05, 0.0, -0.05]),
+            rotation=current_pose.rotation,
+        )
 
     wait_key(env, ord("n"), f"[{chain_name}] Home config. Press 'n' to solve IK.")
 

@@ -1,4 +1,22 @@
-"""Minimal IK example — no visualization, no PyBullet."""
+"""Minimal IK example — no visualization, no PyBullet.
+
+Available chains:
+    "left_arm"              7 DOF   (shoulder to left wrist)
+    "right_arm"             7 DOF   (shoulder to right wrist)
+    "whole_body_left"      11 DOF   (ground vehicle to left wrist)
+    "whole_body_right"     11 DOF   (ground vehicle to right wrist)
+    "whole_body_base_left" 14 DOF   (zero point to left wrist, includes base)
+    "whole_body_base_right"14 DOF   (zero point to right wrist, includes base)
+
+    Shorthand: create_ik_solver("whole_body", side="left")
+
+HOME_JOINTS layout (21 DOF):
+    [0:2]   leg     (Ankle, Knee)
+    [2:4]   waist   (Pitch, Yaw)
+    [4:11]  left arm  (ShoulderInner/Outer, UpperArm, Elbow, Forearm, WristUpper/Lower)
+    [11:18] right arm (same as left)
+    [18:21] neck    (Roll, Pitch, Yaw)
+"""
 
 import numpy as np
 
@@ -9,13 +27,23 @@ from autolife_planning.types import IKConfig, SE3Pose, SolveType
 # Home configuration subsets for each chain
 HOME_LEFT_ARM = np.array(HOME_JOINTS[4:11])
 HOME_RIGHT_ARM = np.array(HOME_JOINTS[11:18])
+HOME_WHOLE_BODY_LEFT = np.array(HOME_JOINTS[:11])
+HOME_WHOLE_BODY_RIGHT = np.array(HOME_JOINTS[:4] + HOME_JOINTS[11:18])
 
 
 def main():
-    # Create IK solver for the left arm (7 DoF)
-    solver = create_ik_solver(
-        "left_arm", config=IKConfig(solve_type=SolveType.DISTANCE)
+    # --- IKConfig (all fields shown with defaults) ---
+    config = IKConfig(
+        timeout=0.2,  # seconds per TRAC-IK attempt
+        epsilon=1e-5,  # convergence tolerance
+        solve_type=SolveType.SPEED,  # SPEED | DISTANCE | MANIP1 | MANIP2
+        max_attempts=10,  # random restart attempts
+        position_tolerance=1e-4,  # post-solve check (meters)
+        orientation_tolerance=1e-4,  # post-solve check (radians)
     )
+
+    # --- Create solver ---
+    solver = create_ik_solver("left_arm", config=config)
     print(
         f"Chain: {solver.base_frame} -> {solver.ee_frame} ({solver.num_joints} joints)"
     )
@@ -24,13 +52,13 @@ def main():
     home_pose = solver.fk(HOME_LEFT_ARM)
     print(f"Home EE position: {home_pose.position}")
 
-    # Define a target pose: offset from home
+    # Define a target pose: small offset, keep same orientation
     target = SE3Pose(
-        position=home_pose.position + np.array([0.05, 0.05, 0.03]),
+        position=home_pose.position + np.array([0.05, 0.0, -0.05]),
         rotation=home_pose.rotation,
     )
 
-    # Solve IK
+    # Solve IK (seed is optional; if None, uses random within joint limits)
     result = solver.solve(target, seed=HOME_LEFT_ARM)
     print(f"IK status: {result.status.value}")
     print(f"  position error:    {result.position_error:.6f} m")
@@ -42,6 +70,7 @@ def main():
         # Verify with FK
         achieved = solver.fk(result.joint_positions)
         print(f"  achieved position: {np.round(achieved.position, 4)}")
+
     else:
         print("  IK failed to find a valid solution.")
 
