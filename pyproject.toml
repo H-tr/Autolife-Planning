@@ -11,11 +11,11 @@ requires-python = ">=3.8"
 dependencies = [
     "numpy",
     "scipy",
-    "pybind11>=2.10",
+    "pybind11>=2.10", "pre-commit>=4.5.1,<5",
 ]
 
 [project.optional-dependencies]
-dev = ["pre-commit"]
+dev = ["pre-commit", "pybullet"]
 pinocchio = ["pin"]
 
 [tool.setuptools.packages.find]
