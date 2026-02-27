@@ -216,3 +216,6 @@ __marimo__/
 .streamlit/secrets.toml
 .vscode
 assets/
+# pixi environments
+.pixi/*
+!.pixi/config.toml
