@@ -6,7 +6,7 @@ import pybullet as pb
 from vamp import pybullet_interface as vpb
 
 from autolife_planning.envs.base_env import BaseEnv
-from autolife_planning.types import BaseConfiguration, RobotConfig, RobotConfiguration
+from autolife_planning.types import RobotConfig
 
 
 class PyBulletEnv(BaseEnv):
@@ -31,25 +31,34 @@ class PyBulletEnv(BaseEnv):
         # Set initial pose
         from autolife_planning.config.robot_config import HOME_JOINTS
 
-        # Reset joint states directly using PyBullet native command or helper
-        # Using set_joint_states which expects RobotConfiguration
-        self.set_joint_states(RobotConfiguration.from_array(HOME_JOINTS))
+        self.set_joint_states(HOME_JOINTS[3:])
 
-    def get_joint_states(self) -> RobotConfiguration:
+    def get_joint_states(self) -> np.ndarray:
         states = []
-        # PyBulletSimulator stores self.joints as indices
         for joint_idx in self.sim.joints:
             state = self.sim.client.getJointState(self.sim.skel_id, joint_idx)
             states.append(state[0])
-        return RobotConfiguration.from_array(states)
+        return np.array(states)
 
-    def set_joint_states(self, config: RobotConfiguration):
-        self.sim.set_joint_positions(config.to_array())
+    def set_joint_states(self, config: np.ndarray):
+        self.sim.set_joint_positions(np.asarray(config))
 
-    def get_localization(self) -> BaseConfiguration:
+    def set_base_position(self, x: float, y: float, theta: float):
+        """Move the robot base to (x, y) with yaw=theta in the world frame."""
+        quat = self.sim.client.getQuaternionFromEuler([0, 0, theta])
+        self.sim.client.resetBasePositionAndOrientation(
+            self.sim.skel_id, [x, y, 0], quat
+        )
+
+    def set_configuration(self, config: np.ndarray):
+        """Apply a full 24-DOF config (3 base + 21 joints) to the visualization."""
+        self.set_base_position(config[0], config[1], config[2])
+        self.set_joint_states(config[3:])
+
+    def get_localization(self) -> np.ndarray:
         pos, orn = self.sim.client.getBasePositionAndOrientation(self.sim.skel_id)
         euler = self.sim.client.getEulerFromQuaternion(orn)
-        return BaseConfiguration(x=pos[0], y=pos[1], theta=euler[2])
+        return np.array([pos[0], pos[1], euler[2]])
 
     def get_rgbd(self):
         if self.camera_link_idx == -1:

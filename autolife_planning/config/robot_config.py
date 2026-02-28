@@ -1,5 +1,7 @@
 import os
 
+import numpy as np
+
 from autolife_planning.types.robot import CameraConfig, ChainConfig, RobotConfig
 
 _RESOURCES_DIR = os.path.join(
@@ -8,6 +10,16 @@ _RESOURCES_DIR = os.path.join(
     "robot",
     "autolife",
 )
+
+# Atomic joint groups — indices into the full 24-DOF configuration array.
+JOINT_GROUPS = {
+    "base": slice(0, 3),  # Virtual_X, Virtual_Y, Virtual_Theta
+    "legs": slice(3, 5),  # Ankle, Knee
+    "waist": slice(5, 7),  # Waist_Pitch, Waist_Yaw
+    "left_arm": slice(7, 14),  # Shoulder → Wrist (7 DOF)
+    "right_arm": slice(14, 21),  # Shoulder → Wrist (7 DOF)
+    "neck": slice(21, 24),  # Roll, Pitch, Yaw
+}
 
 CHAIN_CONFIGS: dict[str, ChainConfig] = {
     "left_arm": ChainConfig(
@@ -23,13 +35,13 @@ CHAIN_CONFIGS: dict[str, ChainConfig] = {
         urdf_path=os.path.join(_RESOURCES_DIR, "autolife.urdf"),
     ),
     "whole_body_left": ChainConfig(
-        base_link="Link_Ground_Vehicle_Z",
+        base_link="Link_Ground_Vehicle",
         ee_link="Link_Left_Wrist_Lower_to_Gripper",
         num_joints=11,
         urdf_path=os.path.join(_RESOURCES_DIR, "autolife.urdf"),
     ),
     "whole_body_right": ChainConfig(
-        base_link="Link_Ground_Vehicle_Z",
+        base_link="Link_Ground_Vehicle",
         ee_link="Link_Right_Wrist_Lower_to_Gripper",
         num_joints=11,
         urdf_path=os.path.join(_RESOURCES_DIR, "autolife.urdf"),
@@ -51,10 +63,17 @@ CHAIN_CONFIGS: dict[str, ChainConfig] = {
 autolife_robot_config = RobotConfig(
     urdf_path=os.path.join(_RESOURCES_DIR, "autolife.urdf"),
     joint_names=[
+        # [0:3]   base (virtual planar joints)
+        "Joint_Virtual_X",
+        "Joint_Virtual_Y",
+        "Joint_Virtual_Theta",
+        # [3:5]   leg
         "Joint_Ankle",
         "Joint_Knee",
+        # [5:7]   waist
         "Joint_Waist_Pitch",
         "Joint_Waist_Yaw",
+        # [7:14]  left arm
         "Joint_Left_Shoulder_Inner",
         "Joint_Left_Shoulder_Outer",
         "Joint_Left_UpperArm",
@@ -62,6 +81,7 @@ autolife_robot_config = RobotConfig(
         "Joint_Left_Forearm",
         "Joint_Left_Wrist_Upper",
         "Joint_Left_Wrist_Lower",
+        # [14:21] right arm
         "Joint_Right_Shoulder_Inner",
         "Joint_Right_Shoulder_Outer",
         "Joint_Right_UpperArm",
@@ -69,9 +89,13 @@ autolife_robot_config = RobotConfig(
         "Joint_Right_Forearm",
         "Joint_Right_Wrist_Upper",
         "Joint_Right_Wrist_Lower",
+        # [21:24] neck
+        "Joint_Neck_Roll",
+        "Joint_Neck_Pitch",
+        "Joint_Neck_Yaw",
     ],
     camera=CameraConfig(
-        link_name="Link_Camera_Chest",
+        link_name="Link_Camera_Head_Forehead",
         width=640,
         height=480,
         fov=60.0,
@@ -80,23 +104,37 @@ autolife_robot_config = RobotConfig(
     ),
 )
 
-HOME_JOINTS = [
-    0.0887,
-    -0.0293,
-    -0.0128,
-    -0.0424,
-    -0.0700,
-    0.1110,
-    0.1234,
-    -0.0488,
-    -0.1148,
-    -0.0954,
-    0.1303,
-    -0.1605,
-    -0.2033,
-    0.0565,
-    -0.0134,
-    -0.0278,
-    0.1667,
-    -0.0103,
-]
+HOME_JOINTS = np.array(
+    [
+        # [0:3]   base
+        0.0,
+        0.0,
+        0.0,
+        # [3:5]   legs
+        0.0887,
+        -0.0293,
+        # [5:7]   waist
+        -0.0128,
+        -0.0424,
+        # [7:14]  left arm
+        -0.0700,
+        0.1110,
+        0.1234,
+        -0.0488,
+        -0.1148,
+        -0.0954,
+        0.1303,
+        # [14:21] right arm
+        -0.1605,
+        -0.2033,
+        0.0565,
+        -0.0134,
+        -0.0278,
+        0.1667,
+        -0.0103,
+        # [21:24] neck
+        0.0,
+        0.0,
+        0.0,
+    ]
+)
