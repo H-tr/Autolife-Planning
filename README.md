@@ -37,13 +37,47 @@ pixi run foam-build
 bash scripts/download_assets.sh
 ```
 
+## Building the Robot Description
+
+When the robot URDF changes, rebuild the full pipeline from URDF to FK code:
+
+```bash
+pixi run generate-fk
+```
+
+This runs the full chain automatically:
+
+1. **foam-build** — Build the foam collision library
+2. **build-robot** — Process raw URDF into planning-ready descriptions (simple, base, SRDF)
+3. **spherize-robot** — Generate spherized URDF for collision checking
+4. **cricket-build** — Build the cricket FK code generator
+5. **generate-fk** — Generate FK C++ code and install it into vamp
+
+After generating, rebuild vamp to pick up the new FK:
+
+```bash
+pixi install
+```
+
+You can also run individual steps:
+
+```bash
+pixi run build-robot          # Steps 1-2 only
+pixi run spherize-robot       # Steps 1-3
+pixi run generate-fk          # Steps 5
+```
+
 ## Usage
 
 Run examples inside the pixi environment:
 
 ```bash
-pixi run python examples/random_dance_around_table.py
-pixi run python examples/ik_solver_example.py
+pixi run python examples/ik_example.py
+pixi run python examples/planning_example.py
+
+# With PyBullet visualization (requires dev environment)
+pixi run -e dev python examples/ik_example_vis.py
+pixi run -e dev python examples/random_dance_around_table.py
 ```
 
 ## Project Structure
