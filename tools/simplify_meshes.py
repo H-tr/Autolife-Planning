@@ -67,17 +67,21 @@ def simplify_meshes(src_dir, dst_dir):
 
 
 if __name__ == "__main__":
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
     parser = argparse.ArgumentParser(description="Simplify meshes for PyBullet")
     parser.add_argument(
         "--src",
         type=str,
-        default="/media/run/Extend/Autolife-Planning/assets/envs/rls_env/meshes",
+        default=os.path.join(project_root, "assets", "envs", "rls_env", "meshes"),
         help="Source directory",
     )
     parser.add_argument(
         "--dst",
         type=str,
-        default="/media/run/Extend/Autolife-Planning/assets/envs/rls_env/simplified_meshes",
+        default=os.path.join(
+            project_root, "assets", "envs", "rls_env", "simplified_meshes"
+        ),
         help="Destination directory",
     )
 
