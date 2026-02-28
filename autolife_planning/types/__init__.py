@@ -1,14 +1,10 @@
 from .geometry import SE3Pose
 from .ik import IKConfig, IKResult, IKStatus, SolveType
-from .planning import PlanningContext
+from .planning import PlannerConfig, PlanningResult, PlanningStatus
 from .robot import (
-    ArmConfiguration,
-    BaseConfiguration,
     CameraConfig,
     ChainConfig,
     RobotConfig,
-    RobotConfiguration,
-    WholeBodyConfiguration,
 )
 
 __all__ = [
@@ -23,10 +19,8 @@ __all__ = [
     "CameraConfig",
     "ChainConfig",
     "RobotConfig",
-    "BaseConfiguration",
-    "RobotConfiguration",
-    "ArmConfiguration",
-    "WholeBodyConfiguration",
     # Planning
-    "PlanningContext",
+    "PlannerConfig",
+    "PlanningResult",
+    "PlanningStatus",
 ]
