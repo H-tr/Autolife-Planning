@@ -8,20 +8,35 @@ import pybullet as pb
 from autolife_planning.config.robot_config import (
     CHAIN_CONFIGS,
     HOME_JOINTS,
+    JOINT_GROUPS,
     autolife_robot_config,
 )
 from autolife_planning.envs.pybullet_env import PyBulletEnv
 from autolife_planning.kinematics.trac_ik_solver import create_ik_solver
-from autolife_planning.types import IKConfig, RobotConfiguration, SE3Pose, SolveType
+from autolife_planning.types import IKConfig, SE3Pose, SolveType
 
-# Home configuration subsets matching each chain's joint ordering
-HOME_LEFT_ARM = np.array(HOME_JOINTS[4:11])
-HOME_RIGHT_ARM = np.array(HOME_JOINTS[11:18])
-HOME_WHOLE_BODY_LEFT = np.array(HOME_JOINTS[:11])
-HOME_WHOLE_BODY_RIGHT = np.array(HOME_JOINTS[:4] + HOME_JOINTS[11:18])
+# Home configuration subsets matching each chain's joint ordering (via JOINT_GROUPS)
+G = JOINT_GROUPS
+HOME_LEFT_ARM = HOME_JOINTS[G["left_arm"]]
+HOME_RIGHT_ARM = HOME_JOINTS[G["right_arm"]]
+HOME_WHOLE_BODY_LEFT = np.concatenate(
+    [
+        HOME_JOINTS[G["legs"]],
+        HOME_JOINTS[G["waist"]],
+        HOME_JOINTS[G["left_arm"]],
+    ]
+)
+HOME_WHOLE_BODY_RIGHT = np.concatenate(
+    [
+        HOME_JOINTS[G["legs"]],
+        HOME_JOINTS[G["waist"]],
+        HOME_JOINTS[G["right_arm"]],
+    ]
+)
 
-# Mapping from chain solution indices to full 18-joint config indices
-CHAIN_TO_FULL = {
+# Mapping from chain solution indices to full 21-joint config indices (no base)
+# These indices are relative to HOME_JOINTS[3:] (the 21 body joints)
+CHAIN_TO_BODY = {
     "left_arm": list(range(4, 11)),
     "right_arm": list(range(11, 18)),
     "whole_body_left": list(range(0, 11)),
@@ -128,7 +143,7 @@ def test_chain(env, chain_name):
     print(f"  ee:   {solver.ee_frame}")
 
     # Show home config and draw current EE frame
-    env.set_joint_states(RobotConfiguration.from_array(HOME_JOINTS))
+    env.set_joint_states(HOME_JOINTS[3:])
     debug_lines = draw_frame_at_link(env, ee_idx, length=0.06, width=2)
 
     # FK to get current EE pose (in chain-local frame for IK target)
@@ -168,11 +183,11 @@ def test_chain(env, chain_name):
     )
 
     if result.joint_positions is not None:
-        # Apply solution and draw achieved EE frame
-        full = list(HOME_JOINTS)
-        for i, fi in enumerate(CHAIN_TO_FULL[chain_name]):
-            full[fi] = float(result.joint_positions[i])
-        env.set_joint_states(RobotConfiguration.from_array(full))
+        # Apply solution: overlay IK result onto home body joints
+        body_joints = HOME_JOINTS[3:].copy()
+        for i, bi in enumerate(CHAIN_TO_BODY[chain_name]):
+            body_joints[bi] = float(result.joint_positions[i])
+        env.set_joint_states(body_joints)
         debug_lines += draw_frame_at_link(env, ee_idx, length=0.05, width=2)
 
     wait_key(env, ord("n"), f"[{chain_name}] Solution shown. Press 'n' for next.")

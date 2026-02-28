@@ -28,15 +28,20 @@ platforms = ["linux-64"]
 [tool.pixi.pypi-dependencies]
 autolife_planning = { path = ".", editable = true }
 vamp-planner = { path = "./third_party/vamp", editable = true }
+foam = { path = "./third_party/foam", editable = true }
 
 [tool.pixi.environments]
 default = { solve-group = "default" }
+dev = { features = ["dev"], solve-group = "default" }
 
 [tool.pixi.tasks]
 cricket-configure = "cmake -GNinja -S third_party/cricket -B third_party/cricket/build"
 cricket-build = { cmd = "cmake --build third_party/cricket/build", depends-on = ["cricket-configure"] }
 foam-configure = "cmake -GNinja -S third_party/foam -B third_party/foam/build"
 foam-build = { cmd = "cmake --build third_party/foam/build", depends-on = ["foam-configure"] }
+build-robot = { cmd = "bash scripts/build_robot.sh", depends-on = ["foam-build"] }
+spherize-robot = { cmd = "bash scripts/spherize_robot.sh", depends-on = ["build-robot"] }
+generate-fk = { cmd = "bash scripts/generate_fk.sh", depends-on = ["cricket-build", "spherize-robot"] }
 
 [tool.pixi.dependencies]
 cmake = ">=4.2.3,<5"
@@ -58,3 +63,10 @@ inja = ">=3.5.0,<4"
 nlohmann_json = ">=3.12.0,<4"
 fmt = ">=12.1.0,<13"
 llvm = ">=22.1.0,<23"
+fire = ">=0.7.1,<0.8"
+xmltodict = ">=1.0.4,<2"
+pymeshlab = ">=2025.7.post1,<2026"
+pip = ">=26.0.1,<27"
+
+[tool.pixi.feature.dev.pypi-dependencies]
+pybullet = "*"
