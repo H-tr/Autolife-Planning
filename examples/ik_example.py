@@ -10,25 +10,39 @@ Available chains:
 
     Shorthand: create_ik_solver("whole_body", side="left")
 
-HOME_JOINTS layout (21 DOF):
-    [0:2]   leg     (Ankle, Knee)
-    [2:4]   waist   (Pitch, Yaw)
-    [4:11]  left arm  (ShoulderInner/Outer, UpperArm, Elbow, Forearm, WristUpper/Lower)
-    [11:18] right arm (same as left)
-    [18:21] neck    (Roll, Pitch, Yaw)
+JOINT_GROUPS (indices into full 24-DOF config):
+    base      [0:3]    Virtual_X, Virtual_Y, Virtual_Theta
+    legs      [3:5]    Ankle, Knee
+    waist     [5:7]    Waist Pitch, Yaw
+    left_arm  [7:14]   Shoulder → Wrist (7 DOF)
+    right_arm [14:21]  Shoulder → Wrist (7 DOF)
+    neck      [21:24]  Roll, Pitch, Yaw
 """
 
 import numpy as np
 
-from autolife_planning.config.robot_config import HOME_JOINTS
+from autolife_planning.config.robot_config import HOME_JOINTS, JOINT_GROUPS
 from autolife_planning.kinematics.trac_ik_solver import create_ik_solver
 from autolife_planning.types import IKConfig, SE3Pose, SolveType
 
-# Home configuration subsets for each chain
-HOME_LEFT_ARM = np.array(HOME_JOINTS[4:11])
-HOME_RIGHT_ARM = np.array(HOME_JOINTS[11:18])
-HOME_WHOLE_BODY_LEFT = np.array(HOME_JOINTS[:11])
-HOME_WHOLE_BODY_RIGHT = np.array(HOME_JOINTS[:4] + HOME_JOINTS[11:18])
+# Home configuration subsets for each chain (via JOINT_GROUPS)
+G = JOINT_GROUPS
+HOME_LEFT_ARM = HOME_JOINTS[G["left_arm"]]
+HOME_RIGHT_ARM = HOME_JOINTS[G["right_arm"]]
+HOME_WHOLE_BODY_LEFT = np.concatenate(
+    [
+        HOME_JOINTS[G["legs"]],
+        HOME_JOINTS[G["waist"]],
+        HOME_JOINTS[G["left_arm"]],
+    ]
+)
+HOME_WHOLE_BODY_RIGHT = np.concatenate(
+    [
+        HOME_JOINTS[G["legs"]],
+        HOME_JOINTS[G["waist"]],
+        HOME_JOINTS[G["right_arm"]],
+    ]
+)
 
 
 def main():
