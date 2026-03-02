@@ -10,10 +10,11 @@ CRICKET="$ROOT/third_party/cricket"
 VAMP="$ROOT/third_party/vamp"
 RESOURCES="$ROOT/resources/robot/autolife"
 
-# 1. Distribute spherized URDF to cricket + vamp resources
-echo "[1/3] Distributing spherized URDF..."
+# 1. Distribute existing robot description to cricket + vamp resources
+echo "[1/3] Distributing robot description..."
 for DEST in "$CRICKET/resources/autolife" "$VAMP/resources/autolife"; do
     cp "$RESOURCES/autolife_spherized.urdf" "$DEST/autolife_spherized.urdf"
+    cp "$RESOURCES/autolife.srdf" "$DEST/autolife.srdf"
     echo "  copied to $DEST"
 done
 

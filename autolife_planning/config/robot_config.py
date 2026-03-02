@@ -12,13 +12,14 @@ _RESOURCES_DIR = os.path.join(
 )
 
 # Atomic joint groups — indices into the full 24-DOF configuration array.
+# Order must match VAMP's URDF tree traversal: base, legs, waist, left arm, neck, right arm.
 JOINT_GROUPS = {
     "base": slice(0, 3),  # Virtual_X, Virtual_Y, Virtual_Theta
     "legs": slice(3, 5),  # Ankle, Knee
     "waist": slice(5, 7),  # Waist_Pitch, Waist_Yaw
     "left_arm": slice(7, 14),  # Shoulder → Wrist (7 DOF)
-    "right_arm": slice(14, 21),  # Shoulder → Wrist (7 DOF)
-    "neck": slice(21, 24),  # Roll, Pitch, Yaw
+    "neck": slice(14, 17),  # Roll, Pitch, Yaw
+    "right_arm": slice(17, 24),  # Shoulder → Wrist (7 DOF)
 }
 
 CHAIN_CONFIGS: dict[str, ChainConfig] = {
@@ -67,7 +68,7 @@ autolife_robot_config = RobotConfig(
         "Joint_Virtual_X",
         "Joint_Virtual_Y",
         "Joint_Virtual_Theta",
-        # [3:5]   leg
+        # [3:5]   legs
         "Joint_Ankle",
         "Joint_Knee",
         # [5:7]   waist
@@ -81,7 +82,11 @@ autolife_robot_config = RobotConfig(
         "Joint_Left_Forearm",
         "Joint_Left_Wrist_Upper",
         "Joint_Left_Wrist_Lower",
-        # [14:21] right arm
+        # [14:17] neck
+        "Joint_Neck_Roll",
+        "Joint_Neck_Pitch",
+        "Joint_Neck_Yaw",
+        # [17:24] right arm
         "Joint_Right_Shoulder_Inner",
         "Joint_Right_Shoulder_Outer",
         "Joint_Right_UpperArm",
@@ -89,10 +94,6 @@ autolife_robot_config = RobotConfig(
         "Joint_Right_Forearm",
         "Joint_Right_Wrist_Upper",
         "Joint_Right_Wrist_Lower",
-        # [21:24] neck
-        "Joint_Neck_Roll",
-        "Joint_Neck_Pitch",
-        "Joint_Neck_Yaw",
     ],
     camera=CameraConfig(
         link_name="Link_Camera_Head_Forehead",
@@ -124,7 +125,11 @@ HOME_JOINTS = np.array(
         -0.1148,
         -0.0954,
         0.1303,
-        # [14:21] right arm
+        # [14:17] neck
+        0.0,
+        0.0,
+        0.0,
+        # [17:24] right arm
         -0.1605,
         -0.2033,
         0.0565,
@@ -132,9 +137,5 @@ HOME_JOINTS = np.array(
         -0.0278,
         0.1667,
         -0.0103,
-        # [21:24] neck
-        0.0,
-        0.0,
-        0.0,
     ]
 )

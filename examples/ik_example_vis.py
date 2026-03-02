@@ -36,11 +36,12 @@ HOME_WHOLE_BODY_RIGHT = np.concatenate(
 
 # Mapping from chain solution indices to full 21-joint config indices (no base)
 # These indices are relative to HOME_JOINTS[3:] (the 21 body joints)
+# Order: legs[0:2], waist[2:4], left_arm[4:11], neck[11:14], right_arm[14:21]
 CHAIN_TO_BODY = {
     "left_arm": list(range(4, 11)),
-    "right_arm": list(range(11, 18)),
+    "right_arm": list(range(14, 21)),
     "whole_body_left": list(range(0, 11)),
-    "whole_body_right": list(range(0, 4)) + list(range(11, 18)),
+    "whole_body_right": list(range(0, 4)) + list(range(14, 21)),
 }
 
 CHAIN_SEEDS = {
