@@ -15,8 +15,8 @@ JOINT_GROUPS (indices into full 24-DOF config):
     legs      [3:5]    Ankle, Knee
     waist     [5:7]    Waist Pitch, Yaw
     left_arm  [7:14]   Shoulder → Wrist (7 DOF)
-    right_arm [14:21]  Shoulder → Wrist (7 DOF)
-    neck      [21:24]  Roll, Pitch, Yaw
+    neck      [14:17]  Roll, Pitch, Yaw
+    right_arm [17:24]  Shoulder → Wrist (7 DOF)
 """
 
 import numpy as np
