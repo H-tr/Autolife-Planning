@@ -421,9 +421,17 @@ def _generate_collision_disables(robot: ET.Element, all_links: set[str]) -> None
             for j in range(i + 1, len(chain)):
                 add(chain[i], chain[j])
 
+    # Substrings for distal arm links that should collide with the chest.
+    _distal_arm = ("Finger", "Gripper", "Elbow", "Forearm", "Wrist")
+
     # Main chain vs both arm chains
+    # Keep collision checking for Waist_Yaw_to_Shoulder_Inner vs distal arm links.
     for lower in main_chain:
         for arm_link in left_arm_chain + right_arm_chain:
+            if lower == "Link_Waist_Yaw_to_Shoulder_Inner" and any(
+                s in arm_link for s in _distal_arm
+            ):
+                continue
             add(lower, arm_link)
 
     # Left arm vs right arm (opposite sides)
@@ -442,8 +450,11 @@ def _generate_collision_disables(robot: ET.Element, all_links: set[str]) -> None
             add(neck, arm_link)
 
     # Gripper sub-links vs all body links and vs each other
+    # Keep collision checking for gripper sub-links vs Waist_Yaw_to_Shoulder_Inner.
     for gl in gripper_links:
         for bl in body_links:
+            if bl == "Link_Waist_Yaw_to_Shoulder_Inner":
+                continue
             add(gl, bl)
         for gl2 in gripper_links:
             if gl != gl2:
@@ -638,9 +649,15 @@ def main() -> None:
     base_simple_tree = generate_base_urdf(simple_tree)
     _write_xml(base_simple_tree, out_dir / "autolife_base_simple.urdf")
 
-    print(f"\n[4/{total_stages}] Generating SRDF...")
-    srdf_tree = generate_srdf(preprocessed)
-    _write_xml(srdf_tree, out_dir / "autolife.srdf")
+    srdf_path = out_dir / "autolife.srdf"
+    if srdf_path.exists():
+        print(
+            f"\n[4/{total_stages}] SRDF already exists, keeping existing (hand-edited) version."
+        )
+    else:
+        print(f"\n[4/{total_stages}] Generating SRDF...")
+        srdf_tree = generate_srdf(base_simple_tree)
+        _write_xml(srdf_tree, srdf_path)
 
     print(f"\n[5/{total_stages}] Copying meshes...")
     copy_meshes(preprocessed, mesh_src_dir, out_dir)
