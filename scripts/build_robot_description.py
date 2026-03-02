@@ -421,16 +421,22 @@ def _generate_collision_disables(robot: ET.Element, all_links: set[str]) -> None
             for j in range(i + 1, len(chain)):
                 add(chain[i], chain[j])
 
-    # Substrings for distal arm links that should collide with the chest.
+    # Substrings for distal arm links that should collide with the torso/chest.
     _distal_arm = ("Finger", "Gripper", "Elbow", "Forearm", "Wrist")
+    # Main-chain links that should collide with distal arm links.
+    _collision_torso = {
+        "Link_Waist_Yaw_to_Shoulder_Inner",
+        "Link_Head",
+        "Link_Knee_to_Waist_Pitch",
+        # "Link_Ankle_to_Knee",
+        # "Link_Ground_Vehicle",
+    }
 
     # Main chain vs both arm chains
-    # Keep collision checking for Waist_Yaw_to_Shoulder_Inner vs distal arm links.
+    # Keep collision checking for torso/chest vs distal arm links.
     for lower in main_chain:
         for arm_link in left_arm_chain + right_arm_chain:
-            if lower == "Link_Waist_Yaw_to_Shoulder_Inner" and any(
-                s in arm_link for s in _distal_arm
-            ):
+            if lower in _collision_torso and any(s in arm_link for s in _distal_arm):
                 continue
             add(lower, arm_link)
 
@@ -450,10 +456,10 @@ def _generate_collision_disables(robot: ET.Element, all_links: set[str]) -> None
             add(neck, arm_link)
 
     # Gripper sub-links vs all body links and vs each other
-    # Keep collision checking for gripper sub-links vs Waist_Yaw_to_Shoulder_Inner.
+    # Keep collision checking for gripper sub-links vs torso/chest.
     for gl in gripper_links:
         for bl in body_links:
-            if bl == "Link_Waist_Yaw_to_Shoulder_Inner":
+            if bl in _collision_torso:
                 continue
             add(gl, bl)
         for gl2 in gripper_links:
