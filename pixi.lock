@@ -594,7 +594,7 @@ packages:
 - pypi: ./
   name: autolife-planning
   version: 0.1.0
-  sha256: 2fe7ad5c7df362a14bd07e91cc02816c1b2ec1370960e62a44d9f111331ac4b5
+  sha256: e9b14593f8950a108ffb54ce7b38eb1a2a0a91f2fd5be7541f5093c17da12d6f
   requires_dist:
   - numpy
   - scipy

@@ -41,7 +41,7 @@ foam-configure = "cmake -GNinja -S third_party/foam -B third_party/foam/build"
 foam-build = { cmd = "cmake --build third_party/foam/build", depends-on = ["foam-configure"] }
 build-robot = { cmd = "bash scripts/build_robot.sh", depends-on = ["foam-build"] }
 spherize-robot = { cmd = "bash scripts/spherize_robot.sh", depends-on = ["build-robot"] }
-generate-fk = { cmd = "bash scripts/generate_fk.sh", depends-on = ["cricket-build", "spherize-robot"] }
+generate-fk = { cmd = "bash scripts/generate_fk.sh", depends-on = ["spherize-robot"] }
 
 [tool.pixi.dependencies]
 cmake = ">=4.2.3,<5"
