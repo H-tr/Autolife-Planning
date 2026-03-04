@@ -37,6 +37,7 @@ foam = { path = "./third_party/foam", editable = true }
 [tool.pixi.environments]
 default = { solve-group = "default" }
 dev = { features = ["dev"], solve-group = "default" }
+docs = { features = ["docs"], solve-group = "docs" }
 
 [tool.pixi.tasks]
 cricket-configure = "cmake -GNinja -S third_party/cricket -B third_party/cricket/build"
@@ -77,6 +78,12 @@ pip = ">=26.0.1,<27"
 python-build = ">=1.2.2,<2"
 scikit-build-core = ">=0.4.3"
 nanobind = ">=2.0.0"
+
+[tool.pixi.feature.docs.dependencies]
+python = ">=3.11,<3.13"
+pip = ">=26.0.1,<27"
+
+[tool.pixi.feature.docs.pypi-dependencies]
 mkdocs-material = ">=9.5"
 mkdocstrings-python = ">=1.7"
 
