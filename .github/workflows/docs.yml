@@ -15,12 +15,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: prefix-dev/setup-pixi@v0.8.1
+      - uses: actions/setup-python@v5
         with:
-          pixi-version: v0.46.0
+          python-version: "3.12"
+
+      - name: Install docs dependencies
+        run: pip install mkdocs-material mkdocstrings[python]
 
       - name: Build docs
-        run: pixi run mkdocs build --strict
+        run: mkdocs build --strict
 
       - name: Deploy to GitHub Pages
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
