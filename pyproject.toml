@@ -77,6 +77,8 @@ pip = ">=26.0.1,<27"
 python-build = ">=1.2.2,<2"
 scikit-build-core = ">=0.4.3"
 nanobind = ">=2.0.0"
+mkdocs-material = ">=9.5"
+mkdocstrings-python = ">=1.7"
 
 [tool.pixi.feature.dev.pypi-dependencies]
 pybullet = "*"
