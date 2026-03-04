@@ -1,8 +1,8 @@
 # Examples
 
-## Inverse Kinematics
+## IK Solver (Minimal)
 
-A minimal IK example without visualization:
+Solve inverse kinematics without visualization:
 
 ```python
 import numpy as np
@@ -11,25 +11,22 @@ from autolife_planning.config.robot_config import HOME_JOINTS, JOINT_GROUPS
 from autolife_planning.kinematics.trac_ik_solver import create_ik_solver
 from autolife_planning.types import IKConfig, SE3Pose, SolveType
 
-# Home configuration for the left arm
 G = JOINT_GROUPS
 HOME_LEFT_ARM = HOME_JOINTS[G["left_arm"]]
 
-# Create solver with custom config
 config = IKConfig(
-    timeout=0.2,
-    epsilon=1e-5,
-    solve_type=SolveType.SPEED,
-    max_attempts=10,
-    position_tolerance=1e-4,
-    orientation_tolerance=1e-4,
+    timeout=0.2,              # seconds per TRAC-IK attempt
+    epsilon=1e-5,             # convergence tolerance
+    solve_type=SolveType.SPEED,  # SPEED | DISTANCE | MANIP1 | MANIP2
+    max_attempts=10,          # random restart attempts
+    position_tolerance=1e-4,  # post-solve check (meters)
+    orientation_tolerance=1e-4,  # post-solve check (radians)
 )
 
 solver = create_ik_solver("left_arm", config=config)
 
 # Forward kinematics at home position
 home_pose = solver.fk(HOME_LEFT_ARM)
-print(f"Home EE position: {home_pose.position}")
 
 # Solve IK for a target offset from home
 target = SE3Pose(
@@ -40,7 +37,102 @@ target = SE3Pose(
 result = solver.solve(target, seed=HOME_LEFT_ARM)
 if result.success:
     print(f"Solution: {np.round(result.joint_positions, 4)}")
+
+    # Verify with FK
+    achieved = solver.fk(result.joint_positions)
+    print(f"Achieved position: {np.round(achieved.position, 4)}")
 ```
+
+## IK Solver with PyBullet Visualization
+
+Interactive IK example that visualizes results in PyBullet. Tests multiple chains (left arm, right arm, whole body) with coordinate frame overlays.
+
+```python
+from autolife_planning.config.robot_config import (
+    CHAIN_CONFIGS, HOME_JOINTS, JOINT_GROUPS, autolife_robot_config,
+)
+from autolife_planning.envs.pybullet_env import PyBulletEnv
+from autolife_planning.kinematics.trac_ik_solver import create_ik_solver
+from autolife_planning.types import IKConfig, SE3Pose, SolveType
+
+env = PyBulletEnv(autolife_robot_config, visualize=True)
+
+config = IKConfig(solve_type=SolveType.DISTANCE)
+solver = create_ik_solver("left_arm", config=config)
+
+# Solve and apply to simulation
+result = solver.solve(target_pose, seed=HOME_JOINTS[JOINT_GROUPS["left_arm"]])
+if result.success:
+    env.set_joint_states(result.joint_positions)
+```
+
+!!! note
+    Requires the `dev` environment: `pixi run -e dev python examples/ik_example_vis.py`
+
+## Motion Planning (Minimal)
+
+Plan a collision-free path between configurations:
+
+```python
+import numpy as np
+
+from autolife_planning.config.robot_config import HOME_JOINTS
+from autolife_planning.planning import create_planner
+
+# Create a planner with an empty environment (no obstacles)
+planner = create_planner("autolife")
+
+start = HOME_JOINTS.copy()
+goal = planner.sample_valid()
+
+result = planner.plan(start, goal)
+if result.success:
+    print(f"Path: {result.path.shape[0]} waypoints, "
+          f"{result.planning_time_ns / 1e6:.1f}ms, "
+          f"cost: {result.path_cost:.4f}")
+```
+
+## Motion Planning with Obstacles
+
+Plan around a point cloud obstacle (e.g., a table) with PyBullet visualization and interactive configuration sampling:
+
+```python
+import numpy as np
+import trimesh
+
+from autolife_planning.config.robot_config import autolife_robot_config
+from autolife_planning.envs.pybullet_env import PyBulletEnv
+from autolife_planning.planning import create_planner
+from autolife_planning.types import PlannerConfig
+
+# Load point cloud obstacle
+table_pcd = trimesh.load("table.ply")
+points = np.array(table_pcd.vertices)
+
+# Create planner with obstacle
+planner = create_planner(
+    "autolife",
+    config=PlannerConfig(planner_name="rrtc", point_radius=0.01),
+    pointcloud=points,
+)
+
+# Visualize
+env = PyBulletEnv(autolife_robot_config, visualize=True)
+env.add_pointcloud(points)
+
+# Sample valid configs and plan
+start = planner.sample_valid()
+goal = planner.sample_valid()
+
+result = planner.plan(start, goal)
+if result.success:
+    for waypoint in result.path:
+        env.set_configuration(waypoint)
+```
+
+---
+
+## Reference
 
 ### Available Chains
 
@@ -69,17 +161,11 @@ Indices into the full 24-DOF configuration:
 | `neck` | 14–16 | Roll, Pitch, Yaw |
 | `right_arm` | 17–23 | Shoulder → Wrist (7 DOF) |
 
-## Motion Planning
+### IK Solve Types
 
-```python
-from autolife_planning.planning.motion_planner import create_planner
-from autolife_planning.types import PlannerConfig
-
-config = PlannerConfig()
-planner = create_planner("autolife", config=config)
-
-# Plan from start to goal configuration
-result = planner.plan(start_config, goal_config)
-if result.success:
-    print(f"Path with {len(result.path)} waypoints")
-```
+| Type | Description |
+|------|-------------|
+| `SolveType.SPEED` | Return first valid solution (fastest) |
+| `SolveType.DISTANCE` | Minimize joint displacement from seed |
+| `SolveType.MANIP1` | Maximize manipulability (product of singular values) |
+| `SolveType.MANIP2` | Maximize isotropy (min/max singular value ratio) |
