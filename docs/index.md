@@ -6,20 +6,13 @@ A planning library for the **Autolife robot**. It provides inverse kinematics (T
 
 - **Inverse Kinematics** — TRAC-IK based solver with multiple solve strategies (speed, distance, manipulability)
 - **Motion Planning** — VAMP-based planner with collision checking and path validation
+- **Subgroup Planning** — Plan for individual subgroups of the robot (single arm, dual arm, torso+arm, whole body) with automatic joint mapping
 - **Collision Geometry** — Spherized URDF representations for efficient collision detection
 - **Rotation Utilities** — Conversions between quaternion, RPY, axis-angle, and rotation matrices
 
 ## Quick Install
 
-First, install the required C/C++ system dependencies via conda:
-
-```bash
-conda create -n autolife -c conda-forge python=3.12 \
-  boost cxx-compiler cmake ninja eigen orocos-kdl nlopt pybind11 pip
-conda activate autolife
-```
-
-Then install the package:
+Pre-built wheels are available for **Python 3.10–3.12** on Linux x86_64. No local compilation required:
 
 ```bash
 pip install autolife-planning

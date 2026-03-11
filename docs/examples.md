@@ -136,6 +136,68 @@ if result.success:
         env.set_configuration(waypoint)
 ```
 
+## Subgroup Planning
+
+Plan for individual subgroups of the robot — single arm, dual arm, torso+arm, or whole body. Each subgroup operates on a subset of joints while keeping the rest frozen at a base configuration.
+
+<video controls width="100%">
+  <source src="../assets/subgroup_planning.mp4" type="video/mp4">
+</video>
+
+### Available subgroups
+
+| Category | Subgroups | DOF |
+|---|---|---|
+| Single arm | `autolife_left_high`, `autolife_left_mid`, `autolife_left_low`, `autolife_right_high`, `autolife_right_mid`, `autolife_right_low` | 7 |
+| Dual arm | `autolife_dual_high`, `autolife_dual_mid`, `autolife_dual_low` | 14 |
+| Torso + arm | `autolife_torso_left_high`, `autolife_torso_left_mid`, `autolife_torso_left_low`, `autolife_torso_right_high`, `autolife_torso_right_mid`, `autolife_torso_right_low` | 9 |
+| Whole body | `autolife_body` | 21 |
+
+The `high`/`mid`/`low` suffix selects the waist preset (frozen torso angle) for the subgroup.
+
+### Basic usage
+
+```python
+from autolife_planning.config.robot_config import subgroup_base_config
+from autolife_planning.planning import create_planner
+from autolife_planning.types import PlannerConfig
+
+# Create a planner for a single left arm (7 DOF)
+planner = create_planner(
+    "autolife_left_high",
+    config=PlannerConfig(planner_name="rrtc"),
+)
+
+# Get the base configuration (frozen joints for this subgroup)
+base_cfg = subgroup_base_config("autolife_left_high")
+
+# Extract the subgroup's start from the full-body base config
+start = planner.extract_config(base_cfg)
+
+# Sample a collision-free goal in the subgroup's joint space
+goal = planner.sample_valid()
+
+# Plan
+result = planner.plan(start, goal)
+if result.success:
+    print(f"Path: {result.path.shape[0]} waypoints, "
+          f"{result.planning_time_ns / 1e6:.1f}ms")
+
+    # Map the subgroup path back to full-body configurations
+    full_path = planner.embed_path(result.path, base_config=base_cfg)
+```
+
+### With PyBullet visualization
+
+```bash
+pixi run -e dev python examples/subgroup_planning_example.py
+
+# Use a different planner
+pixi run -e dev python examples/subgroup_planning_example.py --planner_name prm
+```
+
+The example iterates through all 16 subgroups, plans a path from home to a random goal, and animates the result. Press `n` to advance between subgroups and `q` to quit.
+
 ---
 
 ## Reference

@@ -3,32 +3,11 @@
 ## Prerequisites
 
 - **Linux** (x86_64)
-- **Python** 3.11–3.12
-- [conda](https://docs.conda.io/) or [mamba](https://mamba.readthedocs.io/) package manager
-
-The package depends on several C/C++ libraries that must be installed via conda-forge before `pip install`:
-
-| Dependency | Purpose |
-|------------|---------|
-| `cmake`, `ninja` | Build system |
-| `cxx-compiler` | C++ compiler toolchain |
-| `boost` | C++ utility libraries |
-| `eigen` | Linear algebra |
-| `orocos-kdl` | Kinematics and dynamics |
-| `nlopt` | Nonlinear optimization |
-| `pybind11` | Python ↔ C++ bindings |
+- **Python** 3.10–3.12
 
 ## Installation
 
-### Step 1: Create conda environment
-
-```bash
-conda create -n autolife -c conda-forge python=3.12 \
-  boost cxx-compiler cmake ninja eigen orocos-kdl nlopt pybind11 pip
-conda activate autolife
-```
-
-### Step 2: Install the package
+Pre-built wheels are available for Python 3.10–3.12 on Linux x86_64. No local compilation required:
 
 ```bash
 pip install autolife-planning
@@ -37,9 +16,47 @@ pip install autolife-planning
 ## Verify installation
 
 ```python
-from autolife_planning.kinematics.trac_ik_solver import create_ik_solver
-from autolife_planning.types import IKConfig, SE3Pose
+from autolife_planning.config.robot_config import HOME_JOINTS
+from autolife_planning.planning import create_planner
 
-solver = create_ik_solver("left_arm")
-print(f"Chain: {solver.base_frame} → {solver.ee_frame} ({solver.num_joints} joints)")
+planner = create_planner("autolife")
+goal = planner.sample_valid()
+result = planner.plan(HOME_JOINTS.copy(), goal)
+print(f"Planning {'succeeded' if result.success else 'failed'}")
+```
+
+## Building Wheels from Source
+
+To build distributable wheels for all supported Python versions:
+
+```bash
+bash scripts/build_wheels.sh
+```
+
+This uses Docker with the `manylinux_2_28` image to produce portable Linux wheels. The output goes to `dist/wheels/`. It builds:
+
+- **autolife-vamp** — Version-specific wheels for Python 3.10, 3.11, 3.12
+- **autolife-planning** — Pure Python wheel (works on any Python 3.10+)
+
+Requirements: Docker must be installed and running.
+
+## Development Setup
+
+For contributing or rebuilding C++ dependencies from source, use [pixi](https://pixi.sh):
+
+```bash
+git clone --recursive https://github.com/H-tr/Autolife-Planning.git
+cd Autolife-Planning
+bash scripts/setup.sh
+```
+
+Or manually:
+
+```bash
+git clone --recursive https://github.com/H-tr/Autolife-Planning.git
+cd Autolife-Planning
+pixi install
+pixi run cricket-build
+pixi run foam-build
+bash scripts/download_assets.sh
 ```
