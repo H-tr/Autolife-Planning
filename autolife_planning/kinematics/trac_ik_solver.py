@@ -1,18 +1,18 @@
 """TRAC-IK based inverse kinematics solver.
 
 Wraps the vendored TRAC-IK C++ library (dual KDL + NLopt threading)
-via pybind11 bindings. Pinocchio is still used for FK/Jacobian in
-motion planning; this module handles IK only.
+via pybind11 bindings. Pinocchio is used to compute the base-link-to-world
+transform so that FK/IK targets use the same world frame as the Pink solver.
 """
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+import importlib
 
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from autolife_planning.config.robot_config import CHAIN_CONFIGS
+from autolife_planning.kinematics.ik_solver_base import IKSolverBase
 from autolife_planning.types import (
     ChainConfig,
     IKConfig,
@@ -22,31 +22,7 @@ from autolife_planning.types import (
     SolveType,
 )
 
-
-@runtime_checkable
-class IKSolverBase(Protocol):
-    """Protocol for IK solver backends."""
-
-    @property
-    def base_frame(self) -> str:
-        ...
-
-    @property
-    def ee_frame(self) -> str:
-        ...
-
-    @property
-    def num_joints(self) -> int:
-        ...
-
-    def solve(
-        self,
-        target_pose: SE3Pose,
-        seed: np.ndarray | None = None,
-        config: IKConfig | None = None,
-    ) -> IKResult:
-        ...
-
+pin = importlib.import_module("pinocchio")
 
 # Map our SolveType enum to pytracik C++ enum values
 _SOLVE_TYPE_MAP = {
@@ -57,7 +33,7 @@ _SOLVE_TYPE_MAP = {
 }
 
 
-class TracIKSolver:
+class TracIKSolver(IKSolverBase):
     """IK solver wrapping the TRAC-IK C++ library."""
 
     def __init__(
@@ -93,6 +69,17 @@ class TracIKSolver:
         self._lower_bounds = np.array(pytracik.get_joint_lower_bounds(self._trac_ik))
         self._upper_bounds = np.array(pytracik.get_joint_upper_bounds(self._trac_ik))
         self._n_joints = pytracik.get_num_joints(self._trac_ik)
+
+        # Compute the base-link-to-world transform so FK/IK use world frame
+        # (TRAC-IK's KDL chain returns poses relative to base_link).
+        model = pin.buildModelFromUrdf(chain_config.urdf_path)
+        data = model.createData()
+        pin.forwardKinematics(model, data, pin.neutral(model))
+        pin.updateFramePlacements(model, data)
+        base_fid = model.getFrameId(chain_config.base_link)
+        oMb = data.oMf[base_fid]
+        self._base_R: np.ndarray = np.array(oMb.rotation, dtype=np.float64)
+        self._base_t: np.ndarray = np.array(oMb.translation, dtype=np.float64)
 
     @property
     def base_frame(self) -> str:
@@ -130,18 +117,22 @@ class TracIKSolver:
         self._upper_bounds = upper.copy()
 
     def fk(self, joint_positions: np.ndarray) -> SE3Pose:
-        """Compute forward kinematics via TRAC-IK's built-in FK.
+        """Compute forward kinematics in world frame.
 
         Input:
             joint_positions: Joint angles array of length num_joints
         Output:
-            SE3Pose of the end effector
+            SE3Pose of the end effector in world frame
         """
         q = np.asarray(joint_positions, dtype=np.float64)
         T = self._pytracik.fk(self._trac_ik, q)
         if T.size == 0:
             raise RuntimeError("FK failed — invalid joint configuration")
-        return SE3Pose.from_matrix(T)
+        local = SE3Pose.from_matrix(T)
+        return SE3Pose(
+            position=self._base_R @ local.position + self._base_t,
+            rotation=self._base_R @ local.rotation,
+        )
 
     def solve(
         self,
@@ -160,9 +151,12 @@ class TracIKSolver:
         """
         cfg = config if config is not None else self._config
 
-        # Extract target position and quaternion (x, y, z, w) for pytracik
-        x, y, z = target_pose.position
-        quat_xyzw = Rotation.from_matrix(target_pose.rotation).as_quat()  # [x,y,z,w]
+        # Convert world-frame target to base-link frame for pytracik
+        R_inv = self._base_R.T
+        local_pos = R_inv @ (target_pose.position - self._base_t)
+        local_rot = R_inv @ target_pose.rotation
+        x, y, z = local_pos
+        quat_xyzw = Rotation.from_matrix(local_rot).as_quat()  # [x,y,z,w]
         qx, qy, qz, qw = quat_xyzw
 
         best_result: IKResult | None = None
@@ -223,38 +217,3 @@ class TracIKSolver:
             position_error=float("inf"),
             orientation_error=float("inf"),
         )
-
-
-def create_ik_solver(
-    chain_name: str,
-    config: IKConfig | None = None,
-    side: str | None = None,
-    urdf_path: str | None = None,
-) -> TracIKSolver:
-    """Factory function to create a TRAC-IK solver for a named chain.
-
-    Input:
-        chain_name: Name of the chain (e.g. "left_arm", "whole_body")
-        config: IK configuration (uses defaults if None)
-        side: Optional "left" or "right" suffix for compound names
-        urdf_path: Override the default URDF file path
-    Output:
-        TracIKSolver instance
-
-    Examples:
-        create_ik_solver("left_arm")
-        create_ik_solver("whole_body", side="left")  # resolves to "whole_body_left"
-        create_ik_solver("left_arm", urdf_path="/path/to/autolife.urdf")
-    """
-    if side is not None:
-        chain_name = f"{chain_name}_{side}"
-
-    if chain_name not in CHAIN_CONFIGS:
-        available = ", ".join(sorted(CHAIN_CONFIGS.keys()))
-        raise ValueError(f"Unknown chain '{chain_name}'. Available chains: {available}")
-
-    chain_config = CHAIN_CONFIGS[chain_name]
-    if urdf_path is not None:
-        chain_config = chain_config.with_urdf_path(urdf_path)
-
-    return TracIKSolver(chain_config, config)

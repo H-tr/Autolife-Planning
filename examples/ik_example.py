@@ -22,7 +22,7 @@ JOINT_GROUPS (indices into full 24-DOF config):
 import numpy as np
 
 from autolife_planning.config.robot_config import HOME_JOINTS, JOINT_GROUPS
-from autolife_planning.kinematics.trac_ik_solver import create_ik_solver
+from autolife_planning.kinematics import create_ik_solver
 from autolife_planning.types import IKConfig, SE3Pose, SolveType
 
 # Home configuration subsets for each chain (via JOINT_GROUPS)

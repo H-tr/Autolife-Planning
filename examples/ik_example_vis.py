@@ -12,7 +12,7 @@ from autolife_planning.config.robot_config import (
     autolife_robot_config,
 )
 from autolife_planning.envs.pybullet_env import PyBulletEnv
-from autolife_planning.kinematics.trac_ik_solver import create_ik_solver
+from autolife_planning.kinematics import create_ik_solver
 from autolife_planning.types import IKConfig, SE3Pose, SolveType
 
 # Home configuration subsets matching each chain's joint ordering (via JOINT_GROUPS)
