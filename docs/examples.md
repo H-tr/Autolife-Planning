@@ -8,7 +8,7 @@ Solve inverse kinematics without visualization:
 import numpy as np
 
 from autolife_planning.config.robot_config import HOME_JOINTS, JOINT_GROUPS
-from autolife_planning.kinematics.trac_ik_solver import create_ik_solver
+from autolife_planning.kinematics import create_ik_solver
 from autolife_planning.types import IKConfig, SE3Pose, SolveType
 
 G = JOINT_GROUPS
@@ -52,7 +52,7 @@ from autolife_planning.config.robot_config import (
     CHAIN_CONFIGS, HOME_JOINTS, JOINT_GROUPS, autolife_robot_config,
 )
 from autolife_planning.envs.pybullet_env import PyBulletEnv
-from autolife_planning.kinematics.trac_ik_solver import create_ik_solver
+from autolife_planning.kinematics import create_ik_solver
 from autolife_planning.types import IKConfig, SE3Pose, SolveType
 
 env = PyBulletEnv(autolife_robot_config, visualize=True)
@@ -68,6 +68,77 @@ if result.success:
 
 !!! note
     Requires the `dev` environment: `pixi run -e dev python examples/ik_example_vis.py`
+
+<video controls width="100%">
+  <source src="../assets/trac_ik.mp4" type="video/mp4">
+</video>
+
+## Constrained IK (Pink)
+
+The Pink backend provides QP-based differential IK with center-of-mass stability, camera frame stabilization, and collision avoidance. It uses the same `create_ik_solver` factory with `backend="pink"`.
+
+```python
+from autolife_planning.config.robot_config import HOME_JOINTS, JOINT_GROUPS
+from autolife_planning.kinematics import create_ik_solver
+from autolife_planning.types import PinkIKConfig, SE3Pose
+
+G = JOINT_GROUPS
+SEED = np.concatenate([
+    HOME_JOINTS[G["legs"]],
+    HOME_JOINTS[G["waist"]],
+    HOME_JOINTS[G["left_arm"]],
+])
+
+config = PinkIKConfig(
+    lm_damping=1e-3,
+    com_cost=0.1,                                     # CoM stability
+    camera_frame="Link_Waist_Yaw_to_Shoulder_Inner",  # chest camera
+    camera_cost=0.1,                                   # camera stabilization
+    max_iterations=200,
+)
+
+solver = create_ik_solver("whole_body", side="left", backend="pink", config=config)
+
+home_pose = solver.fk(SEED)
+target = SE3Pose(
+    position=home_pose.position + np.array([0.30, 0.0, 0.0]),
+    rotation=home_pose.rotation,
+)
+
+result = solver.solve_constrained(target, seed=SEED)
+if result.success:
+    print(f"Solved in {result.iterations} iterations")
+    print(f"Position error: {result.position_error*1000:.2f} mm")
+```
+
+### With collision avoidance
+
+```python
+from autolife_planning.kinematics.collision_model import build_collision_model
+
+collision_ctx = build_collision_model("path/to/autolife_simple.urdf", srdf_path="path/to/autolife.srdf")
+
+config = PinkIKConfig(
+    lm_damping=1e-3,
+    com_cost=0.1,
+    self_collision=True,
+    collision_pairs=5,
+    solver="proxqp",
+)
+
+solver = create_ik_solver("whole_body", side="left", backend="pink", config=config)
+solver.set_collision_context(collision_ctx)
+```
+
+### With PyBullet visualization
+
+```bash
+pixi run -e dev python examples/constrained_ik_example_vis.py
+```
+
+<video controls width="100%">
+  <source src="../assets/constrained_ik.mp4" type="video/mp4">
+</video>
 
 ## Motion Planning (Minimal)
 

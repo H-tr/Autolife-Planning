@@ -1,12 +1,24 @@
 # Kinematics
 
+## Factory Function
+
+::: autolife_planning.kinematics.ik_solver_base.create_ik_solver
+
 ## TRAC-IK Solver
 
 ::: autolife_planning.kinematics.trac_ik_solver.TracIKSolver
 
-### Factory Function
+## Pink Constrained IK Solver
 
-::: autolife_planning.kinematics.ik_solver_base.create_ik_solver
+::: autolife_planning.kinematics.pink_ik_solver.PinkIKSolver
+
+## Collision Model
+
+::: autolife_planning.kinematics.collision_model.CollisionContext
+
+::: autolife_planning.kinematics.collision_model.build_collision_model
+
+::: autolife_planning.kinematics.collision_model.add_pointcloud_obstacles
 
 ## Forward Kinematics (Pinocchio)
 

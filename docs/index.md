@@ -4,7 +4,7 @@ A planning library for the **Autolife robot**. It provides inverse kinematics (T
 
 ## Features
 
-- **Inverse Kinematics** — TRAC-IK based solver with multiple solve strategies (speed, distance, manipulability)
+- **Inverse Kinematics** — TRAC-IK (unconstrained) and Pink (constrained, QP-based) solvers with CoM stability, camera stabilization, and collision avoidance
 - **Motion Planning** — VAMP-based planner with collision checking and path validation
 - **Subgroup Planning** — Plan for individual subgroups of the robot (single arm, dual arm, torso+arm, whole body) with automatic joint mapping
 - **Collision Geometry** — Spherized URDF representations for efficient collision detection

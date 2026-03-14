@@ -14,6 +14,14 @@
 
 ::: autolife_planning.types.ik.IKResult
 
+### Pink Constrained IK
+
+::: autolife_planning.types.ik.PinkIKConfig
+
+::: autolife_planning.types.ik.CoupledJoint
+
+::: autolife_planning.types.ik.ConstrainedIKResult
+
 ## Planning
 
 ::: autolife_planning.types.planning.PlanningStatus
