@@ -217,7 +217,9 @@ __marimo__/
 .vscode
 assets/
 
-# Generated FK headers (built by cricket, consumed by vamp)
+# Generated FK headers (built by cricket, consumed by vamp).
+# Hand-written headers in this project use .hpp instead, so they are
+# never matched by this rule and stay tracked.
 *.hh
 
 # Generated build artifacts

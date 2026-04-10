@@ -1,3 +1,4 @@
+from .constraints import Constraint, LinearCoupling, PoseLock
 from .motion_planner import (
     MotionPlanner,
     MotionPlannerBase,
@@ -10,4 +11,7 @@ __all__ = [
     "MotionPlanner",
     "available_robots",
     "create_planner",
+    "Constraint",
+    "LinearCoupling",
+    "PoseLock",
 ]

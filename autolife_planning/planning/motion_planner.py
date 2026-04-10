@@ -56,6 +56,7 @@ class MotionPlanner:
         config: PlannerConfig | None = None,
         pointcloud: np.ndarray | None = None,
         base_config: np.ndarray | None = None,
+        constraints: list | None = None,
     ) -> None:
         from autolife_planning._ompl_vamp import OmplVampPlanner
         from autolife_planning.config.robot_config import (
@@ -112,6 +113,9 @@ class MotionPlanner:
                 config.point_radius,
             )
 
+        if constraints:
+            self._push_constraints(constraints, autolife_robot_config)
+
     # ── Properties ────────────────────────────────────────────────────
 
     @property
@@ -141,6 +145,52 @@ class MotionPlanner:
     def base_config(self) -> np.ndarray:
         """The 24-DOF stance frozen for joints outside this subgroup."""
         return self._base_config.copy()
+
+    # ── Constraint integration ────────────────────────────────────────
+
+    def _push_constraints(self, constraints, robot_config) -> None:
+        """Translate Python constraint specs into C++ planner calls."""
+        from autolife_planning.planning.constraints import (
+            LinearCoupling,
+            PoseLock,
+        )
+
+        for c in constraints:
+            if isinstance(c, LinearCoupling):
+                if c.master not in self._joint_names:
+                    raise ValueError(
+                        f"LinearCoupling: master joint '{c.master}' is not in "
+                        f"the active subgroup ({self._joint_names})"
+                    )
+                if c.slave not in self._joint_names:
+                    raise ValueError(
+                        f"LinearCoupling: slave joint '{c.slave}' is not in "
+                        f"the active subgroup ({self._joint_names})"
+                    )
+                self._planner.add_linear_coupling(
+                    self._joint_names.index(c.master),
+                    self._joint_names.index(c.slave),
+                    float(c.multiplier),
+                    float(c.offset),
+                )
+            elif isinstance(c, PoseLock):
+                urdf = c.urdf_path or robot_config.urdf_path
+                target = np.asarray(c.target, dtype=np.float64).reshape(16).tolist()
+                # Normalise the frame string for the C++ side.
+                frame = "ee" if c.frame in ("ee", "local", "LOCAL") else "world"
+                self._planner.add_pose_lock(
+                    urdf,
+                    c.link,
+                    frame,
+                    list(c.weight),
+                    target,
+                )
+            else:
+                raise TypeError(
+                    f"Unknown constraint type: {type(c).__name__}.  "
+                    f"Use LinearCoupling or PoseLock from "
+                    f"autolife_planning.planning.constraints."
+                )
 
     # ── Subgroup helpers ──────────────────────────────────────────────
 
@@ -282,6 +332,7 @@ def create_planner(
     config: PlannerConfig | None = None,
     pointcloud: np.ndarray | None = None,
     base_config: np.ndarray | None = None,
+    constraints: list | None = None,
 ) -> MotionPlanner:
     """Create a motion planner for any robot or subgroup.
 
@@ -296,8 +347,15 @@ def create_planner(
             example the live configuration read from your env — to pin
             the rest of the body wherever it currently is.  Ignored for
             the full-body ``"autolife"`` planner.
+        constraints: Optional list of holonomic constraint specs from
+            :mod:`autolife_planning.planning.constraints`
+            (``LinearCoupling``, ``PoseLock``).  When non-empty, the
+            planner switches to ``ProjectedStateSpace`` and projects
+            every state onto the constraint manifold.  Both ``start``
+            and ``goal`` passed to ``plan(...)`` must already lie on the
+            manifold.
 
     Returns:
         A :class:`MotionPlanner` instance.
     """
-    return MotionPlanner(robot_name, config, pointcloud, base_config)
+    return MotionPlanner(robot_name, config, pointcloud, base_config, constraints)
