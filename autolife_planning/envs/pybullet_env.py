@@ -1,6 +1,7 @@
 import os
 import re
 import tempfile
+import time
 from typing import Any
 
 import numpy as np
@@ -153,6 +154,47 @@ class PyBulletEnv(BaseEnv):
 
     def step(self):
         self.sim.client.stepSimulation()
+
+    def wait_key(self, key: str | int, message: str = "") -> None:
+        """Block until *key* is pressed in the PyBullet GUI.
+
+        Draws *message* as a temporary on-screen label and prints it
+        to stdout, then polls keyboard events until the requested key
+        is triggered.  Accepts either a single character (``"n"``) or
+        a raw PyBullet key code (e.g. ``pb.B3G_RIGHT_ARROW``).
+        """
+        client = self.sim.client
+        key_code = ord(key) if isinstance(key, str) else int(key)
+        text_id = (
+            client.addUserDebugText(
+                message, [0, 0, 1.5], textColorRGB=[0, 0, 0], textSize=1.5
+            )
+            if message
+            else None
+        )
+        if message:
+            print(message)
+        while True:
+            keys = client.getKeyboardEvents()
+            if key_code in keys and keys[key_code] & pb.KEY_WAS_TRIGGERED:
+                break
+            time.sleep(0.01)
+        if text_id is not None:
+            client.removeUserDebugItem(text_id)
+
+    def animate_path(self, path: np.ndarray, fps: float = 120.0) -> None:
+        """Play back a full 24-DOF path as a smooth animation.
+
+        Each row of *path* is a configuration accepted by
+        :meth:`set_configuration`; consecutive rows are displayed at
+        the requested frame rate.
+        """
+        if path is None or len(path) == 0:
+            return
+        dt = 1.0 / fps
+        for config in path:
+            self.set_configuration(config)
+            time.sleep(dt)
 
     def add_pointcloud(
         self, points: np.ndarray, lifetime: float = 0.0, pointsize: int = 3
