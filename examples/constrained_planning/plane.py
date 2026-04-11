@@ -42,13 +42,18 @@ def main(time_limit: float = 5.0):
     )
 
     # Draw the plane, centred between the start and goal gripper positions.
+    # The plate sits a few cm below the gripper link so the fingers don't
+    # clip into it visually, and it's drawn wide enough that the gripper
+    # never rides off the edge during the solve.
     p_goal = ctx.evaluate_link_pose(EE_LINK, goal)[:3, 3]
     env.draw_plane(
         center=[
             float(0.5 * (p0[0] + p_goal[0])),
             float(0.5 * (p0[1] + p_goal[1])),
-            float(p0[2]),
-        ]
+            float(p0[2]) - 0.05,
+        ],
+        half_sizes=(0.65, 0.65),
+        color=(0.15, 0.55, 0.95, 0.22),
     )
 
     run_demo(env, planner, start, goal, "plane: gripper slides on a horizontal surface")

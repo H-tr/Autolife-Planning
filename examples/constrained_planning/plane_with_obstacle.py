@@ -67,7 +67,13 @@ def main(planner_name: str = "rrtc", time_limit: float = 10.0):
     sphere_radius = 0.09
 
     env.draw_plane(
-        center=[float(sphere_center[0]), float(sphere_center[1]), float(p0[2])]
+        center=[
+            float(sphere_center[0]),
+            float(sphere_center[1]),
+            float(p0[2]) - 0.05,
+        ],
+        half_sizes=(0.65, 0.65),
+        color=(0.15, 0.55, 0.95, 0.22),
     )
     env.draw_sphere(center=sphere_center, radius=sphere_radius)
 

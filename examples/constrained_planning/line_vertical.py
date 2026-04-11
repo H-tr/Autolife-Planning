@@ -1,9 +1,12 @@
 """Vertical-line constraint: the left gripper moves straight up and down.
 
-Two holonomic equations stacked into one residual — the gripper's
-x and y coordinates are pinned to their home values, leaving only
-z free.  The planner has to reconfigure a 7-DOF arm so the gripper
-slides along a purely vertical rail without drifting sideways.
+Stacked residual — the gripper's ``x`` and ``y`` translation
+components are pinned to their home values, and the first two
+columns of its rotation matrix are pinned as well.  Translation
+in ``z`` is the only free end-effector DOF; rotation is locked
+so the gripper appears to slide cleanly along the vertical rail
+instead of tumbling.  The residual has rank 5 on the 7-DOF left
+arm, leaving a 2-D null space for the planner to exploit.
 
 A bold yellow cylinder marks the rail.
 
@@ -20,13 +23,17 @@ from autolife_planning.types import PlannerConfig
 
 def main(time_limit: float = 5.0):
     env, ctx, start = setup()
-    p0 = ctx.evaluate_link_pose(EE_LINK, start)[:3, 3]
+    T0 = ctx.evaluate_link_pose(EE_LINK, start)
+    p0, R0 = T0[:3, 3], T0[:3, :3]
     left_pos = ctx.link_translation(EE_LINK)
+    left_rot = ctx.link_rotation(EE_LINK)
 
-    # The manifold: x and y are pinned; z is free.
+    # The manifold: x and y pinned, rotation locked; z is free.
     residual: ca.SX = ca.vertcat(  # type: ignore[assignment]
         left_pos[0] - float(p0[0]),
         left_pos[1] - float(p0[1]),
+        left_rot[:, 0] - ca.DM(R0[:, 0].tolist()),
+        left_rot[:, 1] - ca.DM(R0[:, 1].tolist()),
     )
     line = Constraint(residual=residual, q_sym=ctx.q, name="line_v")
 

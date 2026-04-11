@@ -19,6 +19,7 @@ build-robot = { cmd = "bash scripts/build_robot.sh", depends-on = ["foam-build"]
 spherize-robot = { cmd = "bash scripts/spherize_robot.sh", depends-on = ["build-robot"] }
 generate-fk = { cmd = "bash scripts/generate_fk.sh", depends-on = ["spherize-robot"] }
 build-pkg = "python -m build --no-isolation --skip-dependency-check --outdir dist/"
+render-docs-videos = "python scripts/render_videos/render_docs_videos.py"
 
 [dependencies]
 cmake = ">=4.2.3,<5"
