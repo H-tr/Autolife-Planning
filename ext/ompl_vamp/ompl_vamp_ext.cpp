@@ -43,12 +43,9 @@ NB_MODULE(_ompl_vamp, m) {
       .def("add_sphere", &OmplVampPlanner::add_sphere, nb::arg("center"),
            nb::arg("radius"))
       .def("clear_environment", &OmplVampPlanner::clear_environment)
-      .def("add_linear_coupling", &OmplVampPlanner::add_linear_coupling,
-           nb::arg("master_idx"), nb::arg("slave_idx"), nb::arg("multiplier"),
-           nb::arg("offset") = 0.0)
-      .def("add_pose_lock", &OmplVampPlanner::add_pose_lock,
-           nb::arg("urdf_path"), nb::arg("link_name"), nb::arg("frame"),
-           nb::arg("mask"), nb::arg("target_xform"))
+      .def("add_compiled_constraint", &OmplVampPlanner::add_compiled_constraint,
+           nb::arg("so_path"), nb::arg("symbol_name"), nb::arg("ambient_dim"),
+           nb::arg("co_dim"))
       .def("clear_constraints", &OmplVampPlanner::clear_constraints)
       .def("num_constraints", &OmplVampPlanner::num_constraints)
       .def("plan", &OmplVampPlanner::plan, nb::arg("start"), nb::arg("goal"),

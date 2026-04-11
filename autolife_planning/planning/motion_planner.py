@@ -114,7 +114,7 @@ class MotionPlanner:
             )
 
         if constraints:
-            self._push_constraints(constraints, autolife_robot_config)
+            self._push_constraints(constraints)
 
     # ── Properties ────────────────────────────────────────────────────
 
@@ -148,49 +148,29 @@ class MotionPlanner:
 
     # ── Constraint integration ────────────────────────────────────────
 
-    def _push_constraints(self, constraints, robot_config) -> None:
-        """Translate Python constraint specs into C++ planner calls."""
-        from autolife_planning.planning.constraints import (
-            LinearCoupling,
-            PoseLock,
-        )
+    def _push_constraints(self, constraints) -> None:
+        """Push compiled CasADi constraints to the C++ planner."""
+        from autolife_planning.planning.constraints import Constraint
 
         for c in constraints:
-            if isinstance(c, LinearCoupling):
-                if c.master not in self._joint_names:
-                    raise ValueError(
-                        f"LinearCoupling: master joint '{c.master}' is not in "
-                        f"the active subgroup ({self._joint_names})"
-                    )
-                if c.slave not in self._joint_names:
-                    raise ValueError(
-                        f"LinearCoupling: slave joint '{c.slave}' is not in "
-                        f"the active subgroup ({self._joint_names})"
-                    )
-                self._planner.add_linear_coupling(
-                    self._joint_names.index(c.master),
-                    self._joint_names.index(c.slave),
-                    float(c.multiplier),
-                    float(c.offset),
-                )
-            elif isinstance(c, PoseLock):
-                urdf = c.urdf_path or robot_config.urdf_path
-                target = np.asarray(c.target, dtype=np.float64).reshape(16).tolist()
-                # Normalise the frame string for the C++ side.
-                frame = "ee" if c.frame in ("ee", "local", "LOCAL") else "world"
-                self._planner.add_pose_lock(
-                    urdf,
-                    c.link,
-                    frame,
-                    list(c.weight),
-                    target,
-                )
-            else:
+            if not isinstance(c, Constraint):
                 raise TypeError(
-                    f"Unknown constraint type: {type(c).__name__}.  "
-                    f"Use LinearCoupling or PoseLock from "
-                    f"autolife_planning.planning.constraints."
+                    f"constraints must be Constraint instances from "
+                    f"autolife_planning.planning.constraints; "
+                    f"got {type(c).__name__}"
                 )
+            if c.ambient_dim != self._ndof:
+                raise ValueError(
+                    f"Constraint ambient_dim ({c.ambient_dim}) does not match "
+                    f"planner active dimension ({self._ndof}).  Build the "
+                    f"Constraint with a SymbolicContext for the same subgroup."
+                )
+            self._planner.add_compiled_constraint(
+                str(c.so_path),
+                c.symbol_name,
+                c.ambient_dim,
+                c.co_dim,
+            )
 
     # ── Subgroup helpers ──────────────────────────────────────────────
 
@@ -347,13 +327,12 @@ def create_planner(
             example the live configuration read from your env — to pin
             the rest of the body wherever it currently is.  Ignored for
             the full-body ``"autolife"`` planner.
-        constraints: Optional list of holonomic constraint specs from
-            :mod:`autolife_planning.planning.constraints`
-            (``LinearCoupling``, ``PoseLock``).  When non-empty, the
-            planner switches to ``ProjectedStateSpace`` and projects
-            every state onto the constraint manifold.  Both ``start``
-            and ``goal`` passed to ``plan(...)`` must already lie on the
-            manifold.
+        constraints: Optional list of
+            :class:`~autolife_planning.planning.constraints.Constraint`
+            instances (CasADi-backed).  When non-empty, the planner
+            switches to ``ProjectedStateSpace`` and projects every state
+            onto the constraint manifold.  Both ``start`` and ``goal``
+            passed to ``plan(...)`` must already lie on the manifold.
 
     Returns:
         A :class:`MotionPlanner` instance.

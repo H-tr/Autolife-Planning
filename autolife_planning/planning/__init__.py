@@ -1,4 +1,4 @@
-from .constraints import Constraint, LinearCoupling, PoseLock
+from .constraints import Constraint, SymbolicContext
 from .motion_planner import (
     MotionPlanner,
     MotionPlannerBase,
@@ -12,6 +12,5 @@ __all__ = [
     "available_robots",
     "create_planner",
     "Constraint",
-    "LinearCoupling",
-    "PoseLock",
+    "SymbolicContext",
 ]

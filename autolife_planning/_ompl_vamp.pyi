@@ -92,37 +92,21 @@ class OmplVampPlanner:
     def clear_environment(self) -> None:
         """Remove all obstacles from the collision environment."""
         ...
-    def add_linear_coupling(
+    def add_compiled_constraint(
         self,
-        master_idx: int,
-        slave_idx: int,
-        multiplier: float,
-        offset: float = 0.0,
+        so_path: str,
+        symbol_name: str,
+        ambient_dim: int,
+        co_dim: int,
     ) -> None:
-        """Append ``q[slave_idx] = multiplier * q[master_idx] + offset``.
-
-        Indices are positions in the planner's *active* subspace
-        (i.e. between 0 and :meth:`dimension`).
-        """
-        ...
-    def add_pose_lock(
-        self,
-        urdf_path: str,
-        link_name: str,
-        frame: str,
-        mask: Sequence[bool],
-        target_xform: Sequence[float],
-    ) -> None:
-        """Lock the SE(3) pose of a URDF link via pinocchio FK + Jacobian.
+        """Load a CasADi-generated shared library as an OMPL constraint.
 
         Args:
-            urdf_path: Path to a URDF whose joint order matches the
-                planner (planar root + 21 named joints for autolife).
-            link_name: Name of the link/frame to constrain.
-            frame: ``"ee"`` (LOCAL) or ``"world"``.
-            mask: 6-element ``[rx, ry, rz, x, y, z]`` axis mask
-                (truthy = locked).
-            target_xform: 16-element row-major 4×4 SE(3) target.
+            so_path: Path to the compiled ``.so`` file.
+            symbol_name: CasADi function symbol name inside the library.
+            ambient_dim: Dimension of the joint space (must match
+                :meth:`dimension`).
+            co_dim: Number of constraint equations (rows of the residual).
         """
         ...
     def clear_constraints(self) -> None:

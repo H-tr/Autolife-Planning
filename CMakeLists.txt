@@ -12,7 +12,6 @@ find_package(nanobind CONFIG REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
 find_package(Boost REQUIRED COMPONENTS serialization filesystem system)
 find_package(Eigen3 REQUIRED NO_MODULE)
-find_package(pinocchio REQUIRED)
 find_package(orocos_kdl QUIET)
 find_package(PkgConfig QUIET)
 if(PkgConfig_FOUND AND NOT orocos_kdl_FOUND)
@@ -62,20 +61,11 @@ target_link_libraries(_ompl_vamp PRIVATE
     Boost::serialization
     Boost::filesystem
     Boost::system
-    pinocchio::pinocchio_default
-    pinocchio::pinocchio_parsers
+    ${CMAKE_DL_LIBS}   # for dlopen/dlsym in CompiledConstraint
 )
 
 target_compile_options(_ompl_vamp PRIVATE
     -march=native
-)
-
-# Pinocchio bumps Boost.MPL list/vector size to 30 via its INTERFACE
-# compile definitions, but Boost.MPL ships preprocessed headers capped
-# at size 20.  Disable the preprocessed headers so the generated
-# vector/list templates respect the new limit.
-target_compile_definitions(_ompl_vamp PRIVATE
-    BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 )
 
 install(TARGETS _ompl_vamp LIBRARY DESTINATION autolife_planning)

@@ -25,8 +25,7 @@
 #include <ompl/base/spaces/constraint/ProjectedStateSpace.h>
 #include <ompl/geometric/SimpleSetup.h>
 
-#include "constraints.hpp"
-#include "pinocchio_robot.hpp"
+#include "compiled_constraint.hpp"
 #include "validity.hpp"
 // OMPL — informed trees
 #include <ompl/geometric/planners/informedtrees/ABITstar.h>
@@ -172,64 +171,18 @@ class OmplVampPlanner {
   // Constraints are accumulated by repeated add_*() calls and consumed
   // by the next plan() call.  Use clear_constraints() to reset.
 
-  void add_linear_coupling(int master_idx, int slave_idx, double multiplier,
-                           double offset) {
-    if (master_idx < 0 || master_idx >= active_dim_ || slave_idx < 0 ||
-        slave_idx >= active_dim_) {
+  void add_compiled_constraint(const std::string &so_path,
+                               const std::string &symbol_name,
+                               unsigned int ambient_dim, unsigned int co_dim) {
+    if (static_cast<int>(ambient_dim) != active_dim_) {
       throw std::invalid_argument(
-          "LinearCoupling: master/slave indices must be inside the planner's "
-          "active subspace [0, dimension())");
+          "add_compiled_constraint: ambient_dim (" +
+          std::to_string(ambient_dim) +
+          ") does not match planner active dimension (" +
+          std::to_string(active_dim_) + ")");
     }
-    constraints_.push_back(std::make_shared<LinearCouplingConstraint>(
-        static_cast<unsigned int>(active_dim_), master_idx, slave_idx,
-        multiplier, offset));
-  }
-
-  // mask is [rx, ry, rz, x, y, z] — true = locked.  target_xform is a
-  // 16-element row-major 4x4 SE(3) matrix and is required.  Use
-  // pinocchio in Python to compute it from FK on whatever
-  // configuration you want to lock against.
-  void add_pose_lock(const std::string &urdf_path, const std::string &link_name,
-                     const std::string &frame, const std::array<bool, 6> &mask,
-                     const std::array<double, 16> &target_xform) {
-    auto model = PinocchioRobotCache::instance().load(urdf_path);
-    if (!model->existFrame(link_name)) {
-      throw std::invalid_argument("PoseLock: link '" + link_name +
-                                  "' not found in URDF " + urdf_path);
-    }
-    auto frame_id = model->getFrameId(link_name);
-
-    PoseLockConstraint::Frame fr;
-    if (frame == "ee" || frame == "local" || frame == "LOCAL")
-      fr = PoseLockConstraint::Frame::LOCAL;
-    else if (frame == "world" || frame == "WORLD")
-      fr = PoseLockConstraint::Frame::WORLD;
-    else
-      throw std::invalid_argument("PoseLock: frame must be 'ee' or 'world'");
-
-    // Active indices and frozen config used by the constraint must
-    // match this planner's view.  Full-body planners use identity.
-    std::vector<int> ai;
-    std::array<float, 24> fz{};
-    if (is_subgroup_) {
-      ai = active_indices_;
-      for (std::size_t i = 0; i < frozen_config_.size() && i < 24; ++i)
-        fz[i] = frozen_config_[i];
-    } else {
-      ai.resize(24);
-      for (int i = 0; i < 24; ++i) ai[i] = i;
-      // fz stays zero — irrelevant when all 24 indices are active.
-    }
-
-    Eigen::Matrix4d M;
-    for (int r = 0; r < 4; ++r)
-      for (int col = 0; col < 4; ++col) M(r, col) = target_xform[r * 4 + col];
-    pinocchio::SE3 T;
-    T.rotation() = M.block<3, 3>(0, 0);
-    T.translation() = M.block<3, 1>(0, 3);
-
-    constraints_.push_back(std::make_shared<PoseLockConstraint>(
-        std::move(model), frame_id, std::move(ai), fz, fr, mask, T));
+    constraints_.push_back(std::make_shared<CompiledConstraint>(
+        ambient_dim, co_dim, so_path, symbol_name));
   }
 
   void clear_constraints() { constraints_.clear(); }

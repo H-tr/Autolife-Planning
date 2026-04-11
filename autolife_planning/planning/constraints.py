@@ -1,134 +1,282 @@
-"""Holonomic constraint factories for the OMPL + VAMP planner.
+"""User-defined manifold constraints, CasADi-backed.
 
-Two parameterised constraint kinds, both consumed by
-:class:`autolife_planning.planning.MotionPlanner` via its ``constraints``
-keyword.  Each one is a small dataclass that the planner translates into
-a C++ ``ompl::base::Constraint`` and feeds to ``ProjectedStateSpace``.
+Users write the constraint equation as a CasADi symbolic expression
+in their own script.  The wrapper handles symbolic Jacobian via
+autodiff, C codegen, compilation, caching, and hand-off to the
+native C++ ``CompiledConstraint`` adapter.
 
-Both ``start`` and ``goal`` passed to ``plan(start, goal)`` must already
-lie on the constraint manifold — the planner does not run an IK pass on
-them.  If either endpoint is off the manifold the planner raises
-``ValueError`` with a clear message.
-
-Example::
-
-    from autolife_planning.planning import create_planner
-    from autolife_planning.planning.constraints import (
-        LinearCoupling, PoseLock,
-    )
-    import numpy as np
-
-    knee = LinearCoupling(
-        master="Joint_Ankle",
-        slave="Joint_Knee",
-        multiplier=2.0,
-    )
-    lock = PoseLock(
-        link="Link_Left_Gripper",
-        target=target_4x4,                       # SE(3) matrix
-        frame="ee",                              # or "world"
-        weight=[True, True, True, False, False, False],  # rx ry rz x y z
-    )
-
-    planner = create_planner(
-        "autolife_body",
-        constraints=[knee, lock],
-        base_config=base,
-    )
-    result = planner.plan(start, goal)
+No prebuilt constraint primitives are shipped.  Every constraint is
+defined inline by the caller as a function of the planner's active
+joint vector.
 """
 
 from __future__ import annotations
 
+import hashlib
+import os
+import subprocess
+import sys
+import time
+from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Sequence, Union
+from pathlib import Path
 
+import casadi as ca
 import numpy as np
+import pinocchio as pin
+import pinocchio.casadi as cpin
+
+from autolife_planning.config.robot_config import (
+    HOME_JOINTS,
+    PLANNING_SUBGROUPS,
+    autolife_robot_config,
+)
+
+# ── cache location ──────────────────────────────────────────────────
+
+
+def _cache_root() -> Path:
+    """Return the constraint cache directory.
+
+    Honours ``AUTOLIFE_CONSTRAINT_CACHE_DIR`` if set (useful for CI).
+    Otherwise falls back to ``~/.cache/autolife_planning/constraints``.
+    """
+    override = os.environ.get("AUTOLIFE_CONSTRAINT_CACHE_DIR")
+    if override:
+        return Path(override).expanduser().resolve()
+    xdg = os.environ.get("XDG_CACHE_HOME")
+    base = Path(xdg).expanduser() if xdg else Path.home() / ".cache"
+    return (base / "autolife_planning" / "constraints").resolve()
+
+
+@contextmanager
+def _cwd(path: Path):
+    """Temporarily chdir — CasADi's generate() always writes to cwd."""
+    old = Path.cwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(old)
+
+
+# ── SymbolicContext ────────────────────────────────────────────────
+
+
+class SymbolicContext:
+    """CasADi-friendly view of the planner's active subgroup.
+
+    Holds the CasADi symbolic joint vector ``q`` matching the subgroup's
+    active dimension, plus a ``pinocchio.casadi`` model for symbolic FK.
+
+    The context hides the planar-root encoding (the 24-DOF body vector
+    uses ``[x, y, theta, j0..j20]``; pinocchio uses
+    ``[x, y, cos(theta), sin(theta), j0..j20]``) and the mapping from
+    the active subspace back to the full 24-DOF body via ``base_config``.
+    """
+
+    def __init__(
+        self,
+        subgroup: str,
+        base_config: np.ndarray | None = None,
+    ) -> None:
+        if base_config is None:
+            base_config = HOME_JOINTS
+        self.base_config = np.asarray(base_config, dtype=np.float64).copy()
+        if self.base_config.shape != HOME_JOINTS.shape:
+            raise ValueError(
+                f"base_config must have shape {HOME_JOINTS.shape}, "
+                f"got {self.base_config.shape}"
+            )
+
+        self.subgroup_name = subgroup
+        full_names = list(autolife_robot_config.joint_names)
+        if subgroup == "autolife":
+            self.active_indices = list(range(24))
+            self.active_names = full_names
+        else:
+            sg = PLANNING_SUBGROUPS.get(subgroup)
+            if sg is None:
+                raise ValueError(f"Unknown subgroup: {subgroup!r}")
+            self.active_names = list(sg["joints"])
+            self.active_indices = [full_names.index(j) for j in self.active_names]
+
+        self.q = ca.SX.sym("q", len(self.active_indices))
+
+        # Numeric + symbolic pinocchio models with planar root.
+        self.pin_model = pin.buildModelFromUrdf(
+            autolife_robot_config.urdf_path, pin.JointModelPlanar()
+        )
+        self.pin_data = self.pin_model.createData()
+        self.cmodel = cpin.Model(self.pin_model)
+        self.cdata = self.cmodel.createData()
+
+        # Build the symbolic mapping q_active -> pinocchio q (nq=25).
+        self.q_pin = self._build_pinocchio_q(self.q)
+
+        # Pre-run symbolic FK so users can access frame transforms.
+        cpin.forwardKinematics(self.cmodel, self.cdata, self.q_pin)
+        cpin.updateFramePlacements(self.cmodel, self.cdata)
+
+    def _build_pinocchio_q(self, q_active: ca.SX) -> ca.SX:
+        """Map active-dim symbol to pinocchio q (nq=25)."""
+        full: list[ca.SX | ca.DM] = [ca.DM(float(v)) for v in self.base_config]
+        for i, idx in enumerate(self.active_indices):
+            full[idx] = q_active[i]
+        # full is 24 entries: [x, y, theta, j0..j20]
+        pin_q = ca.vertcat(
+            full[0],
+            full[1],
+            ca.cos(full[2]),
+            ca.sin(full[2]),
+            *full[3:],
+        )
+        return pin_q
+
+    def link_pose(self, link_name: str, q_active: ca.SX | None = None):
+        """Return the symbolic pinocchio SE3 of a URDF link.
+
+        Pass ``q_active=self.q`` (or omit) to get an expression that
+        depends on the active joints symbolically.
+        """
+        if q_active is None or q_active is self.q:
+            frame_id = self.cmodel.getFrameId(link_name)
+            return self.cdata.oMf[frame_id]
+        # Rebuild with a different symbol.
+        cdata = self.cmodel.createData()
+        q_pin = self._build_pinocchio_q(q_active)
+        cpin.forwardKinematics(self.cmodel, cdata, q_pin)
+        cpin.updateFramePlacement(self.cmodel, cdata, self.cmodel.getFrameId(link_name))
+        return cdata.oMf[self.cmodel.getFrameId(link_name)]
+
+    def link_translation(self, link_name: str, q_active: ca.SX | None = None) -> ca.SX:
+        """Symbolic 3-vector: link position in world frame."""
+        return self.link_pose(link_name, q_active).translation
+
+    def link_rotation(self, link_name: str, q_active: ca.SX | None = None) -> ca.SX:
+        """Symbolic 3x3 rotation matrix of the link."""
+        return self.link_pose(link_name, q_active).rotation
+
+    def evaluate_link_pose(
+        self, link_name: str, q_active_numeric: np.ndarray
+    ) -> np.ndarray:
+        """Compute a NUMERIC 4x4 link pose (handy for building targets).
+
+        Uses the numeric pinocchio model, not the symbolic one, so it is
+        fast and has no dependence on CasADi expressions.
+        """
+        full = self.base_config.copy()
+        for i, idx in enumerate(self.active_indices):
+            full[idx] = q_active_numeric[i]
+        q = np.empty(int(self.pin_model.nq))
+        q[0] = full[0]
+        q[1] = full[1]
+        q[2] = np.cos(full[2])
+        q[3] = np.sin(full[2])
+        q[4:] = full[3:]
+        pin.forwardKinematics(self.pin_model, self.pin_data, q)
+        pin.updateFramePlacement(
+            self.pin_model,
+            self.pin_data,
+            self.pin_model.getFrameId(link_name),
+        )
+        pose = self.pin_data.oMf[self.pin_model.getFrameId(link_name)]
+        M = np.eye(4)
+        M[:3, :3] = pose.rotation
+        M[:3, 3] = pose.translation
+        return M
+
+
+# ── Constraint ─────────────────────────────────────────────────────
 
 
 @dataclass
-class LinearCoupling:
-    """Linear joint coupling constraint: ``q[slave] = m * q[master] + b``.
+class Constraint:
+    """A user-defined holonomic constraint, JIT-compiled via CasADi.
 
-    Both joints must be in the planner's *active* subspace — pick a
-    subgroup that contains both, e.g. ``autolife_height`` or
-    ``autolife_body`` for the knee/ankle case.
+    Constructing this class triggers (on cold cache):
+        1. symbolic Jacobian via ``ca.jacobian(residual, q_sym)``
+        2. C code generation via CasADi
+        3. compilation to a ``.so`` with ``c++ -O3 -shared -fPIC``
+        4. caching under ``~/.cache/autolife_planning/constraints/<sha>/``
 
-    Attributes:
-        master: Name of the driving joint.
-        slave: Name of the driven joint.
-        multiplier: ``m`` in the equation above.
-        offset: ``b`` in the equation above (default 0).
+    On a cache hit the whole thing is a single ``stat`` + string compare.
     """
 
-    master: str
-    slave: str
-    multiplier: float
-    offset: float = 0.0
+    residual: ca.SX
+    q_sym: ca.SX
+    name: str = "constraint"
 
+    _so_path: Path = field(init=False)
+    _ambient_dim: int = field(init=False)
+    _co_dim: int = field(init=False)
+    _symbol_name: str = field(init=False)
 
-@dataclass
-class PoseLock:
-    """Lock the pose of one URDF link to a target SE(3).
+    def __post_init__(self) -> None:
+        if not isinstance(self.q_sym, ca.SX):
+            raise TypeError("Constraint.q_sym must be a CasADi SX symbol")
 
-    Internally backed by pinocchio FK + Jacobian.  The 6-element
-    ``weight`` mask follows cuRobo's convention ``[rx, ry, rz, x, y, z]``
-    — ``True`` (or any truthy value) means "this axis is locked",
-    ``False`` means "free".  The ``frame`` parameter picks whether the
-    pose error is expressed in the link's ``"ee"`` (LOCAL) frame or in
-    ``"world"`` frame, which lets you compose multiple ``PoseLock``
-    instances to express things like "free along the gripper's local x
-    but stay upright in world z".
+        res = ca.reshape(self.residual, -1, 1)
 
-    Attributes:
-        link: URDF frame/link name to constrain.
-        target: ``(4, 4)`` SE(3) matrix the link is locked to.  Compute
-            it via pinocchio FK on whichever configuration you want
-            ``plan(start, goal)`` to start from — both ``start`` and
-            ``goal`` must satisfy this constraint.
-        frame: ``"ee"`` (LOCAL) or ``"world"``.
-        weight: 6-element ``[rx, ry, rz, x, y, z]`` mask, default all
-            ``True`` (full pose lock).
-        urdf_path: Override the URDF used for FK.  Defaults to the
-            project's ``autolife_robot_config.urdf_path``.
-    """
+        self._ambient_dim = int(self.q_sym.numel())
+        self._co_dim = int(res.numel())
 
-    link: str
-    target: np.ndarray
-    frame: str = "ee"
-    weight: Sequence[bool] = field(
-        default_factory=lambda: [True, True, True, True, True, True]
-    )
-    urdf_path: Union[str, None] = None
+        jac = ca.densify(ca.jacobian(res, self.q_sym))
 
-    def __post_init__(self):
-        target = np.asarray(self.target, dtype=np.float64)
-        if target.shape != (4, 4):
-            raise ValueError(
-                f"PoseLock.target must be a (4, 4) SE(3) matrix, "
-                f"got shape {target.shape}"
+        f = ca.Function(self.name, [self.q_sym], [res, jac]).expand()
+
+        raw = f.serialize()
+        if isinstance(raw, str):
+            raw = raw.encode("utf-8")
+        sha = hashlib.sha256(raw).hexdigest()
+
+        cache_dir = _cache_root() / sha[:2] / sha[2:]
+        cache_dir.mkdir(parents=True, exist_ok=True)
+
+        c_path = cache_dir / "constraint.c"
+        so_path = cache_dir / "constraint.so"
+
+        if not so_path.exists():
+            sys.stderr.write(f"[autolife] compiling constraint {sha[:8]}... ")
+            sys.stderr.flush()
+            t0 = time.perf_counter()
+            with _cwd(cache_dir):
+                f.generate("constraint.c")
+            compiler = os.environ.get("AUTOLIFE_CONSTRAINT_CC", "c++")
+            subprocess.run(
+                [
+                    compiler,
+                    "-O3",
+                    "-shared",
+                    "-fPIC",
+                    str(c_path),
+                    "-o",
+                    str(so_path),
+                ],
+                check=True,
             )
-        self.target = target
+            dt = time.perf_counter() - t0
+            sys.stderr.write(f"done ({dt * 1000:.0f} ms)\n")
+            sys.stderr.flush()
 
-        if len(self.weight) != 6:
-            raise ValueError(
-                f"PoseLock.weight must have 6 elements [rx, ry, rz, x, y, z], "
-                f"got {len(self.weight)}"
-            )
-        self.weight = [bool(w) for w in self.weight]
-        if not any(self.weight):
-            raise ValueError(
-                "PoseLock.weight must lock at least one axis (got all-False)"
-            )
+        self._so_path = so_path
+        self._symbol_name = self.name
 
-        if self.frame not in ("ee", "world", "local", "LOCAL", "WORLD"):
-            raise ValueError(
-                f"PoseLock.frame must be 'ee' or 'world', got {self.frame!r}"
-            )
+    @property
+    def so_path(self) -> Path:
+        return self._so_path
+
+    @property
+    def ambient_dim(self) -> int:
+        return self._ambient_dim
+
+    @property
+    def co_dim(self) -> int:
+        return self._co_dim
+
+    @property
+    def symbol_name(self) -> str:
+        return self._symbol_name
 
 
-# Public re-export
-Constraint = Union[LinearCoupling, PoseLock]
-
-
-__all__ = ["LinearCoupling", "PoseLock", "Constraint"]
+__all__ = ["Constraint", "SymbolicContext"]
