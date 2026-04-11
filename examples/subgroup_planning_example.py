@@ -1,159 +1,110 @@
-"""Test motion planning for all subgroup configurations.
+"""Plan every kinematic subgroup at three different stances.
 
-Iterates through every planning subgroup (single arm, dual arm, torso+arm,
-whole body), plans a path from the home configuration to a random valid goal,
-and animates the result in PyBullet.
+Demonstrates that the same subgroup name (e.g. ``autolife_left_arm``)
+can be planned around any 24-DOF base configuration the caller passes
+in — no stance is baked into the planner name.  The three stances
+below are *example data*, not part of the planning API.
 
-Usage:
-    # Interactive visualization (press 'n' to advance, 'q' to quit)
     pixi run python examples/subgroup_planning_example.py
-
-    # Use a different planner
-    pixi run python examples/subgroup_planning_example.py --planner_name prm
 """
-
-from __future__ import annotations
-
-import time
 
 import numpy as np
 from fire import Fire
 
-from autolife_planning.config.robot_config import (
-    PLANNING_SUBGROUPS,
-    VIZ_URDF_PATH,
-    autolife_robot_config,
-    subgroup_base_config,
-)
+from autolife_planning.config.robot_config import HOME_JOINTS, autolife_robot_config
 from autolife_planning.envs.pybullet_env import PyBulletEnv
 from autolife_planning.planning import create_planner
 from autolife_planning.types import PlannerConfig
 
-# Subgroup categories for display
-CATEGORIES = {
-    "Single arm (7 DOF)": [
-        "autolife_left_high",
-        "autolife_left_mid",
-        "autolife_left_low",
-        "autolife_right_high",
-        "autolife_right_mid",
-        "autolife_right_low",
-    ],
-    "Dual arm (14 DOF)": [
-        "autolife_dual_high",
-        "autolife_dual_mid",
-        "autolife_dual_low",
-    ],
-    "Torso + arm (9 DOF)": [
-        "autolife_torso_left_high",
-        "autolife_torso_left_mid",
-        "autolife_torso_left_low",
-        "autolife_torso_right_high",
-        "autolife_torso_right_mid",
-        "autolife_torso_right_low",
-    ],
-    "Whole body (21 DOF)": [
-        "autolife_body",
-    ],
+# Joint values for three example stances.  Replace this dict with any
+# 24-DOF array (e.g. the live state from your env) to plan around an
+# arbitrary pose.
+STANCES = {
+    "high": {"Joint_Ankle": 0.0, "Joint_Knee": 0.0, "Joint_Waist_Pitch": 0.00},
+    "mid": {"Joint_Ankle": 0.78, "Joint_Knee": 1.60, "Joint_Waist_Pitch": 0.89},
+    "low": {"Joint_Ankle": 1.41, "Joint_Knee": 2.38, "Joint_Waist_Pitch": 0.95},
 }
 
-
-def wait_key(env, key, msg):
-    """Block until *key* is pressed in the PyBullet GUI window."""
-    import pybullet as pb
-
-    client = env.sim.client
-    text_id = client.addUserDebugText(
-        msg, [0, 0, 1.5], textColorRGB=[0, 0, 0], textSize=1.5
-    )
-    print(msg)
-    while True:
-        keys = client.getKeyboardEvents()
-        if key in keys and keys[key] & pb.KEY_WAS_TRIGGERED:
-            break
-        time.sleep(0.01)
-    client.removeUserDebugItem(text_id)
+SUBGROUPS = [
+    "autolife_left_arm",
+    "autolife_right_arm",
+    "autolife_dual_arm",
+    "autolife_torso_left_arm",
+    "autolife_torso_right_arm",
+    "autolife_height",  # 3 DOF: ankle + knee + waist pitch
+    "autolife_base",  # 3 DOF: virtual x, y, yaw
+    "autolife_body",  # 21 DOF: legs + waist + arms + neck
+]
 
 
-def test_subgroup(env, robot_name, planner_name="rrtc"):
-    """Plan and animate one subgroup in PyBullet."""
-    print(f"\n{'=' * 60}")
-    print(f"  {robot_name}  ({PLANNING_SUBGROUPS[robot_name]['dof']} DOF)")
-    print(f"{'=' * 60}")
-
-    planner = create_planner(
-        robot_name,
-        config=PlannerConfig(planner_name=planner_name),
-    )
-
-    # Base config with correct frozen stance for this subgroup
-    base_cfg = subgroup_base_config(robot_name)
-
-    # Start from the subgroup's base config (uses correct waist preset for torso groups)
-    start = planner.extract_config(base_cfg)
-    env.set_configuration(base_cfg)
-    print(f"  Start (home): {np.round(start, 3)}")
-
-    # Sample a collision-free goal
-    goal = planner.sample_valid()
-    goal_full = planner.embed_config(goal, base_config=base_cfg)
-    env.set_configuration(goal_full)
-    print(f"  Goal:          {np.round(goal, 3)}")
-
-    wait_key(env, ord("n"), f"[{robot_name}] Goal shown. Press 'n' to plan.")
-
-    # Plan
-    result = planner.plan(start, goal)
-    print(f"  Status: {result.status.value}")
-
-    if result.success:
-        print(
-            f"  Path: {result.path.shape[0]} waypoints, "
-            f"{result.planning_time_ns / 1e6:.1f} ms, "
-            f"cost = {result.path_cost:.4f}"
-        )
-
-        # Show start briefly
-        env.set_configuration(planner.embed_config(start, base_config=base_cfg))
-        time.sleep(0.3)
-
-        # Animate the planned path
-        full_path = planner.embed_path(result.path, base_config=base_cfg)
-        for i in range(full_path.shape[0]):
-            env.set_configuration(full_path[i])
-            time.sleep(1.0 / 120.0)
-
-        wait_key(env, ord("n"), f"[{robot_name}] Path done. Press 'n' for next.")
-    else:
-        wait_key(env, ord("n"), f"[{robot_name}] Planning failed. Press 'n' for next.")
+def base_with_stance(stance: dict[str, float]) -> np.ndarray:
+    base = HOME_JOINTS.copy()
+    for joint_name, value in stance.items():
+        base[autolife_robot_config.joint_names.index(joint_name)] = value
+    return base
 
 
-def main(planner_name: str = "rrtc"):
-    """Test motion planning for all 16 subgroups.
+def plan_and_show(
+    env, robot_name: str, base: np.ndarray, config: PlannerConfig, label: str
+) -> bool:
+    """Plan one subgroup against *base* and animate it interactively.
 
-    Args:
-        planner_name: Planning algorithm (rrtc, prm, fcit, aorrtc).
+    Returns ``True`` if the user pressed ``n`` to advance to the next
+    demo, ``False`` if the user closed the GUI window (in which case the
+    caller should stop iterating).
     """
-    env = PyBulletEnv(
-        autolife_robot_config, visualize=True, viz_urdf_path=VIZ_URDF_PATH
-    )
+    planner = create_planner(robot_name, config=config, base_config=base)
+    start = planner.extract_config(base)
+    goal = planner.sample_valid()
 
-    for category, names in CATEGORIES.items():
-        print(f"\n\n{'#' * 60}")
-        print(f"  {category}")
-        print(f"{'#' * 60}")
-        for robot_name in names:
-            try:
-                test_subgroup(env, robot_name, planner_name)
-            except Exception as e:
-                print(f"  ERROR on {robot_name}: {e}")
-                import traceback
+    result = planner.plan(start, goal)
+    n_wp = result.path.shape[0] if result.path is not None else 0
+    print(f"  [{label}] {result.status.value} — {n_wp} waypoints")
 
-                traceback.print_exc()
-                wait_key(env, ord("n"), f"[{robot_name}] Error. Press 'n' for next.")
+    if result.success and result.path is not None:
+        return env.animate_path(planner.embed_path(result.path), next_key="n")
+    env.wait_key("n", f"[{label}] no path — press 'n' for next")
+    return env.sim.client.isConnected()
 
-    wait_key(env, ord("q"), "All subgroups tested. Press 'q' to quit.")
-    print("\nDone.")
+
+def main(planner_name: str = "bitstar", time_limit: float = 0.5):
+    """Run the subgroup sweep with the chosen OMPL planner.
+
+    Available planner names (pick one and pass as ``--planner_name``):
+
+        RRT family ........... rrtc / rrtconnect, rrt, rrtstar,
+                               informed_rrtstar, rrtsharp, rrtxstatic,
+                               strrtstar, lbtrrt, trrt, bitrrt
+        Informed trees ....... bitstar, abitstar, aitstar, eitstar, blitstar
+        FMT .................. fmt, bfmt
+        KPIECE ............... kpiece, bkpiece, lbkpiece
+        PRM family ........... prm, prmstar, lazyprm, lazyprmstar,
+                               spars, spars2
+        Exploration-based .... est, biest, sbl, stride, pdst
+
+    Single-query feasibility planners (``rrtc``, ``rrt``, ``kpiece``,
+    ``est``, …) terminate as soon as they find any valid path, usually
+    in a few milliseconds.  Asymptotically optimal anytime planners
+    (``bitstar``, ``aitstar``, ``rrtstar``, …) keep refining the path
+    until ``time_limit`` expires, so they always use the full budget —
+    keep ``time_limit`` small for a snappy demo and bump it when you
+    care about path quality.
+    """
+    env = PyBulletEnv(autolife_robot_config, visualize=True)
+    config = PlannerConfig(planner_name=planner_name, time_limit=time_limit)
+
+    # Every subgroup × every stance.  Inactive joints are pinned to the
+    # stance values; active joints get the stance as their start pose.
+    for stance_name, stance in STANCES.items():
+        base = base_with_stance(stance)
+        for robot_name in SUBGROUPS:
+            cont = plan_and_show(
+                env, robot_name, base, config, f"{robot_name} @ {stance_name}"
+            )
+            if not cont:
+                return
+
+    env.wait_for_close()
 
 
 if __name__ == "__main__":

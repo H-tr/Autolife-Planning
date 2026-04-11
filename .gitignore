@@ -215,9 +215,15 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 .vscode
-assets/
+# Top-level assets/ holds raw robot meshes (the build input for
+# scripts/build_robot_description.py). Scoped with a leading slash so
+# docs/assets/ (tracked documentation videos) isn't accidentally
+# ignored.
+/assets/
 
-# Generated FK headers (built by cricket, consumed by vamp)
+# Generated FK headers (built by cricket, consumed by vamp).
+# Hand-written headers in this project use .hpp instead, so they are
+# never matched by this rule and stay tracked.
 *.hh
 
 # Generated build artifacts

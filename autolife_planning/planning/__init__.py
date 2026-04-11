@@ -1,3 +1,4 @@
+from .constraints import Constraint, SymbolicContext
 from .motion_planner import (
     MotionPlanner,
     MotionPlannerBase,
@@ -10,4 +11,6 @@ __all__ = [
     "MotionPlanner",
     "available_robots",
     "create_planner",
+    "Constraint",
+    "SymbolicContext",
 ]

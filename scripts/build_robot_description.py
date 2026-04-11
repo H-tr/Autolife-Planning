@@ -579,12 +579,13 @@ def distribute(out_dir: Path, dest_dirs: list[Path]) -> None:
             src = out_dir / f
             if src.exists():
                 shutil.copy2(str(src), str(dest_dir / f))
-        src_meshes = out_dir / "meshes"
-        dst_meshes = dest_dir / "meshes"
-        if src_meshes.exists():
-            if dst_meshes.exists():
-                shutil.rmtree(str(dst_meshes))
-            shutil.copytree(str(src_meshes), str(dst_meshes))
+        for subdir in ("meshes", "viz_meshes"):
+            src_sub = out_dir / subdir
+            dst_sub = dest_dir / subdir
+            if src_sub.exists():
+                if dst_sub.exists():
+                    shutil.rmtree(str(dst_sub))
+                shutil.copytree(str(src_sub), str(dst_sub))
         print(f"  distributed to {dest_dir}")
 
 
@@ -682,7 +683,7 @@ def main() -> None:
     # Verify joint count
     rev_joints = [
         j.get("name")
-        for j in preprocessed.getroot().findall("joint")
+        for j in preprocessed.findall("joint")
         if j.get("type") in ("revolute", "prismatic")
         and not _is_gripper_joint(j.get("name", ""))
     ]

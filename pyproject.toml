@@ -1,27 +1,24 @@
 [build-system]
-requires = ["setuptools>=61.0", "pybind11>=2.10"]
-build-backend = "setuptools.build_meta"
+requires = ["scikit-build-core>=0.4.3", "nanobind>=2.0.0", "pybind11>=2.10"]
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "autolife_planning"
-version = "0.1.5"
+version = "0.2.0"
 description = "Autolife planning module"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "numpy",
     "scipy",
-    "autolife-vamp>=0.6.4",
     "pink",
 ]
 
-[tool.setuptools.packages.find]
-include = ["autolife_planning*"]
+[tool.scikit-build]
+minimum-version = "0.4"
+build-dir = "build/{wheel_tag}"
+wheel.packages = ["autolife_planning"]
+cmake.build-type = "Release"
 
-[tool.setuptools.package-data]
-autolife_planning = [
-    "resources/**/*.urdf",
-    "resources/**/*.srdf",
-    "resources/**/*.STL",
-    "resources/**/*.ply",
-]
+[project.optional-dependencies]
+dev = ["pre-commit", "pybullet"]

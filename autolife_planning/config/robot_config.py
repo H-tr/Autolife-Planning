@@ -125,29 +125,26 @@ _RIGHT_ARM_JOINTS = [
     "Joint_Right_Wrist_Lower",
 ]
 _WAIST_JOINTS = ["Joint_Waist_Pitch", "Joint_Waist_Yaw"]
+_BASE_JOINTS = ["Joint_Virtual_X", "Joint_Virtual_Y", "Joint_Virtual_Theta"]
+# Sagittal chain that bends the robot up/down — used to plan height changes.
+_HEIGHT_JOINTS = ["Joint_Ankle", "Joint_Knee", "Joint_Waist_Pitch"]
 
 PLANNING_SUBGROUPS = {
-    # Single arm (7 DOF) -- high/mid/low torso
-    "autolife_left_high": {"dof": 7, "joints": _LEFT_ARM_JOINTS},
-    "autolife_left_mid": {"dof": 7, "joints": _LEFT_ARM_JOINTS},
-    "autolife_left_low": {"dof": 7, "joints": _LEFT_ARM_JOINTS},
-    "autolife_right_high": {"dof": 7, "joints": _RIGHT_ARM_JOINTS},
-    "autolife_right_mid": {"dof": 7, "joints": _RIGHT_ARM_JOINTS},
-    "autolife_right_low": {"dof": 7, "joints": _RIGHT_ARM_JOINTS},
-    # Dual arm (14 DOF) -- high/mid/low torso
-    "autolife_dual_high": {"dof": 14, "joints": _LEFT_ARM_JOINTS + _RIGHT_ARM_JOINTS},
-    "autolife_dual_mid": {"dof": 14, "joints": _LEFT_ARM_JOINTS + _RIGHT_ARM_JOINTS},
-    "autolife_dual_low": {"dof": 14, "joints": _LEFT_ARM_JOINTS + _RIGHT_ARM_JOINTS},
-    # Torso + arm (9 DOF: 2 waist + 7 arm) -- high/mid/low legs
-    "autolife_torso_left_high": {"dof": 9, "joints": _WAIST_JOINTS + _LEFT_ARM_JOINTS},
-    "autolife_torso_left_mid": {"dof": 9, "joints": _WAIST_JOINTS + _LEFT_ARM_JOINTS},
-    "autolife_torso_left_low": {"dof": 9, "joints": _WAIST_JOINTS + _LEFT_ARM_JOINTS},
-    "autolife_torso_right_high": {
+    # Mobile base in the ground plane (3 DOF: x, y, yaw)
+    "autolife_base": {"dof": 3, "joints": _BASE_JOINTS},
+    # Height chain (3 DOF: ankle + knee + waist pitch)
+    "autolife_height": {"dof": 3, "joints": _HEIGHT_JOINTS},
+    # Single arm (7 DOF)
+    "autolife_left_arm": {"dof": 7, "joints": _LEFT_ARM_JOINTS},
+    "autolife_right_arm": {"dof": 7, "joints": _RIGHT_ARM_JOINTS},
+    # Dual arm (14 DOF)
+    "autolife_dual_arm": {"dof": 14, "joints": _LEFT_ARM_JOINTS + _RIGHT_ARM_JOINTS},
+    # Torso + arm (9 DOF: 2 waist + 7 arm)
+    "autolife_torso_left_arm": {"dof": 9, "joints": _WAIST_JOINTS + _LEFT_ARM_JOINTS},
+    "autolife_torso_right_arm": {
         "dof": 9,
         "joints": _WAIST_JOINTS + _RIGHT_ARM_JOINTS,
     },
-    "autolife_torso_right_mid": {"dof": 9, "joints": _WAIST_JOINTS + _RIGHT_ARM_JOINTS},
-    "autolife_torso_right_low": {"dof": 9, "joints": _WAIST_JOINTS + _RIGHT_ARM_JOINTS},
     # Whole body without base (21 DOF)
     "autolife_body": {
         "dof": 21,
@@ -162,28 +159,6 @@ PLANNING_SUBGROUPS = {
             *_RIGHT_ARM_JOINTS,
         ],
     },
-    # Coupled-leg variant (20 DOF: knee = 2 * ankle)
-    "autolife_body_coupled": {
-        "dof": 20,
-        "joints": [
-            "Joint_Ankle",
-            # Joint_Knee omitted — driven by coupling, not an independent DOF
-            *_WAIST_JOINTS,
-            *_LEFT_ARM_JOINTS,
-            "Joint_Neck_Roll",
-            "Joint_Neck_Pitch",
-            "Joint_Neck_Yaw",
-            *_RIGHT_ARM_JOINTS,
-        ],
-        "coupled_joints": [
-            {
-                "master": "Joint_Ankle",
-                "slave": "Joint_Knee",
-                "multiplier": 2.0,
-                "offset": 0.0,
-            },
-        ],
-    },
 }
 
 HOME_JOINTS = np.array(
@@ -192,7 +167,7 @@ HOME_JOINTS = np.array(
         0.0,
         0.0,
         0.0,
-        # [3:5]   legs (high stance)
+        # [3:5]   legs
         0.0,
         0.0,
         # [5:7]   waist
@@ -220,43 +195,3 @@ HOME_JOINTS = np.array(
         0.0,
     ]
 )
-
-# Frozen stance presets: legs + waist values for each height level.
-# Must match the values in scripts/build_subgroup_descriptions.py.
-_STANCE_PRESETS: dict[str, dict[str, float]] = {
-    "high": {
-        "Joint_Ankle": 0.0,
-        "Joint_Knee": 0.0,
-        "Joint_Waist_Pitch": 0.00,
-        "Joint_Waist_Yaw": -0.14,
-    },
-    "mid": {
-        "Joint_Ankle": 0.78,
-        "Joint_Knee": 1.60,
-        "Joint_Waist_Pitch": 0.89,
-        "Joint_Waist_Yaw": -0.14,
-    },
-    "low": {
-        "Joint_Ankle": 1.41,
-        "Joint_Knee": 2.38,
-        "Joint_Waist_Pitch": 0.95,
-        "Joint_Waist_Yaw": -0.14,
-    },
-}
-
-
-def subgroup_base_config(name: str) -> np.ndarray:
-    """Return a 24-DOF base config with frozen joints at the correct stance values.
-
-    For subgroups ending in ``_high``, ``_mid``, or ``_low`` the leg and waist
-    joints are set to the corresponding frozen preset.  Movable joints will be
-    overridden later by ``embed_config`` / ``embed_path``.
-    """
-    base = HOME_JOINTS.copy()
-    joint_names = autolife_robot_config.joint_names
-    for height in ("high", "mid", "low"):
-        if name.endswith(f"_{height}"):
-            for joint_name, value in _STANCE_PRESETS[height].items():
-                base[joint_names.index(joint_name)] = value
-            break
-    return base

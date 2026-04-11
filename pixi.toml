@@ -4,7 +4,6 @@ platforms = ["linux-64"]
 
 [pypi-dependencies]
 autolife_planning = { path = ".", editable = true }
-autolife-vamp = { path = "./third_party/vamp", editable = true }
 foam = { path = "./third_party/foam", editable = true }
 
 [environments]
@@ -19,9 +18,8 @@ foam-build = { cmd = "cmake --build third_party/foam/build", depends-on = ["foam
 build-robot = { cmd = "bash scripts/build_robot.sh", depends-on = ["foam-build"] }
 spherize-robot = { cmd = "bash scripts/spherize_robot.sh", depends-on = ["build-robot"] }
 generate-fk = { cmd = "bash scripts/generate_fk.sh", depends-on = ["spherize-robot"] }
-build-vamp = "python -m build third_party/vamp --no-isolation --skip-dependency-check --outdir dist/"
 build-pkg = "python -m build --no-isolation --skip-dependency-check --outdir dist/"
-build-all = { depends-on = ["build-vamp", "build-pkg"] }
+render-docs-videos = "python scripts/render_videos/render_docs_videos.py"
 
 [dependencies]
 cmake = ">=4.2.3,<5"
@@ -52,6 +50,7 @@ python-build = ">=1.2.2,<2"
 scikit-build-core = ">=0.4.3"
 nanobind = ">=2.0.0"
 twine = ">=6.2.0,<7"
+pybullet = ">=3.25,<4"
 
 [feature.dev.pypi-dependencies]
 pre-commit = "*"
