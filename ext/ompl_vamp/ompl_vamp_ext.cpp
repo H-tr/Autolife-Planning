@@ -55,5 +55,8 @@ NB_MODULE(_ompl_vamp, m) {
       .def("dimension", &OmplVampPlanner::dimension)
       .def("lower_bounds", &OmplVampPlanner::lower_bounds)
       .def("upper_bounds", &OmplVampPlanner::upper_bounds)
-      .def("min_max_radii", &OmplVampPlanner::min_max_radii);
+      .def("min_max_radii", &OmplVampPlanner::min_max_radii)
+      .def("set_subgroup", &OmplVampPlanner::set_subgroup,
+           nb::arg("active_indices"), nb::arg("frozen_config"))
+      .def("set_full_body", &OmplVampPlanner::set_full_body);
 }

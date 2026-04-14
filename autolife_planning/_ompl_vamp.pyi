@@ -163,3 +163,27 @@ class OmplVampPlanner:
         broadphase correctly.
         """
         ...
+    def set_subgroup(
+        self,
+        active_indices: Sequence[int],
+        frozen_config: Sequence[float],
+    ) -> None:
+        """Switch to a different subgroup without rebuilding the environment.
+
+        Clears all constraints.  The pointcloud and collision geometry
+        are preserved.
+
+        Args:
+            active_indices: Positions in the full 24-DOF body that this
+                planner will plan over, in DOF order.
+            frozen_config: 24-DOF stance to inject for every joint *not*
+                in ``active_indices``.
+        """
+        ...
+    def set_full_body(self) -> None:
+        """Switch back to full-body planning (24 DOF).
+
+        Clears all constraints.  The pointcloud and collision geometry
+        are preserved.
+        """
+        ...

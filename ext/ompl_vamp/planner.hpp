@@ -326,6 +326,29 @@ class OmplVampPlanner {
     return {Robot::min_radius, Robot::max_radius};
   }
 
+  /// Switch to a different subgroup without rebuilding the environment.
+  void set_subgroup(std::vector<int> active_indices,
+                    std::vector<double> frozen_config) {
+    active_dim_ = static_cast<int>(active_indices.size());
+    is_subgroup_ = true;
+    active_indices_ = std::move(active_indices);
+    frozen_config_.resize(frozen_config.size());
+    for (std::size_t i = 0; i < frozen_config.size(); ++i)
+      frozen_config_[i] = static_cast<float>(frozen_config[i]);
+    constraints_.clear();
+    rebuild_space_();
+  }
+
+  /// Switch back to full-body mode without rebuilding the environment.
+  void set_full_body() {
+    active_dim_ = Robot::dimension;
+    is_subgroup_ = false;
+    active_indices_.clear();
+    frozen_config_.clear();
+    constraints_.clear();
+    rebuild_space_();
+  }
+
  private:
   int active_dim_;
   bool is_subgroup_;
@@ -337,6 +360,35 @@ class OmplVampPlanner {
   std::vector<ob::ConstraintPtr> constraints_;
 
   void sync_env() { env_ = VampEnv(float_env_); }
+
+  void rebuild_space_() {
+    Robot::Configuration lo, hi;
+    std::array<float, Robot::dimension> zeros{}, ones{};
+    ones.fill(1.0f);
+    lo = Robot::Configuration(zeros.data());
+    hi = Robot::Configuration(ones.data());
+    Robot::scale_configuration(lo);
+    Robot::scale_configuration(hi);
+    auto lo_arr = lo.to_array();
+    auto hi_arr = hi.to_array();
+
+    auto space = std::make_shared<ob::RealVectorStateSpace>(active_dim_);
+    ob::RealVectorBounds bounds(active_dim_);
+    if (is_subgroup_) {
+      for (std::size_t i = 0; i < active_indices_.size(); ++i) {
+        auto idx = active_indices_[i];
+        bounds.setLow(i, std::min(lo_arr[idx], hi_arr[idx]));
+        bounds.setHigh(i, std::max(lo_arr[idx], hi_arr[idx]));
+      }
+    } else {
+      for (int i = 0; i < active_dim_; ++i) {
+        bounds.setLow(i, std::min(lo_arr[i], hi_arr[i]));
+        bounds.setHigh(i, std::max(lo_arr[i], hi_arr[i]));
+      }
+    }
+    space->setBounds(bounds);
+    space_ = space;
+  }
 
   // Check that *active_q* satisfies every constraint within the
   // OMPL constraint tolerance.  Throws std::invalid_argument with a

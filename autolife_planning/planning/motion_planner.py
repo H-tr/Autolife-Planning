@@ -172,6 +172,55 @@ class MotionPlanner:
                 c.co_dim,
             )
 
+    def clear_constraints(self) -> None:
+        """Remove all constraints from the planner."""
+        self._planner.clear_constraints()
+
+    def set_constraints(self, constraints: list) -> None:
+        """Replace all constraints: clear existing, then push new ones."""
+        self.clear_constraints()
+        self._push_constraints(constraints)
+
+    def set_subgroup(
+        self,
+        robot_name: str,
+        base_config: np.ndarray | None = None,
+    ) -> None:
+        """Switch active joints without rebuilding the collision environment.
+
+        Clears all constraints.  The pointcloud is preserved.
+
+        Args:
+            robot_name: Subgroup name from ``PLANNING_SUBGROUPS``, or
+                ``"autolife"`` for the full 24-DOF body.
+            base_config: 24-DOF frozen config for inactive joints.
+                Defaults to the previously stored base config.
+        """
+        from autolife_planning.config.robot_config import (
+            PLANNING_SUBGROUPS,
+            autolife_robot_config,
+        )
+
+        if base_config is not None:
+            self._base_config = np.asarray(base_config, dtype=np.float64).copy()
+        self._robot_name = robot_name
+
+        full_names = autolife_robot_config.joint_names
+        sg = PLANNING_SUBGROUPS.get(robot_name)
+
+        if sg is None:
+            self._planner.set_full_body()
+            self._joint_names = list(full_names)
+            self._subgroup_indices = None
+        else:
+            sg_joint_names = sg["joints"]
+            active_indices = [full_names.index(j) for j in sg_joint_names]
+            self._planner.set_subgroup(active_indices, self._base_config.tolist())
+            self._joint_names = list(sg_joint_names)
+            self._subgroup_indices = np.array(active_indices)
+
+        self._ndof = self._planner.dimension()
+
     # ── Subgroup helpers ──────────────────────────────────────────────
 
     def extract_config(self, full_config: np.ndarray) -> np.ndarray:
@@ -230,8 +279,16 @@ class MotionPlanner:
         self,
         start: np.ndarray,
         goal: np.ndarray,
+        time_limit: float | None = None,
     ) -> PlanningResult:
-        """Plan a collision-free path from start to goal."""
+        """Plan a collision-free path from start to goal.
+
+        Args:
+            start: Start configuration (active DOF).
+            goal: Goal configuration (active DOF).
+            time_limit: Optional per-call override for the solver time
+                limit.  Defaults to ``self._config.time_limit``.
+        """
         start = np.asarray(start, dtype=np.float64)
         goal = np.asarray(goal, dtype=np.float64)
 
@@ -257,11 +314,14 @@ class MotionPlanner:
                 path_cost=float("inf"),
             )
 
+        if time_limit is None:
+            time_limit = self._config.time_limit
+
         result = self._planner.plan(
             start.tolist(),
             goal.tolist(),
             self._config.planner_name,
-            self._config.time_limit,
+            time_limit,
             self._config.simplify,
             self._config.interpolate,
         )
