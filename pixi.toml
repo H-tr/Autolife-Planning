@@ -59,3 +59,10 @@ pre-commit = ">=4.5.1,<5"
 [feature.dev.pypi-dependencies]
 pre-commit = "*"
 pybullet = "*"
+
+[feature.dev.dependencies]
+pytest = ">=8.0,<9"
+trimesh = ">=4.0"
+
+[feature.dev.tasks]
+test = "pytest -q tests"

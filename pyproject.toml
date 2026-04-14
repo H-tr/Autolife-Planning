@@ -21,4 +21,11 @@ wheel.packages = ["autolife_planning"]
 cmake.build-type = "Release"
 
 [project.optional-dependencies]
-dev = ["pre-commit", "pybullet"]
+dev = ["pre-commit", "pybullet", "pytest>=8.0", "trimesh>=4.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
