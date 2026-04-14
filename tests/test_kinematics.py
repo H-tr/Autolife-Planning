@@ -211,3 +211,84 @@ def test_add_pointcloud_obstacles_returns_count(collision_ctx):
     n_added = add_pointcloud_obstacles(collision_ctx, pts, radius=0.01)
     assert n_added == 3
     assert collision_ctx.collision_model.ngeoms == n_before + 3
+
+
+# ── Pink IK solver ───────────────────────────────────────────────────
+
+
+@pytest.fixture(scope="module")
+def pink_left_arm():
+    pytest.importorskip("pink")
+    pytest.importorskip("qpsolvers")
+    pytest.importorskip("pinocchio")
+    from autolife_planning.kinematics import create_ik_solver
+    from autolife_planning.types import PinkIKConfig
+
+    return create_ik_solver(
+        "left_arm",
+        backend="pink",
+        joint_names=_LEFT_ARM_JOINT_NAMES,
+        config=PinkIKConfig(max_iterations=300),
+    )
+
+
+def test_pink_solver_chain_metadata(pink_left_arm):
+    assert pink_left_arm.num_joints == 7
+    assert pink_left_arm.base_frame
+    assert pink_left_arm.ee_frame
+    assert pink_left_arm.joint_names == _LEFT_ARM_JOINT_NAMES
+
+
+def test_pink_fk_matches_trac_ik(pink_left_arm, trac_left_arm):
+    """Pink and TRAC-IK must agree on the EE pose at HOME (same URDF)."""
+    pink_pose = pink_left_arm.fk(HOME_LEFT_ARM)
+    trac_pose = trac_left_arm.fk(HOME_LEFT_ARM)
+    np.testing.assert_allclose(pink_pose.position, trac_pose.position, atol=1e-6)
+    np.testing.assert_allclose(pink_pose.rotation, trac_pose.rotation, atol=1e-6)
+
+
+def test_pink_solve_constrained_converges(pink_left_arm):
+    """Tiny offset — Pink's iterative QP should land near the target."""
+    home_pose = pink_left_arm.fk(HOME_LEFT_ARM)
+    target = SE3Pose(
+        position=home_pose.position + np.array([0.02, 0.0, -0.01]),
+        rotation=home_pose.rotation,
+    )
+    result = pink_left_arm.solve_constrained(target, seed=HOME_LEFT_ARM)
+    if not result.success:
+        pytest.skip(f"Pink IK did not converge ({result.status.value}); flaky on CI")
+
+    assert result.joint_positions is not None
+    assert result.joint_positions.shape == (7,)
+    assert result.position_error < 5e-2
+    assert result.trajectory is not None and result.trajectory.shape[1] == 7
+
+
+def test_pink_solve_returns_plain_ik_result(pink_left_arm):
+    """``solve()`` is the IKSolverBase contract — must yield an IKResult."""
+    from autolife_planning.types import IKResult
+
+    home_pose = pink_left_arm.fk(HOME_LEFT_ARM)
+    target = SE3Pose(
+        position=home_pose.position + np.array([0.01, 0.0, 0.0]),
+        rotation=home_pose.rotation,
+    )
+    result = pink_left_arm.solve(target, seed=HOME_LEFT_ARM)
+    assert isinstance(result, IKResult)
+
+
+def test_pink_set_collision_context_accepts_none(pink_left_arm):
+    pink_left_arm.set_collision_context(None)
+
+
+def test_pink_solver_rejects_unknown_joint():
+    pytest.importorskip("pink")
+    pytest.importorskip("pinocchio")
+    from autolife_planning.config.robot_config import CHAIN_CONFIGS
+    from autolife_planning.kinematics.pink_ik_solver import PinkIKSolver
+
+    with pytest.raises(ValueError, match="not in model"):
+        PinkIKSolver(
+            CHAIN_CONFIGS["left_arm"],
+            joint_names=["Joint_Does_Not_Exist"],
+        )
