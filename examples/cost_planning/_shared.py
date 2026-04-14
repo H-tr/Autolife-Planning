@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from autolife_planning.config.robot_config import HOME_JOINTS, autolife_robot_config
+from autolife_planning.autolife import HOME_JOINTS, autolife_robot_config
 from autolife_planning.envs.pybullet_env import PyBulletEnv
 from autolife_planning.planning import SymbolicContext
 

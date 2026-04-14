@@ -13,7 +13,7 @@ pytest.importorskip("autolife_planning._ompl_vamp")
 
 
 def test_plan_around_table(table_pointcloud, home_joints):
-    from autolife_planning.config.robot_config import HOME_JOINTS
+    from autolife_planning.autolife import HOME_JOINTS
     from autolife_planning.planning import create_planner
     from autolife_planning.types import PlannerConfig
 

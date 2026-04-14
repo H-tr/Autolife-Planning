@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from autolife_planning.config.robot_config import HOME_JOINTS, JOINT_GROUPS
+from autolife_planning.autolife import HOME_JOINTS, JOINT_GROUPS
 from autolife_planning.types import IKConfig, SE3Pose, SolveType
 
 HOME_LEFT_ARM = HOME_JOINTS[JOINT_GROUPS["left_arm"]]
@@ -156,7 +156,7 @@ _LEFT_ARM_JOINT_NAMES = [
 @pytest.fixture(scope="module")
 def left_arm_pin_context():
     pytest.importorskip("pinocchio")
-    from autolife_planning.config.robot_config import CHAIN_CONFIGS
+    from autolife_planning.autolife import CHAIN_CONFIGS
     from autolife_planning.kinematics import create_pinocchio_context
 
     chain = CHAIN_CONFIGS["left_arm"]
@@ -231,7 +231,7 @@ def test_pinocchio_jacobian_matches_finite_difference(left_arm_pin_context):
 
 def test_pinocchio_context_rejects_unknown_frame():
     pytest.importorskip("pinocchio")
-    from autolife_planning.config.robot_config import CHAIN_CONFIGS
+    from autolife_planning.autolife import CHAIN_CONFIGS
     from autolife_planning.kinematics import create_pinocchio_context
 
     chain = CHAIN_CONFIGS["left_arm"]
@@ -249,7 +249,7 @@ def test_pinocchio_context_rejects_unknown_frame():
 def collision_ctx():
     pytest.importorskip("pinocchio")
     pytest.importorskip("hppfcl")
-    from autolife_planning.config.robot_config import CHAIN_CONFIGS
+    from autolife_planning.autolife import CHAIN_CONFIGS
     from autolife_planning.kinematics import build_collision_model
 
     return build_collision_model(CHAIN_CONFIGS["left_arm"].urdf_path)
@@ -367,7 +367,7 @@ def test_pink_set_collision_context_accepts_none(pink_left_arm):
 def test_pink_solver_rejects_unknown_joint():
     pytest.importorskip("pink")
     pytest.importorskip("pinocchio")
-    from autolife_planning.config.robot_config import CHAIN_CONFIGS
+    from autolife_planning.autolife import CHAIN_CONFIGS
     from autolife_planning.kinematics.pink_ik_solver import PinkIKSolver
 
     with pytest.raises(ValueError, match="not in model"):

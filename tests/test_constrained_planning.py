@@ -41,7 +41,7 @@ RIGHT_FINGER_LINK = "Link_Left_Gripper_Right_Finger"
 
 
 def _build_horizontal_line_constraint():
-    from autolife_planning.config.robot_config import HOME_JOINTS
+    from autolife_planning.autolife import HOME_JOINTS
     from autolife_planning.planning import Constraint, SymbolicContext
 
     ctx = SymbolicContext(SUBGROUP)

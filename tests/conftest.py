@@ -21,7 +21,7 @@ def repo_root() -> Path:
 
 @pytest.fixture(scope="session")
 def home_joints() -> np.ndarray:
-    from autolife_planning.config.robot_config import HOME_JOINTS
+    from autolife_planning.autolife import HOME_JOINTS
 
     return HOME_JOINTS.copy()
 

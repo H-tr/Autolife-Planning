@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from autolife_planning.config.robot_config import CHAIN_CONFIGS
+from autolife_planning.autolife import CHAIN_CONFIGS
 from autolife_planning.types import (
     ChainConfig,
     IKConfig,

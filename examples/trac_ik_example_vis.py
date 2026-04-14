@@ -18,7 +18,7 @@ import numpy as np
 import pybullet as pb
 from scipy.spatial.transform import Rotation
 
-from autolife_planning.config.robot_config import (
+from autolife_planning.autolife import (
     CHAIN_CONFIGS,
     HOME_JOINTS,
     JOINT_GROUPS,

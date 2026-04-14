@@ -11,7 +11,7 @@ below are *example data*, not part of the planning API.
 import numpy as np
 from fire import Fire
 
-from autolife_planning.config.robot_config import HOME_JOINTS, autolife_robot_config
+from autolife_planning.autolife import HOME_JOINTS, autolife_robot_config
 from autolife_planning.envs.pybullet_env import PyBulletEnv
 from autolife_planning.planning import create_planner
 from autolife_planning.types import PlannerConfig

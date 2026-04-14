@@ -48,7 +48,7 @@ import pybullet as pb
 import trimesh
 from fire import Fire
 
-from autolife_planning.config.robot_config import (
+from autolife_planning.autolife import (
     HOME_JOINTS,
     autolife_robot_config,
 )

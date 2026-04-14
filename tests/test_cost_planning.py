@@ -35,7 +35,7 @@ RIGHT_FINGER_LINK = "Link_Left_Gripper_Right_Finger"
 
 
 def _build_height_cost():
-    from autolife_planning.config.robot_config import HOME_JOINTS
+    from autolife_planning.autolife import HOME_JOINTS
     from autolife_planning.planning import Cost, SymbolicContext
 
     ctx = SymbolicContext(SUBGROUP)

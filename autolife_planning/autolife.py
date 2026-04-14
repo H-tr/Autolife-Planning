@@ -1,10 +1,21 @@
+"""The Autolife robot's bundled description.
+
+This module collects every concrete value that describes the one
+robot this project ships: joint groupings, the home pose, the URDF
+chains TRAC-IK and Pinocchio operate on, the VAMP planning subgroups,
+and the top-level ``RobotConfig`` instance.
+
+The dataclass *types* themselves live in :mod:`autolife_planning.types.robot`
+— this file holds *values* of those types.
+"""
+
 import os
 
 import numpy as np
 
 from autolife_planning.types.robot import CameraConfig, ChainConfig, RobotConfig
 
-_PKG_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_PKG_ROOT = os.path.dirname(os.path.abspath(__file__))
 _RESOURCES_DIR = os.path.join(_PKG_ROOT, "resources", "robot", "autolife")
 
 # Atomic joint groups — indices into the full 24-DOF configuration array.
