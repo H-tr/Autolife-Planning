@@ -40,6 +40,8 @@ NB_MODULE(_ompl_vamp, m) {
       .def("add_pointcloud", &OmplVampPlanner::add_pointcloud,
            nb::arg("points"), nb::arg("r_min"), nb::arg("r_max"),
            nb::arg("point_radius"))
+      .def("remove_pointcloud", &OmplVampPlanner::remove_pointcloud)
+      .def("has_pointcloud", &OmplVampPlanner::has_pointcloud)
       .def("add_sphere", &OmplVampPlanner::add_sphere, nb::arg("center"),
            nb::arg("radius"))
       .def("clear_environment", &OmplVampPlanner::clear_environment)

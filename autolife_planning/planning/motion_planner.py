@@ -181,6 +181,36 @@ class MotionPlanner:
         self.clear_constraints()
         self._push_constraints(constraints)
 
+    # ── Pointcloud environment ────────────────────────────────────────
+
+    def add_pointcloud(self, pointcloud: np.ndarray) -> None:
+        """Set the scene pointcloud, replacing any previously-registered cloud.
+
+        Args:
+            pointcloud: ``(N, 3)`` array of obstacle positions in world
+                frame.  Uses ``config.point_radius`` as the per-point
+                inflation radius.
+        """
+        r_min, r_max = self._planner.min_max_radii()
+        self._planner.add_pointcloud(
+            np.asarray(pointcloud, dtype=np.float32).tolist(),
+            r_min,
+            r_max,
+            self._config.point_radius,
+        )
+
+    def remove_pointcloud(self) -> bool:
+        """Drop the currently-registered pointcloud.
+
+        Returns ``False`` if there was no cloud to remove.
+        """
+        return self._planner.remove_pointcloud()
+
+    @property
+    def has_pointcloud(self) -> bool:
+        """True if a pointcloud is currently registered."""
+        return self._planner.has_pointcloud()
+
     def set_subgroup(
         self,
         robot_name: str,

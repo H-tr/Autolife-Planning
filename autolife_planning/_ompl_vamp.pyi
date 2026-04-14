@@ -75,7 +75,10 @@ class OmplVampPlanner:
         r_max: float,
         point_radius: float,
     ) -> None:
-        """Add a point cloud obstacle to the collision environment.
+        """Set the scene pointcloud.
+
+        The planner holds at most one cloud; calling this replaces any
+        previously-registered cloud.
 
         Args:
             points: ``(N, 3)`` array of obstacle positions in world frame.
@@ -85,6 +88,15 @@ class OmplVampPlanner:
                 :meth:`min_max_radii`).
             point_radius: Inflation radius applied to every cloud point.
         """
+        ...
+    def remove_pointcloud(self) -> bool:
+        """Drop the currently-registered pointcloud.
+
+        Returns ``False`` if there was no cloud to remove.
+        """
+        ...
+    def has_pointcloud(self) -> bool:
+        """``True`` if a pointcloud is currently registered."""
         ...
     def add_sphere(self, center: Sequence[float], radius: float) -> None:
         """Add a single sphere obstacle (centre + radius) to the environment."""

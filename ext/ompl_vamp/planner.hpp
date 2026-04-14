@@ -146,14 +146,28 @@ class OmplVampPlanner {
     space_ = space;
   }
 
+  /// Set the scene pointcloud.  The planner holds at most one cloud;
+  /// calling this replaces any previously-registered cloud.
   void add_pointcloud(const std::vector<std::array<float, 3>> &points,
                       float r_min, float r_max, float point_radius) {
     std::vector<vamp::collision::Point> pts;
     pts.reserve(points.size());
     for (const auto &p : points) pts.push_back({p[0], p[1], p[2]});
+    float_env_.pointclouds.clear();
     float_env_.pointclouds.emplace_back(pts, r_min, r_max, point_radius);
     sync_env();
   }
+
+  /// Drop the currently-registered pointcloud.  Returns ``false`` if
+  /// there was no cloud to remove.
+  bool remove_pointcloud() {
+    if (float_env_.pointclouds.empty()) return false;
+    float_env_.pointclouds.clear();
+    sync_env();
+    return true;
+  }
+
+  bool has_pointcloud() const { return !float_env_.pointclouds.empty(); }
 
   void add_sphere(const std::array<float, 3> &center, float radius) {
     float_env_.spheres.emplace_back(vamp::collision::Sphere<float>{
