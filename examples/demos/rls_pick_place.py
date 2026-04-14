@@ -24,7 +24,15 @@ Storyline:
     2.  place apple on table top  (autolife_torso_left_arm, 9 DOF)
     3.  navigate to kitchen counter  (autolife_base)
     4.  pick bowl from kitchen counter  (autolife_torso_left_arm)
-    5.  navigate to coffee table  (autolife_base, bowl held horizontally)
+        → low-hanging beam spawns over the kitchen→workstation corridor
+    5.  drive to coffee table, auto-squatting under the beam  (custom
+        6-DOF subgroup ``base + height-chain`` planned in one shot
+        with RRT-Connect on the projected state space; hard constraints
+        ``knee = 2·ankle``, ``waist_pitch = ankle`` and
+        ``yaw = current_yaw``; under the leg coupling the upper body
+        stays vertical so the bowl's full SO(3) pose is preserved for
+        free; path-length simplification trims the squat to the minimum
+        the obstacle actually demands)
     6.  place bowl on coffee table  (autolife_torso_left_arm)
     7.  navigate to sofa  (autolife_base, 3 DOF)
     8.  pick bottle from sofa  (autolife_torso_left_arm)
@@ -50,11 +58,40 @@ from fire import Fire
 
 from autolife_planning.autolife import (
     HOME_JOINTS,
+    PLANNING_SUBGROUPS,
     autolife_robot_config,
 )
 from autolife_planning.envs.pybullet_env import PyBulletEnv
-from autolife_planning.planning import Constraint, SymbolicContext, create_planner
+from autolife_planning.planning import Constraint, Cost, SymbolicContext, create_planner
 from autolife_planning.types import PlannerConfig
+
+# ── Custom subgroup: base + height chain ──────────────────────────
+# Lets a single planner vary the base (x, y, yaw) AND the height
+# chain (ankle, knee, waist_pitch) at the same time — a 6-DOF active
+# set.  waist_yaw and the right arm are deliberately *not* active:
+# they stay at their ``base_config`` values (the bowl-grasp pose)
+# throughout the plan.  The bowl's world-frame orientation is held
+# level by a hard horizontal-hold constraint on the right gripper
+# (``R_grip[0,2] = R_grip[1,2] = 0``), which — since the arm and
+# waist_yaw are frozen — reduces to an implicit coupling that forces
+# ``waist_pitch`` to compensate ``ankle`` at every manifold sample.
+DRIVE_SQUAT_SUBGROUP = "autolife_drive_squat"
+PLANNING_SUBGROUPS[DRIVE_SQUAT_SUBGROUP] = {
+    "dof": 6,
+    "joints": [
+        "Joint_Virtual_X",
+        "Joint_Virtual_Y",
+        "Joint_Virtual_Theta",
+        "Joint_Ankle",
+        "Joint_Knee",
+        "Joint_Waist_Pitch",
+    ],
+}
+DRIVE_SQUAT_IDX = np.array([0, 1, 2, 3, 4, 5])
+DRIVE_SQUAT_YAW_IDX = 2  # inside the 6-element active vector
+DRIVE_SQUAT_ANKLE_IDX = 3
+DRIVE_SQUAT_KNEE_IDX = 4
+DRIVE_SQUAT_WAIST_PITCH_IDX = 5
 
 # ── Subgroups ──────────────────────────────────────────────────────
 BASE_SUBGROUP = "autolife_base"  # 3 DOF: virtual x/y/yaw
@@ -101,7 +138,6 @@ STANDING_STANCE = np.array([0.0, 0.0, 0.0])
 # opposite to human), waist_pitch=-1.20 (torso compensates to stay
 # upright).
 SQUAT_STANCE = np.array([-1.20, -2.40, -1.20])
-BODY_WAIST_PITCH_IDX = 2  # waist_pitch inside the 21-DOF body vector
 
 # ── Graspable positions + approach vectors ────────────────────────
 APPLE_MESH_INIT = np.array([-1.50, 1.67, 0.15])  # on the floor near the table
@@ -194,6 +230,18 @@ BOWL_PREPLACE_FULL = np.array([
 BOWL_HOLD_ROT = np.eye(3)
 # fmt: on
 
+# ── Low-hanging beam (activated AFTER the bowl is grasped) ────────
+# A horizontal plank suspended over the open corridor between the
+# kitchen counter and the workstation.  The robot, carrying the bowl
+# with a locked horizontal pose, must duck under it by bending at the
+# waist while the ankle + knee remain pinned (leg constraint) — and a
+# soft cost encourages the upper body to stay as straight as possible,
+# so the waist only bends as much as is needed to clear the plank.
+BEAM_CENTER = np.array([-1.00, 0.00, 1.50])
+BEAM_HALF_EXTENTS = np.array(
+    [2.50, 0.20, 0.04]
+)  # spans the entire free corridor in X (wall-to-wall)
+
 ARM_FREE_TIME = 4.0
 ARM_LINE_TIME = 8.0
 BASE_NAV_TIME = 6.0
@@ -259,11 +307,12 @@ def make_line_constraint(ctx, p_from, p_to, name, grip=GRIPPER_LINK):
     return Constraint(residual=res, q_sym=ctx.q, name=name)
 
 
-def make_leg_pin(ctx, ankle, knee, name):
-    res = ca.vertcat(
-        ctx.q[BODY_ANKLE_IDX] - ca.DM(float(ankle)),
-        ctx.q[BODY_KNEE_IDX] - ca.DM(float(knee)),
-    )
+def make_leg_ratio(ctx, name):
+    """Couple the legs as ``knee = 2 · ankle`` — single holonomic
+    equation that keeps the foot flat during a squat without pinning
+    either joint to an absolute value.
+    """
+    res = ctx.q[BODY_KNEE_IDX] - 2 * ctx.q[BODY_ANKLE_IDX]
     return Constraint(residual=res, q_sym=ctx.q, name=name)
 
 
@@ -389,9 +438,7 @@ def plan_rarm_line(planner, current_full, goal_full, p_from, p_to, label):
 
 def plan_body_free(planner, current_full, goal_full, label):
     ctx = SymbolicContext(BODY_SUBGROUP, base_config=current_full)
-    lp = make_leg_pin(
-        ctx, current_full[3], current_full[4], f"legpin_{_sanitize(label)}"
-    )
+    lp = make_leg_ratio(ctx, f"legratio_{_sanitize(label)}")
     _use(planner, BODY_SUBGROUP, current_full, [lp])
     lo, hi = _bounds(planner)
     start = _project_and_clamp(ctx, lp.residual, current_full[BODY_IDX].copy(), lo, hi)
@@ -401,10 +448,7 @@ def plan_body_free(planner, current_full, goal_full, label):
 
 def plan_body_line(planner, current_full, goal_full, p_from, p_to, label):
     ctx = SymbolicContext(BODY_SUBGROUP, base_config=current_full)
-    leg_res = ca.vertcat(
-        ctx.q[BODY_ANKLE_IDX] - ca.DM(float(current_full[3])),
-        ctx.q[BODY_KNEE_IDX] - ca.DM(float(current_full[4])),
-    )
+    leg_ratio = ctx.q[BODY_KNEE_IDX] - 2 * ctx.q[BODY_ANKLE_IDX]
     pf, pt = np.asarray(p_from, float), np.asarray(p_to, float)
     d = pt - pf
     d /= float(np.linalg.norm(d))
@@ -417,7 +461,7 @@ def plan_body_line(planner, current_full, goal_full, p_from, p_to, label):
     line_res = ca.vertcat(
         ca.dot(diff, ca.DM(u.tolist())), ca.dot(diff, ca.DM(v.tolist()))
     )
-    combined = ca.vertcat(leg_res, line_res)
+    combined = ca.vertcat(leg_ratio, line_res)
     c = Constraint(residual=combined, q_sym=ctx.q, name=f"bodyline_{_sanitize(label)}")
     _use(planner, BODY_SUBGROUP, current_full, [c])
     lo, hi = _bounds(planner)
@@ -436,17 +480,18 @@ def make_grip_rotation_lock(ctx, R_target, name, grip):
 
 
 def plan_body_locked_free(planner, current_full, goal_full, R_target, label, grip):
-    """Body-subgroup free-motion plan: leg pin (legs at zero) + right-gripper
-    rotation lock.  Left arm + neck + waist + arms are all active (the user-
-    requested 'left arm constraint removed, leg constraint kept' setup).
+    """Body-subgroup free-motion plan: leg ratio (``knee = 2·ankle``) +
+    right-gripper rotation lock as hard manifold constraints, RRT-Connect
+    with no cost.  This is a "hold the bowl exactly" motion — hard
+    constraints are the right fit.
     """
     ctx = SymbolicContext(BODY_SUBGROUP, base_config=current_full)
     R = ctx.link_rotation(grip)
     R_t = ca.DM(np.asarray(R_target, float).tolist())
     M = R.T @ R_t - ca.DM_eye(3)
     rot_res = ca.vertcat(M[2, 1] - M[1, 2], M[0, 2] - M[2, 0], M[1, 0] - M[0, 1])
-    leg_res = ca.vertcat(ctx.q[BODY_ANKLE_IDX], ctx.q[BODY_KNEE_IDX])
-    res = ca.vertcat(rot_res, leg_res)
+    leg_ratio = ctx.q[BODY_KNEE_IDX] - 2 * ctx.q[BODY_ANKLE_IDX]
+    res = ca.vertcat(rot_res, leg_ratio)
     c = Constraint(residual=res, q_sym=ctx.q, name=f"bodylock_{_sanitize(label)}")
     _use(planner, BODY_SUBGROUP, current_full, [c])
     lo, hi = _bounds(planner)
@@ -471,7 +516,7 @@ def plan_body_locked_line_direct(
     R_t = ca.DM(np.asarray(R_target, float).tolist())
     M = R.T @ R_t - ca.DM_eye(3)
     rot_res = ca.vertcat(M[2, 1] - M[1, 2], M[0, 2] - M[2, 0], M[1, 0] - M[0, 1])
-    leg_res = ca.vertcat(ctx.q[BODY_ANKLE_IDX], ctx.q[BODY_KNEE_IDX])
+    leg_ratio = ctx.q[BODY_KNEE_IDX] - 2 * ctx.q[BODY_ANKLE_IDX]
 
     planner.set_subgroup(BODY_SUBGROUP, base_config=current_full)
     lo = np.array(planner._planner.lower_bounds())
@@ -486,7 +531,7 @@ def plan_body_locked_line_direct(
         alpha = s / steps
         target_pos = start_pos * (1 - alpha) + end_pos * alpha
         pos_res = gp - ca.DM(target_pos.tolist())
-        res = ca.vertcat(pos_res, rot_res, leg_res)
+        res = ca.vertcat(pos_res, rot_res, leg_ratio)
         for _ in range(20):
             q = ctx.project(q, res, max_iters=200)
             q = np.clip(q, lo + 1e-5, hi - 1e-5)
@@ -497,6 +542,133 @@ def plan_body_locked_line_direct(
     full_path[:, BODY_IDX] = np.asarray(path_active)
     print(f"  [{label}] direct: {len(path_active)} wp")
     return full_path
+
+
+def install_beam(planner, base_cloud):
+    """Append a dense surface sampling of the low-hanging plank to the
+    planner's pointcloud and return the beam points so the caller can
+    reveal them in the viewer at the right moment (not at startup).
+    """
+    hx, hy, hz = BEAM_HALF_EXTENTS
+    xs = np.linspace(-hx, hx, 80)
+    ys = np.linspace(-hy, hy, 20)
+    zs = np.linspace(-hz, hz, 6)
+    gx, gy = np.meshgrid(xs, ys, indexing="ij")
+    bottom = np.stack([gx.ravel(), gy.ravel(), np.full(gx.size, -hz)], axis=-1)
+    top = np.stack([gx.ravel(), gy.ravel(), np.full(gx.size, hz)], axis=-1)
+    # side faces (y = ±hy)
+    gx2, gz2 = np.meshgrid(xs, zs, indexing="ij")
+    side_ypos = np.stack([gx2.ravel(), np.full(gx2.size, hy), gz2.ravel()], axis=-1)
+    side_yneg = np.stack([gx2.ravel(), np.full(gx2.size, -hy), gz2.ravel()], axis=-1)
+    local = np.concatenate([bottom, top, side_ypos, side_yneg], axis=0)
+    beam_points = (local + BEAM_CENTER[None, :]).astype(np.float32)
+
+    augmented = np.concatenate(
+        [np.asarray(base_cloud, dtype=np.float32), beam_points],
+        axis=0,
+    )
+    planner.add_pointcloud(augmented)
+    print(
+        f"  beam installed: +{len(beam_points)} pts → planner cloud "
+        f"{len(augmented)} pts (viewer reveal deferred)"
+    )
+    return beam_points
+
+
+def plan_drive_with_squat(
+    planner,
+    current_full,
+    goal_base,
+    label,
+    time_limit=20.0,
+    cost_weight=200.0,
+    planner_name="rrtc",
+):
+    """Plan base motion + squat in **one shot**: hard constraints on
+    the structural relationships, soft cost for "stay tall / upper
+    body straight".
+
+    Active joints (6 DOF): base (x, y, yaw) and the height chain
+    (ankle, knee, waist_pitch).  waist_yaw and the right arm stay
+    frozen at their ``base_config`` values so the arm/torso
+    kinematic chain is rigid in body frame.
+
+    Hard constraints (ProjectedStateSpace manifold):
+
+        * ``knee = 2 · ankle``  — leg ratio, the structural coupling
+          between the leg joints.
+        * ``yaw = current_yaw`` — base orientation fixed.
+        * ``R_right_grip[0,2] = R_right_grip[1,2] = 0`` — horizontal
+          hold on the right gripper: the gripper's local Z axis must
+          stay aligned with world Z at every manifold sample, so the
+          bowl stays level.  With the right arm + waist_yaw frozen,
+          the only active joint that can tilt the gripper is
+          ``waist_pitch``, so the projector auto-compensates it
+          against ``ankle``.
+
+    Soft cost (held throughout):
+
+        * ``w · ankle²`` — "stay tall": keeps the robot at full
+          height except where the beam forces it to dip.
+
+    Default planner is RRT-Connect.  It ignores the cost but
+    path-length simplification naturally trims the squat to the
+    minimum the beam demands.  Optimal alternatives compatible with
+    the projected state space: ``rrtstar``, ``prmstar``.
+    """
+    ctx = SymbolicContext(DRIVE_SQUAT_SUBGROUP, base_config=current_full)
+    leg_ratio = ctx.q[DRIVE_SQUAT_KNEE_IDX] - 2 * ctx.q[DRIVE_SQUAT_ANKLE_IDX]
+    yaw_lock = ctx.q[DRIVE_SQUAT_YAW_IDX] - ca.DM(float(current_full[2]))
+    R_grip = ctx.link_rotation(RIGHT_GRIPPER_LINK)
+    res = ca.vertcat(leg_ratio, yaw_lock, R_grip[0, 2], R_grip[1, 2])
+    c = Constraint(residual=res, q_sym=ctx.q, name=f"drive_squat_{_sanitize(label)}")
+
+    cost = Cost(
+        expression=ctx.q[DRIVE_SQUAT_ANKLE_IDX] ** 2,
+        q_sym=ctx.q,
+        name=f"staytall_{_sanitize(label)}",
+        weight=cost_weight,
+    )
+
+    _use(planner, DRIVE_SQUAT_SUBGROUP, current_full, [c])
+    planner.set_costs([cost])
+    lo, hi = _bounds(planner)
+
+    start_active = current_full[DRIVE_SQUAT_IDX].copy()
+    start = _project_and_clamp(ctx, c.residual, start_active, lo, hi)
+
+    # Goal: arrive at the target base pose, legs back to standing
+    # (ankle = knee = 0).  waist_pitch stays at its start value —
+    # that's what the arm's grasp IK was solved against, so keeping
+    # it preserves the bowl's world-frame orientation.
+    goal_active = current_full[DRIVE_SQUAT_IDX].copy()
+    goal_active[0:3] = np.asarray(goal_base, dtype=np.float64)
+    goal_active[DRIVE_SQUAT_ANKLE_IDX] = 0.0
+    goal_active[DRIVE_SQUAT_KNEE_IDX] = 0.0
+    goal_active[DRIVE_SQUAT_WAIST_PITCH_IDX] = float(current_full[5])
+    goal = _project_and_clamp(ctx, c.residual, goal_active, lo, hi)
+
+    saved_name = planner._config.planner_name
+    saved_simplify = planner._config.simplify
+    planner._config.planner_name = planner_name
+    # Keep simplification on for RRT-Connect (trims unnecessary squat
+    # depth/duration); disable for asymptotically-optimal planners so
+    # their cost-optimised path survives.
+    planner._config.simplify = planner_name == "rrtc"
+    try:
+        path = _plan(planner, start, goal, label, time_limit)
+    finally:
+        planner._config.planner_name = saved_name
+        planner._config.simplify = saved_simplify
+        planner.clear_costs()
+
+    end_err = float(np.linalg.norm(path[-1, DRIVE_SQUAT_IDX] - goal))
+    if end_err > 0.05:
+        raise RuntimeError(
+            f"{label}: planner returned approximate solution "
+            f"(end-to-goal distance {end_err:.3f})"
+        )
+    return path
 
 
 def plan_arm_free_horizontal(
@@ -582,6 +754,7 @@ class Segment:
     attach_local_tf: np.ndarray | None
     attach_link_idx: int | None
     banner: str
+    reveal_points: np.ndarray | None = None  # drawn once when this segment starts
 
 
 def find_link_index(env, name):
@@ -677,6 +850,8 @@ def play_segments(env, segments, fps=60.0):
                 )
             if si != last_si:
                 print(f"[{si}] {seg.banner}")
+                if seg.reveal_points is not None:
+                    env.add_pointcloud(seg.reveal_points, pointsize=3)
                 last_si = si
             keys = c.getKeyboardEvents()
             if ord(" ") in keys and keys[ord(" ")] & pb.KEY_WAS_TRIGGERED:
@@ -742,7 +917,14 @@ def main(pcd_stride: int = 1, visualize: bool = True) -> None:
     client = env.sim.client
     segs: list[Segment] = []
 
-    def add(path, label, attach_id=None, attach_tf=None, attach_link=None):
+    def add(
+        path,
+        label,
+        attach_id=None,
+        attach_tf=None,
+        attach_link=None,
+        reveal_points=None,
+    ):
         segs.append(
             Segment(
                 path=path,
@@ -750,6 +932,7 @@ def main(pcd_stride: int = 1, visualize: bool = True) -> None:
                 attach_local_tf=attach_tf,
                 attach_link_idx=attach_link,
                 banner=label,
+                reveal_points=reveal_points,
             )
         )
 
@@ -878,10 +1061,35 @@ def main(pcd_stride: int = 1, visualize: bool = True) -> None:
     add(path, "s4 lift", bowl_id, bowl_tf, r_gripper_link)
     current = path[-1]
 
-    # ── Stage 5: nav to coffee table (bowl held, rotation locked) ──
-    print("\n── stage 5: nav → coffee table (bowl) ──")
-    path = plan_base(planner, current, BASE_NEAR_COFFEE, "s5 nav→coffee")
-    add(path, "s5 nav→coffee", bowl_id, bowl_tf, r_gripper_link)
+    # ── Install the low-hanging beam (bowl is now in hand) ────────
+    # Only exists in the second half of the demo — the robot must
+    # duck under it while the bowl stays level and the legs remain
+    # coupled.  A soft cost biases the height toward "stay tall".
+    # The viewer reveals the beam pointcloud when the first
+    # post-grasp segment starts playing — not at startup.
+    print("\n── install beam obstacle over kitchen→workstation corridor ──")
+    beam_points = install_beam(planner, cloud)
+
+    # ── Stage 5: drive to coffee table, auto-squat under the beam ─
+    # Single-shot plan over base + height chain (6 DOF) with the leg
+    # coupling and yaw lock as hard constraints and "stay tall" as a
+    # soft cost.  The optimiser itself decides where to dip the body.
+    print("\n── stage 5: drive → coffee (auto-squat under beam) ──")
+    path = plan_drive_with_squat(
+        planner,
+        current,
+        BASE_NEAR_COFFEE,
+        "s5 drive→coffee",
+        time_limit=20.0,
+    )
+    add(
+        path,
+        "s5 drive→coffee (auto-squat)",
+        bowl_id,
+        bowl_tf,
+        r_gripper_link,
+        reveal_points=beam_points,
+    )
     current = path[-1]
 
     # ── Stage 6: place bowl on coffee table (rotation locked, leg pin) ──
