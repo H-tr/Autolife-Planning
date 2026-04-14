@@ -10,6 +10,9 @@ foam = { path = "./third_party/foam", editable = true }
 default = { solve-group = "default" }
 dev = { features = ["dev"], solve-group = "default" }
 
+[activation]
+env = { PYTHONPATH = "" }
+
 [tasks]
 cricket-configure = "cmake -GNinja -S third_party/cricket -B third_party/cricket/build"
 cricket-build = { cmd = "cmake --build third_party/cricket/build", depends-on = ["cricket-configure"] }
