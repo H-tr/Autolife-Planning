@@ -8,9 +8,9 @@ from typing import Any
 import numpy as np
 import pybullet as pb
 
+from autolife_planning.envs import pybullet_interface as vpb
 from autolife_planning.envs.base_env import BaseEnv
 from autolife_planning.types import RobotConfig
-from autolife_planning.utils import pybullet_interface as vpb
 
 
 def _prepare_urdf_for_pybullet(urdf_path: str) -> str:
@@ -114,7 +114,7 @@ class PyBulletEnv(BaseEnv):
                 break
 
         # Set initial pose
-        from autolife_planning.config.robot_config import HOME_JOINTS
+        from autolife_planning.autolife import HOME_JOINTS
 
         self.set_joint_states(HOME_JOINTS[3:])
 

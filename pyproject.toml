@@ -21,4 +21,18 @@ wheel.packages = ["autolife_planning"]
 cmake.build-type = "Release"
 
 [project.optional-dependencies]
-dev = ["pre-commit", "pybullet"]
+dev = ["pre-commit", "pybullet", "pytest>=8.0", "trimesh>=4.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+# Silence third-party noise — none of these come from our code:
+#   * osqp's PendingDeprecationWarning fires once per QP iteration
+#     during Pink IK solves (~50–300× per test)
+#   * qpsolvers' SparseConversionWarning is a perf hint to Pink for
+#     handing it dense matrices instead of CSC
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning:osqp",
+    "ignore::Warning:qpsolvers",
+]

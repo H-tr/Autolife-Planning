@@ -26,7 +26,7 @@ import numpy as np
 import pinocchio as pin
 import pinocchio.casadi as cpin
 
-from autolife_planning.config.robot_config import (
+from autolife_planning.autolife import (
     HOME_JOINTS,
     PLANNING_SUBGROUPS,
     autolife_robot_config,

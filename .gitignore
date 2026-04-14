@@ -219,7 +219,20 @@ __marimo__/
 # scripts/build_robot_description.py). Scoped with a leading slash so
 # docs/assets/ (tracked documentation videos) isn't accidentally
 # ignored.
-/assets/
+# Use ``/dir/*`` rather than ``/dir/`` so the negations below can
+# re-include selected children — git refuses to recurse into a fully
+# excluded directory.
+/assets/*
+# Exception: ship the RLS scene pointclouds so the demos/tests in
+# examples/rls_pick_place_demo.py and the cost/constrained planning
+# galleries are runnable straight from a fresh clone.  Meshes stay
+# ignored — they're hundreds of megabytes and only needed for content
+# authoring.
+!/assets/envs/
+/assets/envs/*
+!/assets/envs/rls_env/
+/assets/envs/rls_env/*
+!/assets/envs/rls_env/pcd/
 
 # Generated FK headers (built by cricket, consumed by vamp).
 # Hand-written headers in this project use .hpp instead, so they are

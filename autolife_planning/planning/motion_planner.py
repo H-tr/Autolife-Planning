@@ -60,7 +60,7 @@ class MotionPlanner:
         costs: list | None = None,
     ) -> None:
         from autolife_planning._ompl_vamp import OmplVampPlanner
-        from autolife_planning.config.robot_config import (
+        from autolife_planning.autolife import (
             HOME_JOINTS,
             PLANNING_SUBGROUPS,
             autolife_robot_config,
@@ -265,7 +265,7 @@ class MotionPlanner:
             base_config: 24-DOF frozen config for inactive joints.
                 Defaults to the previously stored base config.
         """
-        from autolife_planning.config.robot_config import (
+        from autolife_planning.autolife import (
             PLANNING_SUBGROUPS,
             autolife_robot_config,
         )
@@ -433,7 +433,7 @@ class MotionPlanner:
 
 def available_robots() -> list[str]:
     """Return all available robot names for planning."""
-    from autolife_planning.config.robot_config import PLANNING_SUBGROUPS
+    from autolife_planning.autolife import PLANNING_SUBGROUPS
 
     return ["autolife"] + sorted(PLANNING_SUBGROUPS.keys())
 
