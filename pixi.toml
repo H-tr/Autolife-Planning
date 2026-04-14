@@ -63,6 +63,8 @@ pybullet = "*"
 [feature.dev.dependencies]
 pytest = ">=8.0,<9"
 trimesh = ">=4.0"
+coverage = ">=7.13.5,<8"
+pytest-cov = ">=7.1.0,<8"
 
 [feature.dev.tasks]
 test = "pytest -q tests"
