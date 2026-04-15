@@ -8,9 +8,9 @@
 
 **[Documentation](https://h-tr.github.io/Autolife-Planning/)** | **[API Reference](https://h-tr.github.io/Autolife-Planning/api/kinematics/)**
 
-[![rls_pick_place demo](docs/assets/rls_pick_place.gif)](https://github.com/H-tr/Autolife-Planning/raw/main/docs/assets/rls_pick_place.mp4)
+<a href="https://github.com/H-tr/Autolife-Planning/raw/main/docs/assets/rls_pick_place.mp4"><img src="docs/assets/rls_pick_place.gif" alt="rls_pick_place demo" width="100%"></a>
 
-<sub>↑ 4× sped-up preview — click for full-quality MP4</sub>
+<sub>↑ 5× sped-up preview — click for full-quality MP4</sub>
 
 </div>
 
