@@ -22,15 +22,19 @@ A planning library for the Autolife robot. It provides inverse kinematics (TRAC-
 
 ## Quick Start
 
-```bash
-pip install autolife-planning
-```
+**Platform**: Linux, Python 3.11+ (see `pixi.toml`).
 
-For development with the full C++ toolchain:
+For inference — running the planners and IK solvers — just pip install:
 
 ```bash
 git clone --recursive https://github.com/H-tr/Autolife-Planning.git
 cd Autolife-Planning
+pip install -e .
+```
+
+For development — rebuilding URDFs, regenerating FK headers, running the C++ toolchain end-to-end — use the setup script, which also installs pixi and the conda-forge deps (pinocchio, orocos-kdl, eigen, boost, ...):
+
+```bash
 bash scripts/setup.sh
 ```
 
