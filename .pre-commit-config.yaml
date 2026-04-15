@@ -40,4 +40,4 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
         args: ['--maxkb=1024']
-        exclude: '(robot/ik/ikfast/fetch/.*\.(cpp|h)$)|(resources/grasp_benchmark\.json$)|(assets/envs/rls_env/pcd/.*\.ply$)'
+        exclude: '(robot/ik/ikfast/fetch/.*\.(cpp|h)$)|(resources/grasp_benchmark\.json$)|(assets/envs/rls_env/pcd/.*\.ply$)|(docs/assets/rls_pick_place\.mp4$)'
