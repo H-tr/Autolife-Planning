@@ -416,6 +416,80 @@ class MotionPlanner:
             path_cost=result.path_cost,
         )
 
+    def simplify_path(self, path: np.ndarray, time_limit: float = 1.0) -> np.ndarray:
+        """Run OMPL's shortcut-based path simplifier on ``path``.
+
+        Same pipeline ``plan(..., simplify=True)`` uses internally
+        (``reduceVertices`` + ``collapseCloseVertices`` + ``shortcutPath``
+        + B-spline smoothing), but detached so you can apply it to any
+        path you already have — e.g. replay an old plan with a
+        different collision environment.
+
+        Shortcuts only consult the motion validator.  Custom soft
+        costs (:class:`Cost`) are ignored; for cost-driven plans, run
+        :meth:`plan` with ``simplify=False`` and leave the path
+        untouched unless you've explicitly decided shortcut shaping
+        is acceptable.
+
+        Args:
+            path: ``(N, ndof)`` array of waypoints in the planner's
+                active DOF space.
+            time_limit: Wall-clock budget for the simplifier, seconds.
+
+        Returns:
+            ``(M, ndof)`` simplified waypoint array with ``M <= N``.
+        """
+        path = np.asarray(path, dtype=np.float64)
+        if path.ndim != 2 or path.shape[1] != self._ndof:
+            raise ValueError(
+                f"path must have shape (N, {self._ndof}), got {path.shape}"
+            )
+        simp = self._planner.simplify_path(path.tolist(), float(time_limit))
+        return np.array(simp, dtype=np.float64)
+
+    def interpolate_path(
+        self,
+        path: np.ndarray,
+        count: int = 0,
+        resolution: float = 64.0,
+    ) -> np.ndarray:
+        """Densify ``path`` with uniform waypoints along every edge.
+
+        Three modes (pick one; the other must be zero):
+
+            * ``count > 0``        — exactly that many total waypoints
+              distributed proportionally to edge length.
+            * ``resolution > 0.0`` — ``ceil(edge_length * resolution)``
+              waypoints per edge (uniform density in state-space
+              distance — the default).
+            * both ``0``           — OMPL's default longest-valid-segment
+              fraction.
+
+        Uses ``StateSpace::interpolate`` internally, so the inserted
+        states stay on the constraint manifold for projected state
+        spaces as well as flat ones.  No collision check is performed
+        — the densification only lifts points along the existing
+        piecewise-linear edges.
+
+        Args:
+            path: ``(N, ndof)`` waypoint array.
+            count: Exact total waypoint count if ``> 0``.
+            resolution: Waypoints per unit state-space distance if
+                ``> 0.0``.
+
+        Returns:
+            ``(M, ndof)`` densified waypoint array with ``M >= N``.
+        """
+        path = np.asarray(path, dtype=np.float64)
+        if path.ndim != 2 or path.shape[1] != self._ndof:
+            raise ValueError(
+                f"path must have shape (N, {self._ndof}), got {path.shape}"
+            )
+        dense = self._planner.interpolate_path(
+            path.tolist(), int(count), float(resolution)
+        )
+        return np.array(dense, dtype=np.float64)
+
     def validate(self, configuration: np.ndarray) -> bool:
         """Check if a configuration is collision-free."""
         configuration = np.asarray(configuration, dtype=np.float64)

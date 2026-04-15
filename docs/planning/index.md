@@ -241,6 +241,36 @@ Typical recipes:
     )
     ```
 
+## Post-hoc simplify / interpolate
+
+`simplify` and `interpolate` run inside `plan(...)` by default, but
+the same pipeline is exposed as standalone methods on `MotionPlanner`
+— handy when you want to:
+
+- **Plan once with raw output** (`simplify=False, interpolate=False`)
+  and apply them later.
+- **Re-densify an old path** at a different `resolution` without
+  replanning.
+- **Keep the search raw, smooth only at display time** — the
+  controller consumes the original waypoints, the visualiser gets
+  a densely interpolated copy.
+- **Drop simplification for constrained / cost plans** (which you
+  want) but still apply it manually to specific segments where the
+  shortcutting is known-safe.
+
+```python
+result = planner.plan(start, goal)                     # unsimplified, raw
+smooth = planner.simplify_path(result.path, time_limit=1.0)
+dense  = planner.interpolate_path(smooth, resolution=128.0)     # or count=200
+```
+
+Both methods reuse the planner's collision environment and
+constraint set. `simplify_path` only consults the motion validator
+(geometric shortcuts — not cost-aware, same caveat as the in-plan
+flag). `interpolate_path` runs `StateSpace::interpolate` on the
+existing edges, so it stays on the constraint manifold for projected
+state spaces and does not perform collision checks itself.
+
 ## More
 
 <div class="grid cards" markdown>

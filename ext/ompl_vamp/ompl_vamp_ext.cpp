@@ -59,6 +59,10 @@ NB_MODULE(_ompl_vamp, m) {
            nb::arg("planner_name") = "rrtc", nb::arg("time_limit") = 10.0,
            nb::arg("simplify") = true, nb::arg("interpolate") = true,
            nb::arg("interpolate_count") = 0, nb::arg("resolution") = 64.0)
+      .def("simplify_path", &OmplVampPlanner::simplify_path, nb::arg("path"),
+           nb::arg("time_limit") = 1.0)
+      .def("interpolate_path", &OmplVampPlanner::interpolate_path,
+           nb::arg("path"), nb::arg("count") = 0, nb::arg("resolution") = 64.0)
       .def("validate", &OmplVampPlanner::validate, nb::arg("config"))
       .def("dimension", &OmplVampPlanner::dimension)
       .def("lower_bounds", &OmplVampPlanner::lower_bounds)

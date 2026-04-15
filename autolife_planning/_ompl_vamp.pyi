@@ -192,6 +192,43 @@ class OmplVampPlanner:
                 ``interpolate_count``.
         """
         ...
+    def simplify_path(
+        self,
+        path: Sequence[Sequence[float]],
+        time_limit: float = 1.0,
+    ) -> list[list[float]]:
+        """Run OMPL's shortcut simplifier on a waypoint list.
+
+        Reuses the current collision environment and constraints.
+        Shortcuts only consult the motion validator, so custom soft
+        costs are ignored.  Returns the simplified path as waypoints.
+
+        Args:
+            path: ``(N, dimension())`` waypoint list.
+            time_limit: Simplifier wall-clock budget, seconds.
+        """
+        ...
+    def interpolate_path(
+        self,
+        path: Sequence[Sequence[float]],
+        count: int = 0,
+        resolution: float = 64.0,
+    ) -> list[list[float]]:
+        """Densify a waypoint list along its existing edges.
+
+        Pass at most one of ``count`` (exact total waypoints,
+        distributed by edge length) or ``resolution`` (waypoints per
+        unit of state-space distance).  Both zero falls back to OMPL's
+        default longest-valid-segment fraction.  No collision check is
+        performed — densification only calls ``StateSpace::interpolate``
+        on the existing edges.
+
+        Args:
+            path: ``(N, dimension())`` waypoint list.
+            count: Total waypoint count if > 0.
+            resolution: Waypoints per unit distance if > 0.0.
+        """
+        ...
     def validate(self, config: Sequence[float]) -> bool:
         """Return ``True`` if ``config`` is collision-free.
 

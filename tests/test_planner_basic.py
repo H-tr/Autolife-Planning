@@ -72,3 +72,61 @@ def test_plan_to_random_valid_goal(left_arm_planner, left_arm_start):
 def test_plan_rejects_wrong_dimension(left_arm_planner, left_arm_start):
     with pytest.raises(ValueError):
         left_arm_planner.plan(left_arm_start, np.zeros(8))
+
+
+def test_simplify_and_interpolate_path(home_joints):
+    """Post-hoc simplify + interpolate round-trip on a real plan."""
+    from autolife_planning.planning import create_planner
+    from autolife_planning.types import PlannerConfig
+
+    # Plan without simplification/interpolation so the standalone
+    # helpers have room to actually do something.
+    raw_planner = create_planner(
+        "autolife_left_arm",
+        config=PlannerConfig(
+            planner_name="rrtc",
+            time_limit=2.0,
+            simplify=False,
+            interpolate=False,
+        ),
+    )
+    start = raw_planner.extract_config(home_joints)
+    np.random.seed(0)
+    goal = raw_planner.sample_valid()
+    result = raw_planner.plan(start, goal)
+    if not result.success:
+        pytest.skip("rrtc didn't find a path for this random goal")
+
+    n_raw = result.path.shape[0]
+
+    # Simplify: endpoint-preserving, size can only shrink or stay.
+    simp = raw_planner.simplify_path(result.path, time_limit=1.0)
+    assert simp.shape[1] == 7
+    assert simp.shape[0] <= n_raw
+    np.testing.assert_allclose(simp[0], start, atol=1e-6)
+    np.testing.assert_allclose(simp[-1], goal, atol=1e-6)
+
+    # Interpolate by count — exact output size.
+    dense_count = raw_planner.interpolate_path(simp, count=50, resolution=0.0)
+    assert dense_count.shape == (50, 7)
+    np.testing.assert_allclose(dense_count[0], simp[0], atol=1e-6)
+    np.testing.assert_allclose(dense_count[-1], simp[-1], atol=1e-6)
+
+    # Interpolate by resolution — denser than the simplified path.
+    dense_res = raw_planner.interpolate_path(simp, count=0, resolution=64.0)
+    assert dense_res.shape[1] == 7
+    assert dense_res.shape[0] >= simp.shape[0]
+
+    # Mutual-exclusion guardrail.
+    with pytest.raises(ValueError):
+        raw_planner.interpolate_path(simp, count=10, resolution=64.0)
+
+
+def test_simplify_path_rejects_wrong_dimension(left_arm_planner):
+    with pytest.raises(ValueError):
+        left_arm_planner.simplify_path(np.zeros((4, 8)))
+
+
+def test_interpolate_path_rejects_wrong_dimension(left_arm_planner):
+    with pytest.raises(ValueError):
+        left_arm_planner.interpolate_path(np.zeros((4, 8)))

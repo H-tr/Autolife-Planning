@@ -24,6 +24,8 @@
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/base/spaces/constraint/ConstrainedStateSpace.h>
 #include <ompl/base/spaces/constraint/ProjectedStateSpace.h>
+#include <ompl/geometric/PathGeometric.h>
+#include <ompl/geometric/PathSimplifier.h>
 #include <ompl/geometric/SimpleSetup.h>
 
 #include "compiled_constraint.hpp"
@@ -267,42 +269,7 @@ class OmplVampPlanner {
     }
 
     // Pick the right state space + space information for this plan.
-    ob::StateSpacePtr active_space = space_;
-    ob::SpaceInformationPtr si;
-    if (constrained) {
-      auto intersection = std::make_shared<ob::ConstraintIntersection>(
-          static_cast<unsigned int>(active_dim_), constraints_);
-      auto css =
-          std::make_shared<ob::ProjectedStateSpace>(space_, intersection);
-      // ConstrainedSpaceInformation's constructor wires the
-      // back-reference; css->setup() must come *after* that step.
-      auto csi = std::make_shared<ob::ConstrainedSpaceInformation>(css);
-      css->setup();
-      si = csi;
-      active_space = css;
-    } else {
-      si = std::make_shared<ob::SpaceInformation>(space_);
-    }
-
-    if (is_subgroup_) {
-      si->setStateValidityChecker(std::make_shared<SubgroupValidityChecker>(
-          si, env_, active_indices_, frozen_config_));
-      // ConstrainedSpaceInformation provides its own motion validator
-      // that wraps the projection — we only override it in the
-      // unconstrained case.
-      if (!constrained) {
-        si->setMotionValidator(std::make_shared<SubgroupMotionValidator>(
-            si, env_, active_indices_, frozen_config_));
-      }
-    } else {
-      si->setStateValidityChecker(
-          std::make_shared<AutolifeValidityChecker>(si, env_));
-      if (!constrained) {
-        si->setMotionValidator(
-            std::make_shared<AutolifeMotionValidator>(si, env_));
-      }
-    }
-    si->setup();
+    auto [si, active_space] = make_space_information_(constrained);
 
     og::SimpleSetup ss(si);
     ss.setPlanner(create_planner(si, planner_name));
@@ -368,6 +335,67 @@ class OmplVampPlanner {
     }
 
     return result;
+  }
+
+  // Standalone path simplification — same pipeline OMPL's
+  // ``SimpleSetup::simplifySolution`` runs (reduceVertices,
+  // collapseCloseVertices, shortcutPath, optional B-spline smoothing)
+  // against the current collision environment, but detached from
+  // ``plan(...)``.  The input and output are plain waypoint lists in
+  // the planner's active DOF space.
+  //
+  // Shortcuts only consult the motion validator — custom soft costs
+  // are ignored.  For constrained/cost planners, prefer
+  // ``plan(simplify=False)`` and leave the path untouched, or call
+  // this only when you've explicitly decided shortcut shaping is
+  // acceptable.
+  auto simplify_path(const std::vector<std::vector<double>> &path,
+                     double time_limit) -> std::vector<std::vector<double>> {
+    if (path.size() < 2) return path;
+    const bool constrained = !constraints_.empty();
+    auto [si, active_space] = make_space_information_(constrained);
+    og::PathGeometric geo = waypoints_to_path_(path, si, active_space);
+    og::PathSimplifier simp(si);
+    simp.simplify(geo, time_limit);
+    return path_to_waypoints_(geo);
+  }
+
+  // Standalone path densification — same three modes as
+  // ``plan(..., interpolate=True, ...)``:
+  //   * ``count > 0``        → exactly that many total waypoints.
+  //   * ``resolution > 0.0`` → ``ceil(edge_length * resolution)`` waypoints
+  //                            per edge (uniform density in state-space
+  //                            distance).
+  //   * both 0               → OMPL's default longest-valid-segment
+  //                            fraction.
+  // No collision check — densification only calls
+  // ``StateSpace::interpolate`` on the existing edges, so the resulting
+  // waypoints lie on the same (piecewise-linear) path the caller
+  // already had and stay on the constraint manifold for projected
+  // spaces.
+  auto interpolate_path(const std::vector<std::vector<double>> &path, int count,
+                        double resolution) -> std::vector<std::vector<double>> {
+    if (count > 0 && resolution > 0.0) {
+      throw std::invalid_argument(
+          "interpolate_path: pass at most one of count (>0) or resolution "
+          "(>0), not both.");
+    }
+    if (resolution < 0.0) {
+      throw std::invalid_argument(
+          "interpolate_path: resolution must be >= 0 (0 disables).");
+    }
+    if (path.size() < 2) return path;
+    const bool constrained = !constraints_.empty();
+    auto [si, active_space] = make_space_information_(constrained);
+    og::PathGeometric geo = waypoints_to_path_(path, si, active_space);
+    if (count > 0) {
+      geo.interpolate(static_cast<unsigned int>(count));
+    } else if (resolution > 0.0) {
+      densify_by_resolution(geo, active_space, resolution);
+    } else {
+      geo.interpolate();
+    }
+    return path_to_waypoints_(geo);
   }
 
   auto validate(std::vector<double> config) -> bool {
@@ -527,6 +555,84 @@ class OmplVampPlanner {
             "you intend to plan from.");
       }
     }
+  }
+
+  // Build a ``SpaceInformation`` configured with our validity /
+  // motion checkers — extracted from ``plan(...)`` so the standalone
+  // simplify/interpolate paths share exactly the same configuration.
+  auto make_space_information_(bool constrained)
+      -> std::pair<ob::SpaceInformationPtr, ob::StateSpacePtr> {
+    ob::StateSpacePtr active_space = space_;
+    ob::SpaceInformationPtr si;
+    if (constrained) {
+      auto intersection = std::make_shared<ob::ConstraintIntersection>(
+          static_cast<unsigned int>(active_dim_), constraints_);
+      auto css =
+          std::make_shared<ob::ProjectedStateSpace>(space_, intersection);
+      auto csi = std::make_shared<ob::ConstrainedSpaceInformation>(css);
+      css->setup();
+      si = csi;
+      active_space = css;
+    } else {
+      si = std::make_shared<ob::SpaceInformation>(space_);
+    }
+
+    if (is_subgroup_) {
+      si->setStateValidityChecker(std::make_shared<SubgroupValidityChecker>(
+          si, env_, active_indices_, frozen_config_));
+      if (!constrained) {
+        si->setMotionValidator(std::make_shared<SubgroupMotionValidator>(
+            si, env_, active_indices_, frozen_config_));
+      }
+    } else {
+      si->setStateValidityChecker(
+          std::make_shared<AutolifeValidityChecker>(si, env_));
+      if (!constrained) {
+        si->setMotionValidator(
+            std::make_shared<AutolifeMotionValidator>(si, env_));
+      }
+    }
+    si->setup();
+    return {si, active_space};
+  }
+
+  // Lift a flat waypoint list into an OMPL ``PathGeometric``.  States
+  // are allocated from ``active_space`` so the caller can hand it to
+  // ``PathSimplifier``, ``PathGeometric::interpolate``, or
+  // ``densify_by_resolution`` interchangeably.
+  auto waypoints_to_path_(const std::vector<std::vector<double>> &waypoints,
+                          const ob::SpaceInformationPtr &si,
+                          const ob::StateSpacePtr &active_space)
+      -> og::PathGeometric {
+    og::PathGeometric path(si);
+    for (const auto &w : waypoints) {
+      if (static_cast<int>(w.size()) != active_dim_) {
+        throw std::invalid_argument(
+            std::string("Waypoint dimension ") + std::to_string(w.size()) +
+            " does not match active DOF " + std::to_string(active_dim_) + ".");
+      }
+      auto *s = active_space->allocState();
+      auto *rv = extract_real_state(s);
+      for (int j = 0; j < active_dim_; ++j) rv->values[j] = w[j];
+      path.append(s);
+      active_space->freeState(s);
+    }
+    return path;
+  }
+
+  // Flatten a PathGeometric's states back into the waypoint list the
+  // Python side expects.
+  auto path_to_waypoints_(const og::PathGeometric &path)
+      -> std::vector<std::vector<double>> {
+    std::vector<std::vector<double>> out;
+    out.reserve(path.getStateCount());
+    for (std::size_t i = 0; i < path.getStateCount(); ++i) {
+      const auto *rv = extract_real_state(path.getState(i));
+      std::vector<double> config(active_dim_);
+      for (int j = 0; j < active_dim_; ++j) config[j] = rv->values[j];
+      out.push_back(std::move(config));
+    }
+    return out;
   }
 
   // Densify ``path`` so each edge of state-space length ``d`` is
