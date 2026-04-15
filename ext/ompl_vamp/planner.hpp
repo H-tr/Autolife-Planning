@@ -399,24 +399,104 @@ class OmplVampPlanner {
   }
 
   auto validate(std::vector<double> config) -> bool {
-    if (is_subgroup_) {
-      alignas(Robot::Configuration::S::Alignment)
-          std::array<float, Robot::Configuration::num_scalars>
-              buf{};
-      std::copy(frozen_config_.begin(), frozen_config_.end(), buf.begin());
-      for (std::size_t i = 0; i < active_indices_.size(); ++i)
-        buf[active_indices_[i]] = static_cast<float>(config[i]);
-      auto q = Robot::Configuration(buf.data());
-      return vamp::planning::validate_motion<Robot, kRake, 1>(q, q, env_);
-    } else {
-      alignas(Robot::Configuration::S::Alignment)
-          std::array<float, Robot::Configuration::num_scalars>
-              buf{};
-      for (std::size_t i = 0; i < Robot::dimension; ++i)
-        buf[i] = static_cast<float>(config[i]);
-      auto q = Robot::Configuration(buf.data());
-      return vamp::planning::validate_motion<Robot, kRake, 1>(q, q, env_);
+    if (static_cast<int>(config.size()) != active_dim_) {
+      throw std::invalid_argument(std::string("validate: config length ") +
+                                  std::to_string(config.size()) +
+                                  " does not match active DOF " +
+                                  std::to_string(active_dim_) + ".");
     }
+    auto q = build_full_config_(config);
+    return vamp::planning::validate_motion<Robot, kRake, 1>(q, q, env_);
+  }
+
+  // Batched collision check — packs up to ``kRake`` distinct
+  // configurations directly into a VAMP ``ConfigurationBlock<kRake>``
+  // so a single ``Robot::fkcc<kRake>`` call sphere-FKs and
+  // collision-checks them against the SIMD environment in one sweep.
+  // Same SIMD primitive the motion-edge validator uses for interpolated
+  // samples — we just feed it independent configs per lane.
+  //
+  // If a packed block fails, we fall back to per-lane single-state
+  // checks so the caller still gets one bool per input config.  In the
+  // common case (most configs valid) this is O(N/kRake) SIMD calls;
+  // worst case (every block fails) degrades to the baseline N single
+  // checks.
+  //
+  // Subgroup planners expand each reduced-DOF config to the full 24-DOF
+  // body via the stored frozen pose before packing, mirroring
+  // ``validate(...)``.
+  auto validate_batch(const std::vector<std::vector<double>> &configs)
+      -> std::vector<bool> {
+    const std::size_t n = configs.size();
+    std::vector<bool> result(n, false);
+    if (n == 0) return result;
+
+    for (std::size_t i = 0; i < n; ++i) {
+      if (static_cast<int>(configs[i].size()) != active_dim_) {
+        throw std::invalid_argument(
+            std::string("validate_batch: config[") + std::to_string(i) +
+            "] length " + std::to_string(configs[i].size()) +
+            " does not match active DOF " + std::to_string(active_dim_) + ".");
+      }
+    }
+
+    // ``ConfigurationBlock<kRake>::pack`` expects row-major layout
+    // where row ``d`` (joint dimension) holds kRake scalars — the
+    // lane values for that joint across the rake.  So
+    //     buf[d * kRake + lane] = full_config(configs[lane])[d].
+    alignas(vamp::FloatVectorAlignment)
+        std::array<float, Robot::dimension * kRake>
+            blk_buf{};
+
+    auto write_lane = [&](std::size_t lane, const std::vector<double> &cfg) {
+      if (is_subgroup_) {
+        for (std::size_t d = 0; d < Robot::dimension; ++d)
+          blk_buf[d * kRake + lane] = frozen_config_[d];
+        for (std::size_t k = 0; k < active_indices_.size(); ++k)
+          blk_buf[active_indices_[k] * kRake + lane] =
+              static_cast<float>(cfg[k]);
+      } else {
+        for (std::size_t d = 0; d < Robot::dimension; ++d)
+          blk_buf[d * kRake + lane] = static_cast<float>(cfg[d]);
+      }
+    };
+
+    for (std::size_t i = 0; i < n; i += kRake) {
+      const std::size_t chunk = std::min(kRake, n - i);
+      for (std::size_t lane = 0; lane < chunk; ++lane)
+        write_lane(lane, configs[i + lane]);
+      // Pad the tail lanes by repeating the first real config in this
+      // block.  Padding with a real (tested) config preserves
+      // correctness: if the packed block passes, every real lane is
+      // valid; if it fails we only run the per-lane fallback over the
+      // real lanes, so the padded lanes never appear in the output.
+      for (std::size_t lane = chunk; lane < kRake; ++lane)
+        write_lane(lane, configs[i]);
+
+      // Constructor forwards to VectorInterface::pack(), which is
+      // itself protected — this is the public entry-point.  The
+      // buffer is aligned to FloatVectorAlignment and its length
+      // (Robot::dimension * kRake) is a multiple of VectorWidth, so
+      // the aligned load path is safe.
+      typename Robot::template ConfigurationBlock<kRake> block(blk_buf.data());
+
+      const bool block_valid =
+          env_.attachments ? Robot::template fkcc_attach<kRake>(env_, block)
+                           : Robot::template fkcc<kRake>(env_, block);
+
+      if (block_valid) {
+        for (std::size_t lane = 0; lane < chunk; ++lane)
+          result[i + lane] = true;
+      } else {
+        for (std::size_t lane = 0; lane < chunk; ++lane) {
+          auto q = build_full_config_(configs[i + lane]);
+          result[i + lane] =
+              vamp::planning::validate_motion<Robot, kRake, 1>(q, q, env_);
+        }
+      }
+    }
+
+    return result;
   }
 
   auto dimension() const -> int { return active_dim_; }
@@ -477,6 +557,25 @@ class OmplVampPlanner {
   std::vector<double> cost_weights_;
 
   void sync_env() { env_ = VampEnv(float_env_); }
+
+  // Expand an active-DOF config into a full 24-DOF VAMP Configuration,
+  // injecting the frozen pose for joints outside ``active_indices_``
+  // when running as a subgroup planner.
+  auto build_full_config_(const std::vector<double> &config) const
+      -> Robot::Configuration {
+    alignas(Robot::Configuration::S::Alignment)
+        std::array<float, Robot::Configuration::num_scalars>
+            buf{};
+    if (is_subgroup_) {
+      std::copy(frozen_config_.begin(), frozen_config_.end(), buf.begin());
+      for (std::size_t i = 0; i < active_indices_.size(); ++i)
+        buf[active_indices_[i]] = static_cast<float>(config[i]);
+    } else {
+      for (std::size_t i = 0; i < Robot::dimension; ++i)
+        buf[i] = static_cast<float>(config[i]);
+    }
+    return Robot::Configuration(buf.data());
+  }
 
   // Build the OMPL OptimizationObjective for the active cost set.
   // One CostLibrary backs each CompiledCost adapter — the adapter

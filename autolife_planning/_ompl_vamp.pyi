@@ -237,6 +237,29 @@ class OmplVampPlanner:
         ``frozen_config`` before checking.
         """
         ...
+    def validate_batch(
+        self,
+        configs: Sequence[Sequence[float]],
+    ) -> list[bool]:
+        """Batched collision check — deep SIMD, per-config result.
+
+        Packs up to ``rake`` distinct configurations into a single
+        VAMP ``ConfigurationBlock<rake>`` so one ``Robot::fkcc<rake>``
+        call sphere-FKs and collision-checks all of them
+        simultaneously — the same SIMD primitive the motion-edge
+        validator uses for interpolated samples, fed independent
+        configs per lane instead.
+
+        Returns one bool per input config in input order.  In the
+        common case (most configs valid) costs ``ceil(N / rake)``
+        SIMD calls; when a packed block fails, only that block falls
+        back to per-lane single-state checks.
+
+        Each ``configs[i]`` must have length :meth:`dimension`.
+        Subgroup planners expand each to a full 24-DOF state with
+        the stored ``frozen_config`` before packing.
+        """
+        ...
     def dimension(self) -> int:
         """Number of active joints — 24 for the full body, smaller for subgroups."""
         ...

@@ -495,6 +495,33 @@ class MotionPlanner:
         configuration = np.asarray(configuration, dtype=np.float64)
         return self._planner.validate(configuration.tolist())
 
+    def validate_batch(self, configurations: np.ndarray) -> np.ndarray:
+        """Batched collision check — one SIMD block per ``rake`` configs.
+
+        Packs ``rake`` distinct configurations into a single VAMP
+        ``ConfigurationBlock<rake>`` and runs one ``fkcc<rake>`` call
+        per block, so ``N`` queries cost ``ceil(N / rake)`` SIMD
+        sweeps in the common case.  When a packed block fails we fall
+        back to per-lane single-state checks for that block only, so
+        the returned array is always exactly one bool per input.
+
+        Args:
+            configurations: ``(N, ndof)`` array of active-DOF
+                configurations.
+
+        Returns:
+            ``(N,)`` boolean array; ``True`` at index ``i`` iff
+            ``configurations[i]`` is collision-free.
+        """
+        configurations = np.asarray(configurations, dtype=np.float64)
+        if configurations.ndim != 2 or configurations.shape[1] != self._ndof:
+            raise ValueError(
+                f"configurations must have shape (N, {self._ndof}), "
+                f"got {configurations.shape}"
+            )
+        valid = self._planner.validate_batch(configurations.tolist())
+        return np.asarray(valid, dtype=bool)
+
     def sample_valid(self) -> np.ndarray:
         """Sample a random collision-free configuration."""
         lo = np.array(self._planner.lower_bounds())

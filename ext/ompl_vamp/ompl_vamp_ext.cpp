@@ -64,6 +64,8 @@ NB_MODULE(_ompl_vamp, m) {
       .def("interpolate_path", &OmplVampPlanner::interpolate_path,
            nb::arg("path"), nb::arg("count") = 0, nb::arg("resolution") = 64.0)
       .def("validate", &OmplVampPlanner::validate, nb::arg("config"))
+      .def("validate_batch", &OmplVampPlanner::validate_batch,
+           nb::arg("configs"))
       .def("dimension", &OmplVampPlanner::dimension)
       .def("lower_bounds", &OmplVampPlanner::lower_bounds)
       .def("upper_bounds", &OmplVampPlanner::upper_bounds)

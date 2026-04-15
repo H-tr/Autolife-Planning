@@ -91,7 +91,10 @@ obstacle (same scene as `examples/planning/motion.py`).
 | STRIDE | 2.2 / 3.2 ms | 2.7 / 8.5 ms | 2.2 / 3.3 ms |
 
 Raw `planner.validate(config)` throughput: **3.2 μs / check** (Python
-boundary included) ≈ **0.31 M checks / s**.
+boundary included) ≈ **0.31 M checks / s**. Batched
+[`planner.validate_batch(configs)`](planning/index.md#standalone-collision-checking)
+packs up to `rake` distinct configs per SIMD block for an **~8.5×**
+best-case speedup on all-valid workloads.
 
 !!! note "Environment"
     13th Gen Intel Core i9-13900KF, 24 logical cores · Linux 6.8 ·

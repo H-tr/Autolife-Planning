@@ -271,6 +271,41 @@ flag). `interpolate_path` runs `StateSpace::interpolate` on the
 existing edges, so it stays on the constraint manifold for projected
 state spaces and does not perform collision checks itself.
 
+## Standalone collision checking
+
+The same VAMP SIMD pipeline that the planner drives per motion edge is
+exposed directly — useful for filtering sampled goals, validating a
+trajectory produced outside the planner, or scoring a whole candidate
+batch of configurations at once.
+
+```python
+planner.validate(cfg)                   # single config → bool
+planner.validate_batch(cfgs)            # (N, ndof) → (N,) bool array
+```
+
+`validate_batch` packs up to `rake` distinct configurations directly
+into a VAMP `ConfigurationBlock<rake>` and runs **one** `fkcc<rake>`
+call per block — the same primitive the motion validator uses for
+interpolated samples along an edge, fed independent configs per lane
+instead. Per-config result is preserved: when a packed block fails,
+only that block falls back to per-lane checks.
+
+| Workload (4096 configs, AVX) | `validate` loop | `validate_batch` | Speedup |
+|---|---:|---:|---:|
+| All valid (best case) | 15.1 ms | 1.8 ms | **~8.5×** |
+| 72% valid, mixed | 15.4 ms | 9.2 ms | ~1.7× |
+
+Best case saturates the rake-8 SIMD width. Mixed-validity pays the
+fallback for blocks with any invalid lane; the common "which of these
+random samples is valid?" workload still wins.
+
+```python
+# Example: filter 1000 candidate goals by validity.
+goals = np.random.uniform(lo, hi, size=(1000, planner.num_dof))
+mask = planner.validate_batch(goals)
+good_goals = goals[mask]
+```
+
 ## More
 
 <div class="grid cards" markdown>

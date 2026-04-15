@@ -130,3 +130,43 @@ def test_simplify_path_rejects_wrong_dimension(left_arm_planner):
 def test_interpolate_path_rejects_wrong_dimension(left_arm_planner):
     with pytest.raises(ValueError):
         left_arm_planner.interpolate_path(np.zeros((4, 8)))
+
+
+def test_validate_batch_matches_single(left_arm_planner, left_arm_start):
+    """Batched SIMD check must agree with per-config calls on every sample."""
+    np.random.seed(0)
+    lo = np.asarray(left_arm_planner._planner.lower_bounds())
+    hi = np.asarray(left_arm_planner._planner.upper_bounds())
+    # Spans across and past kRake=8: tail blocks, pure blocks, mixed validity.
+    samples = np.random.uniform(lo, hi, size=(37, 7))
+    # Anchor one known-valid row so the common "all-valid block" path runs.
+    samples[0] = left_arm_start
+
+    expected = np.array([left_arm_planner.validate(s) for s in samples], dtype=bool)
+    got = left_arm_planner.validate_batch(samples)
+    assert got.shape == (37,) and got.dtype == bool
+    np.testing.assert_array_equal(got, expected)
+
+
+def test_validate_batch_empty(left_arm_planner):
+    out = left_arm_planner.validate_batch(np.zeros((0, 7)))
+    assert out.shape == (0,) and out.dtype == bool
+
+
+def test_validate_batch_rejects_wrong_dimension(left_arm_planner):
+    with pytest.raises(ValueError):
+        left_arm_planner.validate_batch(np.zeros((4, 8)))
+
+
+def test_validate_batch_full_body_roundtrip(home_joints):
+    """Full-body (24-DOF) batched check — no subgroup expansion path."""
+    from autolife_planning._ompl_vamp import OmplVampPlanner
+
+    planner = OmplVampPlanner()
+    home = home_joints.tolist()
+    out_of_bounds = [10.0] * 24
+
+    batch = [home, out_of_bounds, home, out_of_bounds] * 3  # 12 = 1 full + 1 tail
+    got = planner.validate_batch(batch)
+    expected = [planner.validate(c) for c in batch]
+    assert got == expected
