@@ -250,6 +250,84 @@ class MotionPlanner:
         """True if a pointcloud is currently registered."""
         return self._planner.has_pointcloud()
 
+    # ── Point cloud filtering ────────────────────────────────────────
+
+    def filter_pointcloud(
+        self,
+        pointcloud: np.ndarray,
+        min_dist: float,
+        max_range: float,
+        origin: np.ndarray | list[float],
+        workspace_min: np.ndarray | list[float],
+        workspace_max: np.ndarray | list[float],
+        cull: bool = True,
+    ) -> np.ndarray:
+        """Spatially downsample a point cloud via Morton-curve sorting.
+
+        Keeps one representative point per ``min_dist`` neighbourhood and
+        discards points farther than ``max_range`` from ``origin`` or
+        outside the ``[workspace_min, workspace_max]`` bounding box.
+
+        Args:
+            pointcloud: ``(N, 3)`` array of 3-D points.
+            min_dist: Minimum distance between two retained points.
+            max_range: Maximum distance from ``origin`` to keep a point.
+            origin: ``(3,)`` reference position for range culling.
+            workspace_min: ``(3,)`` lower corner of the workspace AABB.
+            workspace_max: ``(3,)`` upper corner of the workspace AABB.
+            cull: If ``True`` (default), apply range and AABB culling.
+
+        Returns:
+            ``(M, 3)`` filtered point cloud with ``M <= N``.
+        """
+        pts = np.asarray(pointcloud, dtype=np.float32).tolist()
+        origin = [float(x) for x in origin]
+        workspace_min = [float(x) for x in workspace_min]
+        workspace_max = [float(x) for x in workspace_max]
+        filtered = self._planner.filter_pointcloud(
+            pts,
+            float(min_dist),
+            float(max_range),
+            origin,
+            workspace_min,
+            workspace_max,
+            cull,
+        )
+        return np.asarray(filtered, dtype=np.float32)
+
+    def filter_self_from_pointcloud(
+        self,
+        pointcloud: np.ndarray,
+        point_radius: float,
+        config: np.ndarray,
+    ) -> np.ndarray:
+        """Remove points that collide with the robot body or environment.
+
+        Computes forward kinematics at ``config``, then drops every
+        point whose inflated sphere (radius ``point_radius``) overlaps
+        any robot collision sphere or any registered obstacle.
+
+        Args:
+            pointcloud: ``(N, 3)`` array of 3-D points.
+            point_radius: Inflation radius for each point.
+            config: Active-DOF configuration (same space as ``plan``).
+
+        Returns:
+            ``(M, 3)`` filtered point cloud with ``M <= N``.
+        """
+        pts = np.asarray(pointcloud, dtype=np.float32).tolist()
+        config = np.asarray(config, dtype=np.float64)
+        if len(config) != self._ndof:
+            raise ValueError(f"config has {len(config)} DOF, expected {self._ndof}")
+        filtered = self._planner.filter_self_from_pointcloud(
+            pts,
+            float(point_radius),
+            config.tolist(),
+        )
+        return np.asarray(filtered, dtype=np.float32)
+
+    # ── Subgroup switching ───────────────────────────────────────────
+
     def set_subgroup(
         self,
         robot_name: str,

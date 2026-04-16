@@ -70,6 +70,13 @@ NB_MODULE(_ompl_vamp, m) {
       .def("lower_bounds", &OmplVampPlanner::lower_bounds)
       .def("upper_bounds", &OmplVampPlanner::upper_bounds)
       .def("min_max_radii", &OmplVampPlanner::min_max_radii)
+      .def("filter_pointcloud", &OmplVampPlanner::filter_pointcloud,
+           nb::arg("points"), nb::arg("min_dist"), nb::arg("max_range"),
+           nb::arg("origin"), nb::arg("workspace_min"),
+           nb::arg("workspace_max"), nb::arg("cull") = true)
+      .def("filter_self_from_pointcloud",
+           &OmplVampPlanner::filter_self_from_pointcloud, nb::arg("points"),
+           nb::arg("point_radius"), nb::arg("config"))
       .def("set_subgroup", &OmplVampPlanner::set_subgroup,
            nb::arg("active_indices"), nb::arg("frozen_config"))
       .def("set_full_body", &OmplVampPlanner::set_full_body);

@@ -80,7 +80,9 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vamp/collision/filter.hh>
 #include <vamp/collision/shapes.hh>
+#include <vamp/collision/sphere_sphere.hh>
 #include <vector>
 
 namespace autolife {
@@ -497,6 +499,73 @@ class OmplVampPlanner {
     }
 
     return result;
+  }
+
+  // ── Point cloud filtering ───────────────────────────────────────
+
+  /// Spatial down-sampling via Morton-curve sorting.
+  auto filter_pointcloud(const std::vector<std::array<float, 3>> &points,
+                         float min_dist, float max_range,
+                         const std::array<float, 3> &origin,
+                         const std::array<float, 3> &workspace_min,
+                         const std::array<float, 3> &workspace_max, bool cull)
+      -> std::vector<std::array<float, 3>> {
+    vamp::collision::Point o{origin[0], origin[1], origin[2]};
+    vamp::collision::Point ws_min{workspace_min[0], workspace_min[1],
+                                  workspace_min[2]};
+    vamp::collision::Point ws_max{workspace_max[0], workspace_max[1],
+                                  workspace_max[2]};
+
+    std::vector<vamp::collision::Point> pc;
+    pc.reserve(points.size());
+    for (const auto &p : points) pc.push_back({p[0], p[1], p[2]});
+
+    auto filtered = vamp::collision::filter_pointcloud(pc, min_dist, max_range,
+                                                       o, ws_min, ws_max, cull);
+
+    std::vector<std::array<float, 3>> out;
+    out.reserve(filtered.size());
+    for (const auto &p : filtered) out.push_back({p[0], p[1], p[2]});
+    return out;
+  }
+
+  /// Remove points that collide with the robot body or the environment.
+  auto filter_self_from_pointcloud(
+      const std::vector<std::array<float, 3>> &points, float point_radius,
+      const std::vector<double> &config) -> std::vector<std::array<float, 3>> {
+    if (static_cast<int>(config.size()) != active_dim_) {
+      throw std::invalid_argument(
+          std::string("filter_self_from_pointcloud: config length ") +
+          std::to_string(config.size()) + " does not match active DOF " +
+          std::to_string(active_dim_) + ".");
+    }
+
+    // FK at the given configuration
+    auto full_arr = build_full_config_(config).to_array();
+    typename Robot::template ConfigurationBlock<1> block;
+    for (std::size_t i = 0; i < Robot::dimension; ++i) block[i] = full_arr[i];
+
+    typename Robot::template Spheres<1> spheres;
+    Robot::template sphere_fk<1>(block, spheres);
+
+    std::vector<std::array<float, 3>> out;
+    out.reserve(points.size());
+
+    for (const auto &pt : points) {
+      const float x = pt[0], y = pt[1], z = pt[2], r = point_radius;
+      bool valid = true;
+      for (std::size_t i = 0; i < Robot::n_spheres; ++i) {
+        if (vamp::collision::sphere_sphere_sql2(
+                spheres.x[{i, 0}], spheres.y[{i, 0}], spheres.z[{i, 0}],
+                spheres.r[{i, 0}], x, y, z, r) < 0 ||
+            vamp::sphere_environment_in_collision(env_, x, y, z, r)) {
+          valid = false;
+          break;
+        }
+      }
+      if (valid) out.push_back(pt);
+    }
+    return out;
   }
 
   auto dimension() const -> int { return active_dim_; }
