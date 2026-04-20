@@ -1,5 +1,7 @@
 """Rotation utility functions for conversions between representations."""
 
+from __future__ import annotations
+
 import numpy as np
 
 

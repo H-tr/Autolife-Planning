@@ -9,6 +9,8 @@ The dataclass *types* themselves live in :mod:`autolife_planning.types.robot`
 — this file holds *values* of those types.
 """
 
+from __future__ import annotations
+
 import os
 
 import numpy as np

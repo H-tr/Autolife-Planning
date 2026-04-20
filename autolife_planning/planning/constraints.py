@@ -23,8 +23,18 @@ from pathlib import Path
 
 import casadi as ca
 import numpy as np
-import pinocchio as pin
-import pinocchio.casadi as cpin
+try:
+    import pinocchio as pin
+except Exception:  # pragma: no cover - optional runtime dependency
+    pin = None
+try:
+    import pinocchio.casadi as cpin
+except Exception:  # pragma: no cover - optional runtime dependency
+    cpin = None
+try:
+    from urdf2casadi.urdfparser import URDFparser
+except Exception:  # pragma: no cover - optional runtime dependency
+    URDFparser = None
 
 from autolife_planning.autolife import (
     HOME_JOINTS,
@@ -47,6 +57,11 @@ def _cache_root() -> Path:
     xdg = os.environ.get("XDG_CACHE_HOME")
     base = Path(xdg).expanduser() if xdg else Path.home() / ".cache"
     return (base / "autolife_planning" / "constraints").resolve()
+
+
+def _jit_build_dir() -> Path:
+    """Directory for CasADi/urdf2casadi temporary JIT artifacts."""
+    return (Path(__file__).resolve().parents[2] / "build" / "casadi_jit").resolve()
 
 
 @contextmanager
@@ -102,21 +117,52 @@ class SymbolicContext:
             self.active_indices = [full_names.index(j) for j in self.active_names]
 
         self.q = ca.SX.sym("q", len(self.active_indices))
-
-        # Numeric + symbolic pinocchio models with planar root.
-        self.pin_model = pin.buildModelFromUrdf(
-            autolife_robot_config.urdf_path, pin.JointModelPlanar()
+        self._full_names = list(autolife_robot_config.joint_names)
+        self._root_link = "Link_Zero_Point"
+        self._uses_planar_base = any(
+            n in {"Joint_Virtual_X", "Joint_Virtual_Y", "Joint_Virtual_Theta"}
+            for n in self.active_names
         )
-        self.pin_data = self.pin_model.createData()
-        self.cmodel = cpin.Model(self.pin_model)
-        self.cdata = self.cmodel.createData()
 
-        # Build the symbolic mapping q_active -> pinocchio q (nq=25).
-        self.q_pin = self._build_pinocchio_q(self.q)
+        self._fk_cache: dict[str, dict[str, object]] = {}
 
-        # Pre-run symbolic FK so users can access frame transforms.
-        cpin.forwardKinematics(self.cmodel, self.cdata, self.q_pin)
-        cpin.updateFramePlacements(self.cmodel, self.cdata)
+        if pin is not None and cpin is not None:
+            self._backend = "pinocchio"
+            # Numeric + symbolic pinocchio models with planar root.
+            self.pin_model = pin.buildModelFromUrdf(
+                autolife_robot_config.urdf_path, pin.JointModelPlanar()
+            )
+            self.pin_data = self.pin_model.createData()
+            self.cmodel = cpin.Model(self.pin_model)
+            self.cdata = self.cmodel.createData()
+
+            # Build the symbolic mapping q_active -> pinocchio q (nq=25).
+            self.q_pin = self._build_pinocchio_q(self.q)
+
+            # Pre-run symbolic FK so users can access frame transforms.
+            cpin.forwardKinematics(self.cmodel, self.cdata, self.q_pin)
+            cpin.updateFramePlacements(self.cmodel, self.cdata)
+        elif URDFparser is not None:
+            if self._uses_planar_base:
+                raise RuntimeError(
+                    "SymbolicContext fallback backend (urdf2casadi) does not support "
+                    "planar base symbolic joints (Joint_Virtual_X/Y/Theta). "
+                    "Install pinocchio + pinocchio.casadi for base-enabled groups."
+                )
+            self._backend = "urdf2casadi"
+            self._urdf_parser = URDFparser()
+            self._urdf_parser.from_file(autolife_robot_config.urdf_path)
+            # Use the same world-like root as PyBullet visualization when available.
+            try:
+                self._urdf_parser.get_joint_info("Link_Zero_Point", "Link_Zero_Point")
+                self._root_link = "Link_Zero_Point"
+            except Exception:
+                self._root_link = "Link_Ground_Vehicle"
+        else:
+            raise ModuleNotFoundError(
+                "SymbolicContext requires either pinocchio.casadi or urdf2casadi. "
+                "Install one of these backends."
+            )
 
     def _build_pinocchio_q(self, q_active: ca.SX) -> ca.SX:
         """Map active-dim symbol to pinocchio q (nq=25)."""
@@ -133,21 +179,85 @@ class SymbolicContext:
         )
         return pin_q
 
+    def _build_full_q(self, q_active: ca.SX) -> list[ca.SX | ca.DM]:
+        """Map active subgroup symbols onto full 24-DOF joint vector."""
+        full: list[ca.SX | ca.DM] = [ca.DM(float(v)) for v in self.base_config]
+        for i, idx in enumerate(self.active_indices):
+            full[idx] = q_active[i]
+        return full
+
+    def _urdf2casadi_pose(self, link_name: str, q_active: ca.SX):
+        """Return symbolic link pose using urdf2casadi backend."""
+        if link_name == self._root_link:
+            T_expr = ca.SX.eye(4)
+        else:
+            cache = self._fk_cache.get(link_name)
+            if cache is None:
+                jit_dir = _jit_build_dir()
+                jit_dir.mkdir(parents=True, exist_ok=True)
+                with _cwd(jit_dir):
+                    fk = self._urdf_parser.get_forward_kinematics(
+                        self._root_link, link_name
+                    )
+                cache = {
+                    "T_fk": fk["T_fk"],
+                    "q_fk": fk["q"],
+                    "joint_names": list(fk["joint_names"]),
+                }
+                # Warm up once under build/casadi_jit so CasADi's JIT-generated
+                # temporary C files are created there instead of the caller's cwd.
+                if isinstance(cache["T_fk"], ca.Function):
+                    n_q = int(cache["q_fk"].numel())
+                    jit_dir = _jit_build_dir()
+                    jit_dir.mkdir(parents=True, exist_ok=True)
+                    with _cwd(jit_dir):
+                        cache["T_fk"](np.zeros(n_q))
+                self._fk_cache[link_name] = cache
+
+            full = self._build_full_q(q_active)
+            q_sub = []
+            for joint_name in cache["joint_names"]:
+                if joint_name not in self._full_names:
+                    raise ValueError(
+                        f"Joint {joint_name!r} from URDF chain is not in full joint list."
+                    )
+                q_sub.append(full[self._full_names.index(joint_name)])
+            q_sub_expr = ca.vertcat(*q_sub) if q_sub else ca.SX([])
+            T_fk = cache["T_fk"]
+            if isinstance(T_fk, ca.Function):
+                T_expr = T_fk(q_sub_expr)
+            else:
+                T_expr = ca.substitute(T_fk, cache["q_fk"], q_sub_expr)
+
+        class _Pose:
+            def __init__(self, T):
+                self.translation = T[:3, 3]
+                self.rotation = T[:3, :3]
+
+        return _Pose(T_expr)
+
     def link_pose(self, link_name: str, q_active: ca.SX | None = None):
         """Return the symbolic pinocchio SE3 of a URDF link.
 
         Pass ``q_active=self.q`` (or omit) to get an expression that
         depends on the active joints symbolically.
         """
-        if q_active is None or q_active is self.q:
-            frame_id = self.cmodel.getFrameId(link_name)
-            return self.cdata.oMf[frame_id]
-        # Rebuild with a different symbol.
-        cdata = self.cmodel.createData()
-        q_pin = self._build_pinocchio_q(q_active)
-        cpin.forwardKinematics(self.cmodel, cdata, q_pin)
-        cpin.updateFramePlacement(self.cmodel, cdata, self.cmodel.getFrameId(link_name))
-        return cdata.oMf[self.cmodel.getFrameId(link_name)]
+        if self._backend == "pinocchio":
+            if q_active is None or q_active is self.q:
+                frame_id = self.cmodel.getFrameId(link_name)
+                return self.cdata.oMf[frame_id]
+            # Rebuild with a different symbol.
+            cdata = self.cmodel.createData()
+            q_pin = self._build_pinocchio_q(q_active)
+            cpin.forwardKinematics(self.cmodel, cdata, q_pin)
+            cpin.updateFramePlacement(
+                self.cmodel, cdata, self.cmodel.getFrameId(link_name)
+            )
+            return cdata.oMf[self.cmodel.getFrameId(link_name)]
+
+        # urdf2casadi fallback
+        q_eval = self.q if q_active is None else q_active
+        return self._urdf2casadi_pose(link_name, q_eval)
 
     def link_translation(self, link_name: str, q_active: ca.SX | None = None) -> ca.SX:
         """Symbolic 3-vector: link position in world frame."""
@@ -165,25 +275,35 @@ class SymbolicContext:
         Uses the numeric pinocchio model, not the symbolic one, so it is
         fast and has no dependence on CasADi expressions.
         """
-        full = self.base_config.copy()
-        for i, idx in enumerate(self.active_indices):
-            full[idx] = q_active_numeric[i]
-        q = np.empty(int(self.pin_model.nq))
-        q[0] = full[0]
-        q[1] = full[1]
-        q[2] = np.cos(full[2])
-        q[3] = np.sin(full[2])
-        q[4:] = full[3:]
-        pin.forwardKinematics(self.pin_model, self.pin_data, q)
-        pin.updateFramePlacement(
-            self.pin_model,
-            self.pin_data,
-            self.pin_model.getFrameId(link_name),
-        )
-        pose = self.pin_data.oMf[self.pin_model.getFrameId(link_name)]
+        if self._backend == "pinocchio":
+            full = self.base_config.copy()
+            for i, idx in enumerate(self.active_indices):
+                full[idx] = q_active_numeric[i]
+            q = np.empty(int(self.pin_model.nq))
+            q[0] = full[0]
+            q[1] = full[1]
+            q[2] = np.cos(full[2])
+            q[3] = np.sin(full[2])
+            q[4:] = full[3:]
+            pin.forwardKinematics(self.pin_model, self.pin_data, q)
+            pin.updateFramePlacement(
+                self.pin_model,
+                self.pin_data,
+                self.pin_model.getFrameId(link_name),
+            )
+            pose = self.pin_data.oMf[self.pin_model.getFrameId(link_name)]
+            M = np.eye(4)
+            M[:3, :3] = pose.rotation
+            M[:3, 3] = pose.translation
+            return M
+
+        # urdf2casadi fallback
+        T = self._urdf2casadi_pose(link_name, self.q)
+        T_fn = ca.Function("fk_eval", [self.q], [T.rotation, T.translation])
+        rot_num, trans_num = T_fn(np.asarray(q_active_numeric, dtype=np.float64))
         M = np.eye(4)
-        M[:3, :3] = pose.rotation
-        M[:3, 3] = pose.translation
+        M[:3, :3] = np.asarray(rot_num, dtype=np.float64)
+        M[:3, 3] = np.asarray(trans_num, dtype=np.float64).reshape(-1)
         return M
 
     def project(

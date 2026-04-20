@@ -1,5 +1,10 @@
 [build-system]
-requires = ["scikit-build-core>=0.10", "nanobind>=2.0.0", "pybind11>=2.10"]
+requires = [
+    "scikit-build-core>=0.10",
+    "nanobind>=1.9.2,<2; python_version < '3.9'",
+    "nanobind>=2.0.0; python_version >= '3.9'",
+    "pybind11>=2.10",
+]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -7,7 +12,7 @@ name = "autolife_planning"
 version = "0.2.0"
 description = "Autolife planning module"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.8"
 dependencies = [
     "numpy",
     "scipy",
