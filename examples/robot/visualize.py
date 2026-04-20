@@ -28,13 +28,14 @@ from fire import Fire
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from autolife_planning.autolife import (
+from robot.autolife_planner import SUPPORTED_GROUPS, AutolifePlanner  # noqa: E402
+
+from autolife_planning.autolife import (  # noqa: E402
     HOME_JOINTS,
     VIZ_URDF_PATH,
     autolife_robot_config,
 )
-from autolife_planning.envs.pybullet_env import PyBulletEnv
-from robot.autolife_planner import SUPPORTED_GROUPS, AutolifePlanner
+from autolife_planning.envs.pybullet_env import PyBulletEnv  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Default goals — one hand-crafted 24-DOF target per supported group.
@@ -45,26 +46,27 @@ from robot.autolife_planner import SUPPORTED_GROUPS, AutolifePlanner
 # keeps its HOME value so plan_to_joints never returns "not same".
 # ---------------------------------------------------------------------------
 
-# Home segments (frozen joints always stay here).
-_BASE  = HOME_JOINTS[0:3].tolist()   # [0, 0, 0]
-# _LEGS  = HOME_JOINTS[3:5].tolist()   # [0, 0]
-_LEGS  = [-0.2, 0.3]  # [0, 0]
-# _WAIST = HOME_JOINTS[5:7].tolist()   # [0.00, -0.14]
-_WAIST = [0.2, 0.0]
+# Start segments (frozen joints always stay here).
+_BASE = HOME_JOINTS[0:3].tolist()  # [0, 0, 0]
+_LEGS = [-0.2, 0.3]  # slight squat (HOME is [0, 0])
+_WAIST = [0.2, 0.0]  # slight pitch (HOME is [0.00, -0.14])
 _L_ARM = HOME_JOINTS[7:14].tolist()  # [0.70, -0.14, -0.09,  2.31,  0.04, -0.40, 0.0]
-_NECK  = HOME_JOINTS[14:17].tolist() # [0, 0, 0]
-_R_ARM = HOME_JOINTS[17:24].tolist() # [-0.70, 0.14, -0.09, -2.31, -0.04, -0.40, 0.0]
+_NECK = HOME_JOINTS[14:17].tolist()  # [0, 0, 0]
+_R_ARM = HOME_JOINTS[17:24].tolist()  # [-0.70, 0.14, -0.09, -2.31, -0.04, -0.40, 0.0]
 
 # Goal segments (active joints moved to natural poses).
-# _GOAL_L_ARM = [0.30, -0.50,  0.30,  1.80, -0.20, -0.60,  0.50]  # left arm reach
-# _GOAL_R_ARM = [-0.30,  0.50,  0.30, -1.80,  0.20, -0.60, -0.50]  # right arm reach (symmetric)
-# _GOAL_WAIST = [0.6,  0.25]                                        # slight pitch + yaw
-# _GOAL_LEGS  = [0.78,  1.60]                                        # mid-squat (ankle, knee)
-
-_GOAL_L_ARM = [0.6, -0.50,  0.30,  1.80, -0.20, -0.60,  0.50]  # left arm reach
-_GOAL_R_ARM = [-0.6,  0.50,  0.30, -1.80,  0.20, -0.60, -0.50]  # right arm reach (symmetric)
-_GOAL_WAIST = [0.6,  0.5]                                        # slight pitch + yaw
-_GOAL_LEGS  = [0.78,  1.40]                                        # mid-squat (ankle, knee)
+_GOAL_L_ARM = [0.6, -0.50, 0.30, 1.80, -0.20, -0.60, 0.50]  # left arm reach
+_GOAL_R_ARM = [
+    -0.6,
+    0.50,
+    0.30,
+    -1.80,
+    0.20,
+    -0.60,
+    -0.50,
+]  # right arm reach (symmetric)
+_GOAL_WAIST = [0.6, 0.5]  # slight pitch + yaw
+_GOAL_LEGS = [0.78, 1.40]  # mid-squat (ankle, knee)
 
 
 def _cfg(*segments: list) -> np.ndarray:
@@ -73,20 +75,21 @@ def _cfg(*segments: list) -> np.ndarray:
 
 # Each value is a full 24-DOF goal config; only the group's active DOFs differ.
 _DEFAULT_GOALS: dict[str, np.ndarray] = {
-    "autolife_left_arm":
-        _cfg(_BASE, _LEGS,      _WAIST,      _GOAL_L_ARM, _NECK, _R_ARM),
-    "autolife_right_arm":
-        _cfg(_BASE, _LEGS,      _WAIST,      _L_ARM,      _NECK, _GOAL_R_ARM),
-    "autolife_dual_arm":
-        _cfg(_BASE, _LEGS,      _WAIST,      _GOAL_L_ARM, _NECK, _GOAL_R_ARM),
-    "autolife_torso_left_arm":
-        _cfg(_BASE, _LEGS,      _GOAL_WAIST, _GOAL_L_ARM, _NECK, _R_ARM),
-    "autolife_torso_right_arm":
-        _cfg(_BASE, _LEGS,      _GOAL_WAIST, _L_ARM,      _NECK, _GOAL_R_ARM),
-    "autolife_torso_dual_arm":
-        _cfg(_BASE, _LEGS,      _GOAL_WAIST, _GOAL_L_ARM, _NECK, _GOAL_R_ARM),
-    "autolife_leg_torso_dual_arm":
-        _cfg(_BASE, _GOAL_LEGS, _GOAL_WAIST, _GOAL_L_ARM, _NECK, _GOAL_R_ARM),
+    "autolife_left_arm": _cfg(_BASE, _LEGS, _WAIST, _GOAL_L_ARM, _NECK, _R_ARM),
+    "autolife_right_arm": _cfg(_BASE, _LEGS, _WAIST, _L_ARM, _NECK, _GOAL_R_ARM),
+    "autolife_dual_arm": _cfg(_BASE, _LEGS, _WAIST, _GOAL_L_ARM, _NECK, _GOAL_R_ARM),
+    "autolife_torso_left_arm": _cfg(
+        _BASE, _LEGS, _GOAL_WAIST, _GOAL_L_ARM, _NECK, _R_ARM
+    ),
+    "autolife_torso_right_arm": _cfg(
+        _BASE, _LEGS, _GOAL_WAIST, _L_ARM, _NECK, _GOAL_R_ARM
+    ),
+    "autolife_torso_dual_arm": _cfg(
+        _BASE, _LEGS, _GOAL_WAIST, _GOAL_L_ARM, _NECK, _GOAL_R_ARM
+    ),
+    "autolife_leg_torso_dual_arm": _cfg(
+        _BASE, _GOAL_LEGS, _GOAL_WAIST, _GOAL_L_ARM, _NECK, _GOAL_R_ARM
+    ),
 }
 
 # Ordered for a natural demo progression (fast single-arm → whole-body).
@@ -147,7 +150,9 @@ def main(
     else:
         groups = [g for g in _DEFAULT_GROUP_ORDER if g in SUPPORTED_GROUPS]
 
-    env = PyBulletEnv(autolife_robot_config, visualize=True, viz_urdf_path=VIZ_URDF_PATH)
+    env = PyBulletEnv(
+        autolife_robot_config, visualize=True, viz_urdf_path=VIZ_URDF_PATH
+    )
 
     print(
         f"\n── autolife path visualizer ──\n"
@@ -164,17 +169,11 @@ def main(
 
         t0 = time.perf_counter()
         result = ap.plan_to_joints(g, start, goal)
-        times, traj = ap.time_parameterize(result)
-        result = traj
-        print(times)
-        # print(traj.shape)
         elapsed_ms = (time.perf_counter() - t0) * 1e3
         _banner(g, result, elapsed_ms)
 
         if isinstance(result, np.ndarray):
-            # Animate start→goal then goal→start so the robot returns home.
-            # path = np.concatenate([result, result[::-1]], axis=0)
-            path = result
+            _, path = ap.time_parameterize(result)
             cont = env.animate_path(path, fps=fps, next_key="n")
         else:
             env.set_configuration(start)

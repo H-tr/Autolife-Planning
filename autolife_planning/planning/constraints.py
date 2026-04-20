@@ -23,6 +23,7 @@ from pathlib import Path
 
 import casadi as ca
 import numpy as np
+
 try:
     import pinocchio as pin
 except Exception:  # pragma: no cover - optional runtime dependency
@@ -208,8 +209,6 @@ class SymbolicContext:
                 # temporary C files are created there instead of the caller's cwd.
                 if isinstance(cache["T_fk"], ca.Function):
                     n_q = int(cache["q_fk"].numel())
-                    jit_dir = _jit_build_dir()
-                    jit_dir.mkdir(parents=True, exist_ok=True)
                     with _cwd(jit_dir):
                         cache["T_fk"](np.zeros(n_q))
                 self._fk_cache[link_name] = cache

@@ -3,13 +3,15 @@ from __future__ import annotations
 from functools import lru_cache
 
 import numpy as np
-from scipy.interpolate import CubicSpline
 
-from autolife_planning.autolife import HOME_JOINTS, PLANNING_SUBGROUPS, autolife_robot_config
+from autolife_planning.autolife import (
+    HOME_JOINTS,
+    PLANNING_SUBGROUPS,
+    autolife_robot_config,
+)
 from autolife_planning.planning import create_planner
+from autolife_planning.trajectory import TimeOptimalParameterizer
 from autolife_planning.types import PlannerConfig
-
-import time
 
 SUPPORTED_GROUPS = {
     "autolife_left_arm",
@@ -39,7 +41,9 @@ def _validate_24d(name: str, q: np.ndarray) -> np.ndarray:
     return q
 
 
-def _frozen_joints_same(group: str, start: np.ndarray, goal: np.ndarray, tol: float) -> bool:
+def _frozen_joints_same(
+    group: str, start: np.ndarray, goal: np.ndarray, tol: float
+) -> bool:
     active = _active_indices(group)
     frozen = np.setdiff1d(np.arange(FULL_DOF), active)
     return np.allclose(start[frozen], goal[frozen], atol=tol, rtol=0.0)
@@ -153,12 +157,15 @@ class AutolifePlanner:
 
         self._planner.set_subgroup(group, base_config=start)
 
-        if group == "autolife_leg_torso_dual_arm" and self.current_group != "autolife_leg_torso_dual_arm":
+        if (
+            group == "autolife_leg_torso_dual_arm"
+            and self.current_group != "autolife_leg_torso_dual_arm"
+        ):
             # Cost dim must match the subgroup — set after set_subgroup.
             self._planner.set_costs([_leg_torso_dual_arm_cost()])
         else:
             self._planner.clear_costs()
-        
+
         self.current_group = group
 
         start_sub = self._planner.extract_config(start)
@@ -180,90 +187,36 @@ class AutolifePlanner:
     ) -> tuple[np.ndarray, np.ndarray]:
         """Convert a joint-space waypoint path to a time-parameterized trajectory.
 
-        Algorithm
-        ---------
-        1. Compute per-joint **total variation** along the whole path (not per
-           segment) and derive the minimum total time *T* from a trapezoidal
-           velocity profile on the joint with the largest travel.
-        2. Scale the trapezoidal profile to arc-length space so the fastest joint
-           reaches exactly *v_max* at the cruise phase.
-        3. Evaluate the trapezoidal arc-length profile ``s(t)`` and invert it to
-           assign timestamps to every waypoint.
-        4. Fit a clamped cubic spline through the waypoints and resample at *dt*.
+        Wraps the C++ TOTG (Kunz & Stilman, 2012) parameterizer exposed via
+        :class:`autolife_planning.trajectory.TimeOptimalParameterizer` — the
+        same algorithm used by MoveIt 2.  ``v_max``/``a_max`` are broadcast to
+        per-joint limits.
 
         Args:
             path:      ``(N, DOF)`` waypoints from the motion planner.
             v_max:     Maximum joint velocity (rad/s), uniform across all joints.
             a_max:     Maximum joint acceleration (rad/s²), uniform across all joints.
             dt:        Output sample period (seconds).
-            vel_scale: Fractional scale applied to *v_max* (e.g. 0.5 → half speed).
-            a_scale:   Fractional scale applied to *a_max* (e.g. 0.5 → half accel).
+            vel_scale: Fractional scale applied to *v_max* (must be in (0, 1]).
+            a_scale:   Fractional scale applied to *a_max* (must be in (0, 1]).
 
         Returns:
             times: ``(M,)`` timestamps of the output trajectory.
             traj:  ``(M, DOF)`` joint positions sampled at those timestamps.
         """
-        v_max = v_max * vel_scale
-        a_max = a_max * a_scale
-
         path = np.asarray(path, dtype=np.float64)
         N, DOF = path.shape
         if N == 1:
             return np.array([0.0]), path.copy()
 
-        deltas = np.diff(path, axis=0)                          # (N-1, DOF)
-
-        # ── Step 1: total variation per joint ────────────────────────────
-        total_var = np.abs(deltas).sum(axis=0)                  # (DOF,)
-        d_max = float(total_var.max())
-        if d_max < 1e-12:
-            return np.array([0.0, dt]), np.stack([path[0], path[-1]])
-
-        # ── Step 2: total arc length & scaling to arc-length space ───────
-        seg_lens = np.linalg.norm(deltas, axis=1)               # (N-1,)
-        cum_lens  = np.concatenate([[0.0], np.cumsum(seg_lens)])
-        L = float(cum_lens[-1])
-        if L < 1e-12:
-            return np.array([0.0, dt]), np.stack([path[0], path[-1]])
-
-        # The joint with the largest total variation d_max must hit v_max
-        # at the cruise phase.  Scale v_max / a_max to arc-length space:
-        #   v_s = v_max * (L / d_max),   a_s = a_max * (L / d_max)
-        scale = L / d_max
-        v_s = v_max * scale
-        a_s = a_max * scale
-
-        # ── Step 3: total time T from trapezoidal profile in s-space ─────
-        v_peak = np.sqrt(L * a_s)
-        if v_peak <= v_s:                                        # triangular
-            T = 2.0 * v_peak / a_s
-        else:                                                    # trapezoidal
-            T = L / v_s + v_s / a_s
-        T = max(T, dt)
-
-        # ── Step 4: s(t) — trapezoidal profile ───────────────────────────
-        t_a      = min(v_s / a_s, T / 2.0)                      # accel/decel duration
-        v_cruise = a_s * t_a                                     # actual cruise speed
-        d_a      = 0.5 * a_s * t_a ** 2                         # distance during accel
-
-        t_dense = np.arange(0.0, T + dt * 0.5, dt)
-        s_dense = np.where(
-            t_dense <= t_a,
-            0.5 * a_s * t_dense ** 2,
-            np.where(
-                t_dense <= T - t_a,
-                d_a + v_cruise * (t_dense - t_a),
-                L - 0.5 * a_s * (T - t_dense) ** 2,
-            ),
+        param = TimeOptimalParameterizer(
+            max_velocity=np.full(DOF, v_max, dtype=np.float64),
+            max_acceleration=np.full(DOF, a_max, dtype=np.float64),
         )
-        s_dense = np.clip(s_dense, 0.0, L)
-
-        # ── Step 5: waypoint timestamps via s → t inversion ──────────────
-        wp_times = np.interp(cum_lens, s_dense, t_dense)
-        wp_times[0] = 0.0
-        wp_times[-1] = T
-
-        # ── Step 6: clamped cubic spline + resample ───────────────────────
-        cs = CubicSpline(wp_times, path, bc_type="clamped")
-        traj = cs(t_dense)
-        return t_dense, traj
+        traj = param.parameterize(
+            path,
+            velocity_scaling=vel_scale,
+            acceleration_scaling=a_scale,
+        )
+        times, positions, _, _ = traj.sample_uniform(dt)
+        return times, positions

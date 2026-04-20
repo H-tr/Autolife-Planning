@@ -158,10 +158,16 @@ PLANNING_SUBGROUPS = {
         "dof": 9,
         "joints": _WAIST_JOINTS + _RIGHT_ARM_JOINTS,
     },
-    # Torso + arm + waist (16 DOF: 2 waist + 7 arm + 7 waist)
-    "autolife_torso_dual_arm": {"dof": 16, "joints": _WAIST_JOINTS + _LEFT_ARM_JOINTS + _RIGHT_ARM_JOINTS},
-    # legs + torso + arm + waist (23 DOF: 2 legs + 2 waist + 7 arm + 7 waist)
-    "autolife_leg_torso_dual_arm": {"dof": 18, "joints": _LEGS_JOINTS + _WAIST_JOINTS + _LEFT_ARM_JOINTS + _RIGHT_ARM_JOINTS},
+    # Torso + dual arm (16 DOF: 2 waist + 7 left arm + 7 right arm)
+    "autolife_torso_dual_arm": {
+        "dof": 16,
+        "joints": _WAIST_JOINTS + _LEFT_ARM_JOINTS + _RIGHT_ARM_JOINTS,
+    },
+    # Legs + torso + dual arm (18 DOF: 2 legs + 2 waist + 7 left arm + 7 right arm)
+    "autolife_leg_torso_dual_arm": {
+        "dof": 18,
+        "joints": _LEGS_JOINTS + _WAIST_JOINTS + _LEFT_ARM_JOINTS + _RIGHT_ARM_JOINTS,
+    },
     # Whole body without base (21 DOF)
     "autolife_body": {
         "dof": 21,
