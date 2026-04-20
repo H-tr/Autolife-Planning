@@ -1,0 +1,67 @@
+name: pip install compatibility
+
+# Verifies that ``pip install autolife_planning[dev,examples]`` gives
+# users a working package on every supported Python version.
+#
+# Each matrix entry:
+#   1. Builds the manylinux wheel via cibuildwheel (same toolchain
+#      release.yml uses).
+#   2. Lets cibuildwheel install the wheel + extras in a FRESH venv.
+#   3. Runs the post-install smoke tests first (fast fail on packaging
+#      breakage), then the full pytest suite (correctness).
+#
+# Step 2+3 is exactly what a PyPI user experiences — no source checkout,
+# no pixi, no conda.  If a matrix row goes red, that Python version is
+# not actually shippable.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: pip-compat-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build_and_test:
+    name: cp${{ matrix.python }} — build wheel + pip install + pytest
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        # Every cpython version in the cibuildwheel build matrix must
+        # appear here; keep the two lists in sync.
+        python: ["38", "39", "310", "311", "312", "313"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Build wheel + run post-install tests in a fresh venv
+        uses: pypa/cibuildwheel@v3.4.1
+        env:
+          CIBW_BUILD: cp${{ matrix.python }}-manylinux_x86_64
+          # Install the wheel's [dev,examples] extras into the test venv
+          # so every runtime dep exercised by the test suite is present
+          # (pybullet, casadi, trimesh, fire, matplotlib, pytest, ...).
+          CIBW_TEST_EXTRAS: "dev,examples"
+          # {project} expands to the checked-out source tree inside the
+          # manylinux container — lets pytest find tests/ without needing
+          # the repo to be importable (the wheel provides the package).
+          CIBW_TEST_COMMAND: >
+            python -m pytest -v {project}/tests/test_install_smoke.py &&
+            python -m pytest {project}/tests
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wheel-cp${{ matrix.python }}-manylinux_x86_64
+          path: ./wheelhouse/*.whl
+          if-no-files-found: warn

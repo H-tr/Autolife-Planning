@@ -86,6 +86,11 @@ examples = [
     "matplotlib",
     "pybullet",
 ]
+# Pure-Python symbolic FK fallback used by SymbolicContext when
+# pinocchio.casadi is not available (e.g. Python versions without a
+# pinocchio PyPI wheel). Pinocchio is still preferred — this extra
+# exists so ``pip install '.[urdf2casadi]'`` is one predictable command.
+urdf2casadi = ["urdf2casadi"]
 
 # ── cibuildwheel ─────────────────────────────────────────────────────
 # manylinux_2_34 (AlmaLinux 9) x86_64 baseline. AVX2 is required
@@ -97,7 +102,11 @@ examples = [
 # satisfies OMPL and provides BoostConfig.cmake. glibc 2.34 covers
 # Ubuntu 22.04+, Debian 12+, RHEL 9+, Fedora 35+ — every current Linux.
 [tool.cibuildwheel]
-build = "cp310-* cp311-* cp312-* cp313-*"
+# Full supported-Python range: extend this if a new cpython version ships.
+# cp38/cp39 included so the declared ``requires-python = ">=3.8"`` is
+# actually deliverable — the pip-compat workflow builds + tests every
+# entry here in a fresh venv.
+build = "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*"
 skip = "*-musllinux_* *-win32 *-manylinux_i686 pp*"
 build-verbosity = 1
 archs = ["x86_64"]
