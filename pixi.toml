@@ -5,6 +5,7 @@ platforms = ["linux-64"]
 [pypi-dependencies]
 autolife_planning = { path = ".", editable = true }
 foam = { path = "./third_party/foam", editable = true }
+coacd = "*"
 
 [environments]
 default = { solve-group = "default" }
@@ -19,7 +20,8 @@ cricket-build = { cmd = "cmake --build third_party/cricket/build", depends-on = 
 foam-configure = "cmake -GNinja -S third_party/foam -B third_party/foam/build"
 foam-build = { cmd = "cmake --build third_party/foam/build", depends-on = ["foam-configure"] }
 build-robot = { cmd = "bash scripts/build_robot.sh", depends-on = ["foam-build"] }
-spherize-robot = { cmd = "bash scripts/spherize_robot.sh", depends-on = ["build-robot"] }
+decompose-robot = { cmd = "bash scripts/decompose_robot.sh", depends-on = ["build-robot"] }
+spherize-robot = { cmd = "bash scripts/spherize_robot.sh", depends-on = ["decompose-robot"] }
 generate-fk = { cmd = "bash scripts/generate_fk.sh", depends-on = ["spherize-robot"] }
 build-pkg = "python -m build --no-isolation --skip-dependency-check --outdir dist/"
 render-docs-videos = "python scripts/render_videos/render_docs_videos.py"

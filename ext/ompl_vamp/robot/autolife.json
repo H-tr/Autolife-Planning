@@ -1,0 +1,10 @@
+{
+    "name": "Autolife",
+    "urdf": "../../../resources/robot/autolife/autolife_spherized.urdf",
+    "srdf": "../../../resources/robot/autolife/autolife.srdf",
+    "end_effector": "Link_Right_Gripper_Right_Finger",
+    "resolution": 64,
+    "template": "../../../third_party/cricket/resources/templates/fk_template.hh",
+    "subtemplates": [{"name": "ccfk", "template": "../../../third_party/cricket/resources/templates/ccfk_template.hh"}],
+    "output": "autolife.hh"
+}

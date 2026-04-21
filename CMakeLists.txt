@@ -121,6 +121,10 @@ nanobind_add_module(_ompl_vamp
 target_include_directories(_ompl_vamp PRIVATE
     ${VAMP_INCLUDE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ompl/src
+    # Project-local robot FK/sphere header lives at
+    # ext/ompl_vamp/robot/autolife.hh; this path lets validity.hpp include
+    # it via "robot/autolife.hh" without pulling anything from third_party.
+    ${CMAKE_CURRENT_SOURCE_DIR}/ext/ompl_vamp
 )
 
 target_link_libraries(_ompl_vamp PRIVATE

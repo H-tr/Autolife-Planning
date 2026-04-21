@@ -32,8 +32,13 @@
 #include <utility>
 #include <vamp/collision/environment.hh>
 #include <vamp/planning/validate.hh>
-#include <vamp/robots/autolife.hh>
+// Our autolife FK/collision header lives in-tree so the vamp submodule
+// stays a pure header-only third-party dep. ``ext/ompl_vamp`` is on the
+// include path, which makes this resolve to
+// ``ext/ompl_vamp/robot/autolife.hh``.
 #include <vector>
+
+#include "robot/autolife.hh"
 
 namespace autolife {
 

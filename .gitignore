@@ -238,6 +238,11 @@ __marimo__/
 # Hand-written headers in this project use .hpp instead, so they are
 # never matched by this rule and stay tracked.
 *.hh
+# Exception: ship the autolife FK/collision header so downstream builds
+# (manylinux wheels, fresh clones without cricket's deps) don't have to
+# regenerate it. Regenerate via `pixi run generate-fk` when the
+# spherized URDF or SRDF changes, then re-commit.
+!ext/ompl_vamp/robot/autolife.hh
 
 # Generated build artifacts
 output.json

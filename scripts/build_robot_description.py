@@ -421,22 +421,42 @@ def _generate_collision_disables(robot: ET.Element, all_links: set[str]) -> None
             for j in range(i + 1, len(chain)):
                 add(chain[i], chain[j])
 
-    # Substrings for distal arm links that should collide with the torso/chest.
-    _distal_arm = ("Finger", "Gripper", "Elbow", "Forearm", "Wrist")
-    # Main-chain links that should collide with distal arm links.
-    _collision_torso = {
-        "Link_Waist_Yaw_to_Shoulder_Inner",
-        "Link_Head",
-        "Link_Knee_to_Waist_Pitch",
-        # "Link_Ankle_to_Knee",
-        # "Link_Ground_Vehicle",
+    # Arm links to ignore against the chest: the spherized chest fans out to
+    # the shoulder-mount region, so proximal+upper-arm always sit inside the
+    # chest's sphere envelope during normal manipulation and would report
+    # constant false-positive self-collisions. Distal arm links (forearm/
+    # wrist/gripper) are still collision-checked against the chest.
+    _chest_disable_arm = {
+        "Link_Left_Shoulder_Inner_to_Shoulder_Outer",
+        "Link_Left_Shoulder_Outer_to_UpperArm",
+        "Link_Left_UpperArm_to_Elbow",
+        "Link_Right_Shoulder_Inner_to_Shoulder_Outer",
+        "Link_Right_Shoulder_Outer_to_UpperArm",
+        "Link_Right_UpperArm_to_Elbow",
     }
+    # Substrings identifying distal arm links (knee keeps checking against
+    # these so the forearm can't drive into the thigh).
+    _distal_arm = ("Finger", "Gripper", "Elbow", "Forearm", "Wrist")
 
-    # Main chain vs both arm chains
-    # Keep collision checking for torso/chest vs distal arm links.
+    # Main chain vs both arm chains.
+    #   - Link_Ground_Vehicle (mobile base): arm↔base collisions MUST be
+    #     checked; a swing that intersects the platform is a real fault.
+    #   - Link_Waist_Yaw_to_Shoulder_Inner (chest): disable vs the six
+    #     proximal + upper-arm links in ``_chest_disable_arm``; keep distal
+    #     arm checks enabled.
+    #   - Link_Knee_to_Waist_Pitch (thigh): keep distal arm collisions
+    #     checked, disable the rest.
     for lower in main_chain:
+        if lower == "Link_Ground_Vehicle":
+            continue
         for arm_link in left_arm_chain + right_arm_chain:
-            if lower in _collision_torso and any(s in arm_link for s in _distal_arm):
+            if lower == "Link_Waist_Yaw_to_Shoulder_Inner":
+                if arm_link in _chest_disable_arm:
+                    add(lower, arm_link)
+                continue
+            if lower == "Link_Knee_to_Waist_Pitch" and any(
+                s in arm_link for s in _distal_arm
+            ):
                 continue
             add(lower, arm_link)
 
@@ -450,16 +470,31 @@ def _generate_collision_disables(robot: ET.Element, all_links: set[str]) -> None
         for neck in neck_chain:
             add(torso, neck)
 
-    # Neck/head vs both arms
+    # Neck/head vs both arms.
+    # Link_Head can physically be reached by the distal arm links
+    # (elbow/forearm/wrist/gripper), so keep those pairs collision-checked.
+    # Everything else in neck_chain stays disabled.
     for neck in neck_chain:
         for arm_link in left_arm_chain + right_arm_chain:
+            if neck == "Link_Head" and any(s in arm_link for s in _distal_arm):
+                continue
             add(neck, arm_link)
 
-    # Gripper sub-links vs all body links and vs each other
-    # Keep collision checking for gripper sub-links vs torso/chest.
+    # Gripper sub-links vs all body links and vs each other.
+    # Skip:
+    #   - the base (arm↔base must be checked),
+    #   - the chest (distal pieces vs torso front should be checked),
+    #   - the thigh (distal arm can swing into thigh),
+    #   - the head (gripper can reach head).
+    _gripper_check_body = {
+        "Link_Ground_Vehicle",
+        "Link_Waist_Yaw_to_Shoulder_Inner",
+        "Link_Knee_to_Waist_Pitch",
+        "Link_Head",
+    }
     for gl in gripper_links:
         for bl in body_links:
-            if bl in _collision_torso:
+            if bl in _gripper_check_body:
                 continue
             add(gl, bl)
         for gl2 in gripper_links:
