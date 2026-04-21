@@ -1,46 +1,25 @@
 #!/usr/bin/env bash
-# Generate FK/collision-checking C++ code for vamp using cricket.
-# Only generates the full-body autolife and autolife_body_coupled models.
+# Generate the autolife FK+collision-checking C++ header via cricket.
+# All inputs (urdf/srdf) and outputs live inside the project; third_party
+# submodules are only read from, never written.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(dirname "$SCRIPT_DIR")"
 
-CRICKET="$ROOT/third_party/cricket"
-VAMP="$ROOT/third_party/vamp"
-RESOURCES="$ROOT/resources/robot/autolife"
+CRICKET_BIN="$ROOT/third_party/cricket/build/fkcc_gen"
+CONFIG="$ROOT/ext/ompl_vamp/robot/autolife.json"
+OUTDIR="$ROOT/ext/ompl_vamp/robot"
 
-ROBOTS=(autolife autolife_body_coupled)
+if [ ! -x "$CRICKET_BIN" ]; then
+    echo "[generate_fk] Building cricket first..." >&2
+    cmake --build "$ROOT/third_party/cricket/build"
+fi
 
-# 1. Distribute robot descriptions to cricket + vamp resources
-echo "[1/3] Distributing robot descriptions..."
-for DEST in "$CRICKET/resources/autolife" "$VAMP/resources/autolife"; do
-    cp "$RESOURCES/autolife_spherized.urdf" "$DEST/autolife_spherized.urdf"
-    cp "$RESOURCES/autolife.srdf" "$DEST/autolife.srdf"
-    if [ -f "$RESOURCES/autolife_body_coupled_spherized.urdf" ]; then
-        cp "$RESOURCES/autolife_body_coupled_spherized.urdf" "$DEST/autolife_body_coupled_spherized.urdf"
-    fi
-    echo "  copied to $DEST"
-done
+# fkcc_gen writes its output into CWD using the config's "output" filename
+# ("autolife.hh"). Run from the target dir so the header lands there
+# directly without copying.
+cd "$OUTDIR"
+"$CRICKET_BIN" "$CONFIG"
 
-# 2. Run cricket FK code generation
-echo "[2/3] Generating FK code..."
-for name in "${ROBOTS[@]}"; do
-    CONFIG="$CRICKET/resources/${name}.json"
-    if [ -f "$CONFIG" ]; then
-        echo "  generating FK for $name..."
-        "$CRICKET/build/fkcc_gen" "$CONFIG"
-    fi
-done
-
-# 3. Copy generated headers to vamp
-echo "[3/3] Installing FK headers into vamp..."
-for name in "${ROBOTS[@]}"; do
-    HEADER="${name}_fk.hh"
-    if [ -f "$HEADER" ]; then
-        cp "$HEADER" "$VAMP/src/impl/vamp/robots/${name}.hh"
-        echo "  installed ${name}.hh"
-    fi
-done
-
-echo "Done! Rebuild vamp to use the new FK code."
+echo "[generate_fk] Wrote $OUTDIR/autolife.hh"
