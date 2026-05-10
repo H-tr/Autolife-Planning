@@ -31,8 +31,19 @@ def _get_chain_joint_ids(model: Any, base_frame: str, ee_frame: str) -> list[int
     ee_fid = model.getFrameId(ee_frame)
     base_fid = model.getFrameId(base_frame)
 
-    ee_joint = model.frames[ee_fid].parentJoint
-    base_joint = model.frames[base_fid].parentJoint
+    def _frame_parent_joint(frame: Any) -> int:
+        # Pinocchio 3.x exposes Frame.parentJoint, while 2.x exposes Frame.parent.
+        if hasattr(frame, "parentJoint"):
+            return int(frame.parentJoint)
+        if hasattr(frame, "parent"):
+            return int(frame.parent)
+        raise AttributeError(
+            "Unsupported pinocchio Frame API: expected parentJoint (3.x) "
+            "or parent (2.x)."
+        )
+
+    ee_joint = _frame_parent_joint(model.frames[ee_fid])
+    base_joint = _frame_parent_joint(model.frames[base_fid])
 
     joint_ids: list[int] = []
     current = ee_joint
@@ -272,29 +283,78 @@ class PinkIKSolver(IKSolverBase):
         trajectory = [self._from_full_q(q_init)]
 
         for iteration in range(cfg.max_iterations):
+            solver_name = cfg.solver
+            velocity = None
             try:
                 velocity = pink.solve_ik(
                     configuration,
                     tasks,
                     cfg.dt,
-                    solver=cfg.solver,
+                    solver=solver_name,
                     limits=limits,
                     barriers=barriers or None,
                 )
-            except pink.PinkError:
-                # QP infeasible at this step (e.g. conflicting barriers) —
-                # return best-effort result so far.
-                q_current = configuration.q
-                pos_err, ori_err = self._compute_errors(q_current, target_pose)
-                return ConstrainedIKResult(
-                    status=IKStatus.FAILED,
-                    joint_positions=self._from_full_q(q_current),
-                    final_error=pos_err + ori_err,
-                    iterations=iteration,
-                    position_error=pos_err,
-                    orientation_error=ori_err,
-                    trajectory=np.array(trajectory),
+            except Exception as exc:
+                # Some environments (e.g. py38 with qpsolvers extras) may not
+                # have the requested solver backend. Fall back to osqp when the
+                # configured solver is unavailable.
+                msg = str(exc)
+                solver_not_found = (
+                    "does not seem to be installed" in msg
+                    or exc.__class__.__name__ == "SolverNotFound"
                 )
+                if solver_name == "proxqp" and solver_not_found:
+                    try:
+                        velocity = pink.solve_ik(
+                            configuration,
+                            tasks,
+                            cfg.dt,
+                            solver="osqp",
+                            limits=limits,
+                            barriers=barriers or None,
+                        )
+                    except Exception as exc2:
+                        exc = exc2
+                    else:
+                        # Fallback succeeded, continue the solve loop.
+                        pass
+                else:
+                    # Keep ``exc`` for the failure path below.
+                    pass
+
+                # If fallback succeeded, ``velocity`` exists in local scope.
+                if velocity is not None:
+                    pass
+                elif getattr(pink, "PinkError", None) is None or isinstance(
+                    exc, getattr(pink, "PinkError")
+                ):
+                    # QP infeasible at this step (e.g. conflicting barriers) —
+                    # return best-effort result so far.
+                    q_current = configuration.q
+                    pos_err, ori_err = self._compute_errors(q_current, target_pose)
+                    return ConstrainedIKResult(
+                        status=IKStatus.FAILED,
+                        joint_positions=self._from_full_q(q_current),
+                        final_error=pos_err + ori_err,
+                        iterations=iteration,
+                        position_error=pos_err,
+                        orientation_error=ori_err,
+                        trajectory=np.array(trajectory),
+                    )
+                else:
+                    # Unknown backend exception style (pink/qpsolvers version
+                    # mismatch). Return best-effort result instead of crashing.
+                    q_current = configuration.q
+                    pos_err, ori_err = self._compute_errors(q_current, target_pose)
+                    return ConstrainedIKResult(
+                        status=IKStatus.FAILED,
+                        joint_positions=self._from_full_q(q_current),
+                        final_error=pos_err + ori_err,
+                        iterations=iteration,
+                        position_error=pos_err,
+                        orientation_error=ori_err,
+                        trajectory=np.array(trajectory),
+                    )
 
             # Zero velocity for uncontrolled joints
             for i in range(self._model.nv):

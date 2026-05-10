@@ -1,17 +1,21 @@
 # IK solver base + unified factory (always available)
 from .ik_solver_base import IKSolverBase, create_ik_solver
 
-# TRAC-IK backend (always available)
-from .trac_ik_solver import TracIKSolver
-
 __all__ = [
     "IKSolverBase",
     "create_ik_solver",
-    "TracIKSolver",
 ]
 
-# Pinocchio-dependent modules (pinocchio comes from conda, not pip,
-# so it may be absent in pure-pip installs).
+# TRAC-IK backend also depends on pinocchio for world/base transform mapping.
+try:
+    from .trac_ik_solver import TracIKSolver
+
+    __all__ += ["TracIKSolver"]
+except (ModuleNotFoundError, ImportError):
+    # pinocchio not installed — TracIKSolver unavailable.
+    pass
+
+# Additional Pinocchio-dependent modules (pink, collision, FK helpers).
 try:
     from .collision_model import (
         CollisionContext,
@@ -36,8 +40,7 @@ try:
         "add_pointcloud_obstacles",
         "PinkIKSolver",
     ]
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     # pinocchio (or pink) not installed — pinocchio FK, collision model,
-    # and PinkIKSolver are unavailable.  TracIKSolver and create_ik_solver
-    # (with backend="trac_ik") still work.
+    # and PinkIKSolver are unavailable.
     pass

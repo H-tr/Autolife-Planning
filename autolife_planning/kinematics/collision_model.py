@@ -128,12 +128,23 @@ def add_pointcloud_obstacles(
     for i, pt in enumerate(points):
         sphere = hppfcl.Sphere(radius)
         placement = pin.SE3(np.eye(3), pt)
-        geom = pin.GeometryObject(
-            f"obstacle_{i}",
-            0,  # parent joint = universe
-            placement,
-            sphere,
-        )
+        # Pinocchio bindings differ across major versions:
+        #   3.x commonly accepts (name, parent_joint, geometry, placement)
+        #   2.x may require (name, parent_frame, parent_joint, geometry, placement)
+        # Try the concise form first, then fall back.
+        name = f"obstacle_{i}"
+        parent_joint = 0  # universe
+        try:
+            geom = pin.GeometryObject(name, parent_joint, sphere, placement)
+        except Exception:
+            parent_frame = 0  # universe frame
+            geom = pin.GeometryObject(
+                name,
+                parent_frame,
+                parent_joint,
+                sphere,
+                placement,
+            )
         obs_id = context.collision_model.addGeometryObject(geom)
 
         for robot_id in range(n_robot_geoms):

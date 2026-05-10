@@ -37,6 +37,12 @@ cd Autolife-Planning
 pip install -e .
 ```
 
+If you are using Python 3.8, install the robotics Pink package from conda-forge first:
+
+```bash
+conda install -n autolife -c conda-forge pink --solver=libmamba -y
+```
+
 For development — rebuilding URDFs, regenerating FK headers, running the C++ toolchain end-to-end — use the setup script, which also installs pixi and the conda-forge deps (pinocchio, orocos-kdl, eigen, boost, ...):
 
 ```bash

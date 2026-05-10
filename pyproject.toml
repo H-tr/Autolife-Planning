@@ -34,6 +34,11 @@ dependencies = [
     # solver in autolife_planning.kinematics.pink_ik_solver; PyPI
     # requires Python >=3.10.
     "pin-pink; python_version >= '3.10'",
+    # Pink solves differential IK through qpsolvers and defaults to OSQP.
+    # qpsolvers itself does not bundle concrete solver backends, so install
+    # OSQP explicitly to keep constrained IK examples working after a plain
+    # editable install (`pip install -e .`).
+    "osqp; python_version >= '3.10'",
 ]
 
 [project.urls]

@@ -23,6 +23,18 @@ from autolife_planning.types import (
 )
 
 pin = importlib.import_module("pinocchio")
+if not hasattr(pin, "buildModelFromUrdf"):
+    mod_path = getattr(pin, "__file__", "<unknown>")
+    raise ModuleNotFoundError(
+        "Imported 'pinocchio' does not expose Pinocchio robotics APIs "
+        "(missing buildModelFromUrdf). This usually means a different PyPI "
+        "package named 'pinocchio' was imported instead of the robotics one "
+        "('pin').\n"
+        f"Loaded module: {mod_path}\n"
+        "Fix: uninstall the wrong package (`pip uninstall pinocchio`) and "
+        "install the robotics package (`pip install pin`), or run with "
+        "a clean PYTHONPATH/PYTHONNOUSERSITE."
+    )
 
 # Map our SolveType enum to pytracik C++ enum values
 _SOLVE_TYPE_MAP = {

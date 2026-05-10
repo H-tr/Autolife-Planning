@@ -27,6 +27,24 @@ if(PkgConfig_FOUND AND NOT orocos_kdl_FOUND)
     pkg_check_modules(orocos_kdl orocos-kdl)
 endif()
 find_package(NLopt QUIET)
+# NLopt discovery differs across distros/packages:
+# some exports an imported target (NLopt::nlopt), others only variables.
+set(AUTOLIFE_NLOPT_LINK_LIBS "")
+set(AUTOLIFE_NLOPT_INCLUDE_DIRS "")
+if(TARGET NLopt::nlopt)
+    list(APPEND AUTOLIFE_NLOPT_LINK_LIBS NLopt::nlopt)
+elseif(TARGET nlopt::nlopt)
+    list(APPEND AUTOLIFE_NLOPT_LINK_LIBS nlopt::nlopt)
+elseif(DEFINED NLOPT_LIBRARIES AND NLOPT_LIBRARIES)
+    list(APPEND AUTOLIFE_NLOPT_LINK_LIBS ${NLOPT_LIBRARIES})
+elseif(DEFINED NLopt_LIBRARIES AND NLopt_LIBRARIES)
+    list(APPEND AUTOLIFE_NLOPT_LINK_LIBS ${NLopt_LIBRARIES})
+endif()
+if(DEFINED NLOPT_INCLUDE_DIRS AND NLOPT_INCLUDE_DIRS)
+    list(APPEND AUTOLIFE_NLOPT_INCLUDE_DIRS ${NLOPT_INCLUDE_DIRS})
+elseif(DEFINED NLopt_INCLUDE_DIRS AND NLopt_INCLUDE_DIRS)
+    list(APPEND AUTOLIFE_NLOPT_INCLUDE_DIRS ${NLopt_INCLUDE_DIRS})
+endif()
 
 # ── Architecture flags ───────────────────────────────────────────────
 # x86-64-v3 is the Haswell (2013+) micro-arch level: guarantees AVX2,
@@ -167,7 +185,7 @@ install(TARGETS _time_parameterization LIBRARY DESTINATION autolife_planning)
 
 # ── TRAC-IK extension (pybind11) ─────────────────────────────────────
 
-if(orocos_kdl_FOUND AND NLopt_FOUND)
+if(orocos_kdl_FOUND AND (NLopt_FOUND OR AUTOLIFE_NLOPT_LINK_LIBS))
     file(GLOB_RECURSE TRAC_IK_SOURCES "ext/trac_ik/*.cpp")
 
     pybind11_add_module(pytracik ${TRAC_IK_SOURCES})
@@ -176,11 +194,12 @@ if(orocos_kdl_FOUND AND NLopt_FOUND)
         ext/trac_ik
         ext/trac_ik/urdf
         ${orocos_kdl_INCLUDE_DIRS}
+        ${AUTOLIFE_NLOPT_INCLUDE_DIRS}
     )
 
     target_link_libraries(pytracik PRIVATE
         ${orocos_kdl_LIBRARIES}
-        NLopt::nlopt
+        ${AUTOLIFE_NLOPT_LINK_LIBS}
     )
 
     install(TARGETS pytracik LIBRARY DESTINATION .)

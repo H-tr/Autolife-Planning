@@ -836,13 +836,14 @@ packages:
 - pypi: ./
   name: autolife-planning
   version: 0.2.0
-  sha256: ede172196ac7291c9d2156f8ef0ca55a4df2456e38e5133eddc0ae169d08d566
+  sha256: 0b5f70ca6a3265d8d8b99c43421de93fb458e5514bd0868d22a3d95b189c22a0
   requires_dist:
   - numpy
   - scipy
   - urdf2casadi>=1.0,<1.2
   - pin ; python_full_version >= '3.9'
   - pin-pink ; python_full_version >= '3.10'
+  - osqp ; python_full_version >= '3.10'
   - pre-commit ; extra == 'dev'
   - pybullet ; extra == 'dev'
   - pytest>=8.0 ; extra == 'dev'

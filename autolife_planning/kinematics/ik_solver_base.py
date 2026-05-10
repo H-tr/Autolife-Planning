@@ -126,7 +126,18 @@ def create_ik_solver(
     chain_config = _resolve_chain_config(chain_name, side, urdf_path)
 
     if backend == "trac_ik":
-        from autolife_planning.kinematics.trac_ik_solver import TracIKSolver
+        try:
+            from autolife_planning.kinematics.trac_ik_solver import TracIKSolver
+        except ModuleNotFoundError as exc:
+            if exc.name == "pinocchio":
+                raise ModuleNotFoundError(
+                    "TRAC-IK backend requires 'pinocchio' (PyPI package: 'pin'). "
+                    "Install a compatible pin release for your Python version "
+                    "(for Python 3.8, pin==2.6.21 is known to work), and run "
+                    "with a clean environment (avoid ROS PYTHONPATH/LD_LIBRARY_PATH "
+                    "overrides)."
+                ) from exc
+            raise
 
         ik_config = config if isinstance(config, IKConfig) else None
         return TracIKSolver(chain_config, ik_config)
